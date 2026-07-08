@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+  font-size: 12px;
+  color: #1b1b1b;
+  background: #f3f3f3;
+}
+
+@layer components {
+  .input-w32 {
+    @apply w-full rounded-sm border border-stroke-strong border-b-[#8a8a8a] bg-white px-2 py-1 font-sans text-xs;
+  }
+  .input-w32:focus {
+    @apply outline-none border-b-2 border-b-accent;
+  }
+  .btn-w32 {
+    @apply cursor-pointer rounded-sm border border-stroke-strong border-b-[#c4c4c4] bg-[#fbfbfb] px-3.5 py-1 text-xs text-[#1b1b1b];
+  }
+  .btn-w32:hover {
+    @apply border-accent bg-[#f0f6fc];
+  }
+  .btn-on {
+    @apply border-accent bg-accent text-white;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent font-semibold text-white;
+  }
+  .btn-primary:hover {
+    @apply bg-[#1975c5];
+  }
+}
