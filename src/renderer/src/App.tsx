@@ -7,6 +7,24 @@ import type { EntryRow, ImportResult, SearchFilter } from '../../shared/types';
 const NO_CRITERIA_LABEL = 'A0 (No selection criteria)';
 
 export default function App() {
+  if (typeof window.cifApi === 'undefined') {
+    return (
+      <div className="flex h-screen items-center justify-center bg-mica p-8">
+        <div className="max-w-lg rounded-md border border-[#c42b1c] bg-white p-4">
+          <p className="mb-1 font-semibold text-[#c42b1c]">Application bridge unavailable</p>
+          <p>
+            The preload script failed to load, so the renderer cannot reach the database. This is a
+            packaging or build configuration error: rebuild the app and check the main process log
+            for preload errors.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return <AppInner />;
+}
+
+function AppInner() {
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [qsOpen, setQsOpen] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
@@ -14,12 +32,22 @@ export default function App() {
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
 
   const reload = useCallback(() => {
+    if (!window.cifApi) return;
     window.cifApi.getAllEntries().then(setEntries);
   }, []);
 
   useEffect(() => {
     reload();
   }, [reload]);
+
+  if (!window.cifApi) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-mica p-6 text-center text-sm text-red-700">
+        Backend bridge failed to load. The application preload script did not run correctly.
+        Please reinstall the application or contact support.
+      </div>
+    );
+  }
 
   async function handleImport() {
     setImporting(true);
