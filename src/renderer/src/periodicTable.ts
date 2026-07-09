@@ -43,3 +43,13 @@ export const CATEGORY_CLASS: Record<string, string> = {
   lan: 'bg-[#ffe8d1]',
   act: 'bg-[#fbdfdf]'
 };
+
+/** Grid cells that must render as an empty gap (no border/background) inside the periodic table's
+ *  bounding rectangle: the main-group gap in periods 1-3 (cols 3-12) and the lanthanide/actinide
+ *  placeholder gap under La/Ac (row 7 cols 4-17 minus the actual row-7 elements up to col 10). */
+export function isPeriodicGap(row: number, col: number): boolean {
+  if (row >= 1 && row <= 3 && col >= 3 && col <= 12) return true;
+  if (row === 7 && col >= 11 && col <= 17) return true;
+  if (row === 8) return true;
+  return false;
+}

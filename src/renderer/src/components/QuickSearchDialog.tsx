@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GROUP_LABELS, PERIOD_LABELS, PERIODIC_TABLE, CATEGORY_CLASS } from '../periodicTable';
+import { GROUP_LABELS, PERIOD_LABELS, PERIODIC_TABLE, CATEGORY_CLASS, isPeriodicGap } from '../periodicTable';
 import type { RestraintRow, SearchFilter } from '../../../shared/types';
 
 const LEVEL_FULL = 'Complete structure determined';
@@ -25,6 +25,7 @@ interface FormState {
   spaceGroupQuery: string;
   referenceQuery: string;
   level: string;
+  elementCountQuery: string;
 }
 
 const emptyForm: FormState = {
@@ -39,9 +40,9 @@ const emptyForm: FormState = {
   cMax: '',
   sgQuery: '',
   spaceGroupQuery: '',
-  referenceQuery: ''
-  ,
-  level: ''
+  referenceQuery: '',
+  level: '',
+  elementCountQuery: ''
 };
 
 function toFilter(form: FormState): SearchFilter {
@@ -59,7 +60,8 @@ function toFilter(form: FormState): SearchFilter {
     sgQuery: form.sgQuery,
     spaceGroupQuery: form.spaceGroupQuery,
     referenceQuery: form.referenceQuery,
-    level: form.level
+    level: form.level,
+    elementCountQuery: form.elementCountQuery
   };
 }
 
@@ -93,15 +95,31 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
     return max;
   }, []);
 
+  const rows = useMemo(() => {
+    const max = Math.max(...PERIODIC_TABLE.map((e) => e.row));
+    return max;
+  }, []);
+
   if (!open) return null;
+
+  // Single source of truth for periodic-table cell highlighting: derived directly from the
+  // current slot state on every render. There is no separate toggled boolean/class to drift.
+  function slotOf(symbol: string): 1 | 2 | 0 {
+    if (form.slot1.includes(symbol)) return 1;
+    if (form.slot2.includes(symbol)) return 2;
+    return 0;
+  }
 
   function toggleElement(symbol: string, ctrl: boolean) {
     setForm((prev) => {
+      const inSlot1 = prev.slot1.includes(symbol);
+      const inSlot2 = prev.slot2.includes(symbol);
+      // Clicking an already-selected element always removes it from whichever slot holds it.
+      if (inSlot1) return { ...prev, slot1: prev.slot1.filter((s) => s !== symbol) };
+      if (inSlot2) return { ...prev, slot2: prev.slot2.filter((s) => s !== symbol) };
       const target: 1 | 2 = ctrl || prev.slot1.length === 0 ? 1 : 2;
       const key = target === 1 ? 'slot1' : 'slot2';
-      const current = prev[key];
-      const next = current.includes(symbol) ? current.filter((s) => s !== symbol) : [...current, symbol];
-      return { ...prev, [key]: next };
+      return { ...prev, [key]: [...prev[key], symbol] };
     });
   }
 
@@ -125,72 +143,83 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="flex max-h-[94vh] w-[940px] max-w-[96vw] flex-col overflow-auto rounded-lg border border-stroke-strong bg-mica shadow-2xl">
-        <div className="flex items-center gap-2 border-b border-stroke px-3.5 py-2 font-semibold">
+      <div className="relative flex max-h-[560px] w-[860px] max-w-[95vw] flex-col rounded-lg border border-stroke-strong bg-mica shadow-2xl">
+        <div className="flex items-center gap-2 border-b border-stroke py-1.5 pl-3 pr-11 text-sm font-semibold">
           <span>Quick search</span>
-          <span className="flex-1" />
-          <button
-            className="flex h-6 w-11 items-center justify-center rounded hover:bg-[#e9e9e9]"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ✕
-          </button>
         </div>
+        <button
+          className="absolute right-0 top-0 flex h-8 w-11 items-center justify-center rounded-tr-lg text-sm hover:bg-[#e81123] hover:text-white"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ✕
+        </button>
 
-        <div className="flex flex-col gap-2.5 p-3">
-          <div className="grid grid-cols-[auto_1fr] gap-4">
-            <div
-              className="grid gap-0.5"
-              style={{ gridTemplateColumns: `repeat(${columns + 1}, 24px)`, gridAutoRows: '22px' }}
-            >
-              {GROUP_LABELS.map((g, i) => (
-                <div
-                  key={`g-${i}`}
-                  className="flex items-center justify-center text-[9px] font-semibold text-text-dim"
-                  style={{ gridColumn: i + 2, gridRow: 1 }}
-                >
-                  {g}
-                </div>
-              ))}
-              {Object.entries(PERIOD_LABELS).map(([row, label]) => (
-                <div
-                  key={`p-${row}`}
-                  className="flex items-center justify-center text-[9px] font-semibold text-text-dim"
-                  style={{ gridColumn: 1, gridRow: Number(row) + 1 }}
-                >
-                  {label}
-                </div>
-              ))}
+        <div className="flex flex-col gap-2 p-2.5">
+          <div className="grid grid-cols-[auto_1fr] gap-3">
+            <div>
               <div
-                className="self-start p-0.5 text-[10px] text-gray-400"
-                style={{ gridColumn: '3 / 13', gridRow: '2 / 4' }}
+                className="grid"
+                style={{ gridTemplateColumns: `repeat(${columns + 1}, 20px)`, gridAutoRows: '18px' }}
               >
+                {GROUP_LABELS.map((g, i) => (
+                  <div
+                    key={`g-${i}`}
+                    className="flex items-center justify-center text-[8px] font-semibold text-text-dim"
+                    style={{ gridColumn: i + 2, gridRow: 1 }}
+                  >
+                    {g}
+                  </div>
+                ))}
+                {Object.entries(PERIOD_LABELS).map(([row, label]) => (
+                  <div
+                    key={`p-${row}`}
+                    className="flex items-center justify-center text-[8px] font-semibold text-text-dim"
+                    style={{ gridColumn: 1, gridRow: Number(row) + 1 }}
+                  >
+                    {label}
+                  </div>
+                ))}
+                {Array.from({ length: rows }, (_, ri) => ri + 1).flatMap((r) =>
+                  Array.from({ length: columns }, (_, ci) => ci + 1).map((c) => {
+                    if (!isPeriodicGap(r, c)) return null;
+                    return (
+                      <div key={`gap-${r}-${c}`} style={{ gridColumn: c + 1, gridRow: r + 1 }} />
+                    );
+                  })
+                )}
+                {PERIODIC_TABLE.map((el) => {
+                  const slot = slotOf(el.symbol);
+                  const selected = slot !== 0;
+                  return (
+                    <button
+                      key={el.symbol}
+                      type="button"
+                      className={`relative -ml-px -mt-px flex select-none flex-col items-center justify-center border border-[#c9c9c9] text-[9px] font-bold leading-none hover:z-10 hover:outline hover:outline-2 hover:outline-accent ${
+                        selected ? 'z-10 border-accent bg-accent text-white' : `bg-white ${CATEGORY_CLASS[el.category]}`
+                      }`}
+                      style={{ gridColumn: el.col + 1, gridRow: el.row + 1 }}
+                      onClick={(e) => toggleElement(el.symbol, e.ctrlKey)}
+                    >
+                      <span
+                        className={`absolute left-0.5 top-0 text-[6px] font-normal ${
+                          selected ? 'text-white' : 'text-[#3a3a3a]'
+                        }`}
+                      >
+                        {el.z}
+                      </span>
+                      {el.symbol}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-1 max-w-[440px] text-[9px] text-text-dim">
                 Use Ctrl key to select multiple elements to be combined with OR.
               </div>
-              {PERIODIC_TABLE.map((el) => {
-                const selected = form.slot1.includes(el.symbol) || form.slot2.includes(el.symbol);
-                return (
-                  <button
-                    key={el.symbol}
-                    type="button"
-                    className={`relative flex select-none flex-col items-center justify-center rounded border border-[#d8d8d8] text-[10px] leading-none hover:outline hover:outline-2 hover:outline-accent ${
-                      selected ? 'border-accent bg-accent font-semibold text-white' : `bg-white ${CATEGORY_CLASS[el.category]}`
-                    }`}
-                    style={{ gridColumn: el.col + 1, gridRow: el.row + 1 }}
-                    onClick={(e) => toggleElement(el.symbol, e.ctrlKey)}
-                  >
-                    <span className={`absolute left-0.5 top-0 text-[6.5px] ${selected ? 'text-[#d6e9fb]' : 'text-gray-400'}`}>
-                      {el.z}
-                    </span>
-                    {el.symbol}
-                  </button>
-                );
-              })}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+            <div className="flex flex-col gap-1">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Element(s) 1:</label>
                 <input className="input-w32" readOnly value={form.slot1.join(' OR ')} placeholder="click elements..." />
                 <div className="flex gap-1 font-bold">
@@ -199,7 +228,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Element(s) 2:</label>
                 <input className="input-w32" readOnly value={form.slot2.join(' OR ')} />
                 <div className="flex gap-1 font-bold">
@@ -208,7 +237,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Combine elements:</label>
                 <div className="flex items-center gap-1">
                   <button
@@ -225,25 +254,34 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   >
                     OR
                   </button>
-                  <span className="ml-1.5 text-text-dim">(Ctrl+click adds to same OR group)</span>
                 </div>
                 <div />
               </div>
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
+                <label>Number of elements:</label>
+                <input
+                  className="input-w32"
+                  placeholder="e.g. 3 or 2-4"
+                  value={form.elementCountQuery}
+                  onChange={(e) => setForm((p) => ({ ...p, elementCountQuery: e.target.value }))}
+                />
+                <div />
+              </div>
 
-              <fieldset className="rounded-md border border-stroke bg-[#fafafa] px-2.5 py-2">
-                <legend className="px-1.5 font-semibold text-accent">Cell lengths [nm]</legend>
-                <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] items-center gap-x-2.5 gap-y-1.5">
+              <fieldset className="rounded-md border border-stroke bg-[#fafafa] px-2 py-1.5">
+                <legend className="px-1.5 text-xs font-semibold text-accent">Cell lengths [nm]</legend>
+                <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] items-center gap-x-2 gap-y-1">
                   <label>a:</label>
                   <span className="flex items-center gap-1">
                     <input
-                      className="input-w32 w-16"
+                      className="input-w32 w-14"
                       placeholder="min"
                       value={form.aMin}
                       onChange={(e) => setForm((p) => ({ ...p, aMin: e.target.value }))}
                     />
                     -
                     <input
-                      className="input-w32 w-16"
+                      className="input-w32 w-14"
                       placeholder="max"
                       value={form.aMax}
                       onChange={(e) => setForm((p) => ({ ...p, aMax: e.target.value }))}
@@ -252,14 +290,14 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   <label>b:</label>
                   <span className="flex items-center gap-1">
                     <input
-                      className="input-w32 w-16"
+                      className="input-w32 w-14"
                       placeholder="min"
                       value={form.bMin}
                       onChange={(e) => setForm((p) => ({ ...p, bMin: e.target.value }))}
                     />
                     -
                     <input
-                      className="input-w32 w-16"
+                      className="input-w32 w-14"
                       placeholder="max"
                       value={form.bMax}
                       onChange={(e) => setForm((p) => ({ ...p, bMax: e.target.value }))}
@@ -268,14 +306,14 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   <label>c:</label>
                   <span className="flex items-center gap-1">
                     <input
-                      className="input-w32 w-16"
+                      className="input-w32 w-14"
                       placeholder="min"
                       value={form.cMin}
                       onChange={(e) => setForm((p) => ({ ...p, cMin: e.target.value }))}
                     />
                     -
                     <input
-                      className="input-w32 w-16"
+                      className="input-w32 w-14"
                       placeholder="max"
                       value={form.cMax}
                       onChange={(e) => setForm((p) => ({ ...p, cMax: e.target.value }))}
@@ -284,7 +322,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 </div>
               </fieldset>
 
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Space group number:</label>
                 <input
                   className="input-w32"
@@ -294,7 +332,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 />
                 <div />
               </div>
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Space group (H-M):</label>
                 <input
                   className="input-w32"
@@ -304,7 +342,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 />
                 <div />
               </div>
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Reference:</label>
                 <input
                   className="input-w32"
@@ -314,7 +352,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 />
                 <div />
               </div>
-              <div className="grid grid-cols-[150px_1fr_auto] items-center gap-1.5">
+              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
                 <label>Level of struct. studies:</label>
                 <select
                   className="input-w32"
@@ -330,7 +368,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
             </div>
           </div>
 
-          <div className="h-[110px] overflow-auto rounded-md border border-stroke bg-white">
+          <div className="h-[80px] overflow-auto rounded-md border border-stroke bg-white">
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
