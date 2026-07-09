@@ -9,6 +9,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 function createWindow(): void {
   const win = new BrowserWindow({
+    title: 'CIF Crystal Data',
     width: 1200,
     height: 800,
     minWidth: 900,

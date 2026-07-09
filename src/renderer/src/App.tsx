@@ -75,7 +75,8 @@ function AppInner() {
       Boolean(filter.sgQuery && filter.sgQuery.trim()) ||
       Boolean(filter.spaceGroupQuery && filter.spaceGroupQuery.trim()) ||
       Boolean(filter.referenceQuery && filter.referenceQuery.trim()) ||
-      Boolean(filter.level && filter.level.trim());
+      Boolean(filter.level && filter.level.trim()) ||
+      Boolean(filter.elementCountQuery && filter.elementCountQuery.trim());
 
     const results = await window.cifApi.search(filter);
     setEntries(results);
@@ -84,19 +85,6 @@ function AppInner() {
 
   return (
     <div className="mx-auto flex h-screen max-w-full flex-col overflow-hidden bg-mica">
-      <div className="flex items-center gap-2.5 border-b border-stroke px-3.5 py-2 text-xs">
-        <span className="flex h-4 w-4 items-center justify-center rounded bg-gradient-to-br from-[#0078d4] to-[#4cc2ff] text-[10px] text-white">
-          ◈
-        </span>
-        <span>CIF Crystal Data - Local Database</span>
-      </div>
-      <div className="flex gap-0.5 px-2 py-0.5 text-xs">
-        {['File', 'Edit', 'View', 'Search', 'Tools', 'Help'].map((m) => (
-          <span key={m} className="cursor-default rounded-sm px-2.5 py-1 hover:bg-[#e9e9e9]">
-            {m}
-          </span>
-        ))}
-      </div>
       <div className="flex items-center gap-1.5 border-b border-stroke px-2.5 py-1.5">
         <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={() => setQsOpen(true)}>
           <span>&#128269;</span> Quick search
