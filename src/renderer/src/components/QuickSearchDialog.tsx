@@ -323,7 +323,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 <div className="flex gap-1 font-bold">
                   <button
                     type="button"
-                    className="rounded-sm px-1 hover:bg-[#e9e9e9]"
+                    className="rounded-sm px-1 text-red-500 hover:bg-[#e9e9e9] hover:text-red-600"
                     onClick={() => clearSlot(1)}
                     aria-label="Clear element group 1"
                   >
@@ -337,7 +337,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 <div className="flex gap-1 font-bold">
                   <button
                     type="button"
-                    className="rounded-sm px-1 hover:bg-[#e9e9e9]"
+                    className="rounded-sm px-1 text-red-500 hover:bg-[#e9e9e9] hover:text-red-600"
                     onClick={() => clearSlot(2)}
                     aria-label="Clear element group 2"
                   >
