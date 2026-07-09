@@ -224,7 +224,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
         aria-modal="true"
         aria-labelledby="quick-search-title"
         tabIndex={-1}
-        className="relative flex w-[1040px] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-stroke-strong bg-mica shadow-2xl outline-none"
+        className="relative flex w-[900px] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-stroke-strong bg-mica shadow-2xl outline-none"
       >
         <div className="flex shrink-0 items-center gap-2 border-b border-stroke py-1.5 pl-3 pr-11 text-sm font-semibold">
           <span id="quick-search-title">Quick search</span>
