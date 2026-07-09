@@ -37,7 +37,7 @@ export const PERIODIC_TABLE: ElementDef[] = [
 export const CATEGORY_CLASS: Record<string, string> = {
   alk: 'bg-lime-100',
   tm: 'bg-sky-100',
-  metaloid: 'bg-cyan-100',
+  metaloid: 'bg-sky-200',
   nm: 'bg-teal-100',
   ng: 'bg-cyan-200',
   lan: 'bg-amber-200',
