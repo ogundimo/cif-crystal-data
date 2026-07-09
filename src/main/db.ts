@@ -124,6 +124,26 @@ function parseSgQuery(sgQuery: string | undefined): { sql: string; params: (stri
   return { sql: '1=1', params: [] };
 }
 
+function parseElementCountQuery(query: string | undefined): { sql: string; params: number[] } {
+  if (!query || query.trim() === '') return { sql: '1=1', params: [] };
+  const trimmed = query.trim();
+  const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
+  if (rangeMatch) {
+    return {
+      sql: 'id IN (SELECT entry_id FROM entry_elements GROUP BY entry_id HAVING COUNT(DISTINCT element) BETWEEN ? AND ?)',
+      params: [Number(rangeMatch[1]), Number(rangeMatch[2])]
+    };
+  }
+  const n = Number(trimmed);
+  if (Number.isFinite(n)) {
+    return {
+      sql: 'id IN (SELECT entry_id FROM entry_elements GROUP BY entry_id HAVING COUNT(DISTINCT element) = ?)',
+      params: [n]
+    };
+  }
+  return { sql: '1=1', params: [] };
+}
+
 function buildWhereClause(filter: SearchFilter): { sql: string; params: (string | number)[] } {
   const clauses: string[] = [];
   const params: (string | number)[] = [];
@@ -194,6 +214,12 @@ function buildWhereClause(filter: SearchFilter): { sql: string; params: (string 
   if (filter.level && filter.level.trim() !== '') {
     clauses.push('level_struct_studies = ?');
     params.push(filter.level);
+  }
+
+  const ec = parseElementCountQuery(filter.elementCountQuery);
+  if (ec.sql !== '1=1') {
+    clauses.push(ec.sql);
+    params.push(...ec.params);
   }
 
   return { sql: clauses.length ? clauses.join(' AND ') : '1=1', params };
@@ -271,6 +297,11 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
   if (filter.level && filter.level.trim() !== '') {
     const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', level: filter.level });
     rows.push({ field: 'Level struct. studies', content: filter.level, entries: n });
+  }
+
+  if (filter.elementCountQuery && filter.elementCountQuery.trim() !== '') {
+    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', elementCountQuery: filter.elementCountQuery });
+    rows.push({ field: 'Number of elements', content: filter.elementCountQuery, entries: n });
   }
 
   if (rows.length > 0) {

@@ -40,6 +40,7 @@ export interface SearchFilter {
   spaceGroupQuery?: string;
   referenceQuery?: string;
   level?: string;
+  elementCountQuery?: string;
 }
 
 export interface RestraintRow {
