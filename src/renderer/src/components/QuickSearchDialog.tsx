@@ -292,7 +292,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                       key={el.symbol}
                       type="button"
                       className={`relative -ml-px -mt-px flex select-none flex-col items-center justify-center border border-[#c9c9c9] text-[9px] font-bold leading-none hover:z-10 hover:outline hover:outline-2 hover:outline-accent ${
-                        selected ? 'z-10 border-accent bg-accent text-white' : `bg-white ${CATEGORY_CLASS[el.category]}`
+                        selected ? 'z-10 border-accent bg-accent text-white' : CATEGORY_CLASS[el.category]
                       }`}
                       style={{ gridColumn: el.col + 1, gridRow: el.row + 1 }}
                       onClick={(e) => toggleElement(el.symbol, e.ctrlKey)}

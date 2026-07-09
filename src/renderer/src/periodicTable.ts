@@ -35,13 +35,13 @@ export const PERIODIC_TABLE: ElementDef[] = [
 ];
 
 export const CATEGORY_CLASS: Record<string, string> = {
-  alk: 'bg-[#fff6d6]',
-  tm: 'bg-[#fdeedd]',
-  metaloid: 'bg-[#e2f4e2]',
-  nm: 'bg-[#e0edfb]',
-  ng: 'bg-[#efe4f9]',
-  lan: 'bg-[#ffe8d1]',
-  act: 'bg-[#fbdfdf]'
+  alk: 'bg-lime-100',
+  tm: 'bg-sky-100',
+  metaloid: 'bg-cyan-100',
+  nm: 'bg-teal-100',
+  ng: 'bg-cyan-200',
+  lan: 'bg-amber-200',
+  act: 'bg-orange-200'
 };
 
 /** Grid cells that must render as an empty gap (no border/background) inside the periodic table's
