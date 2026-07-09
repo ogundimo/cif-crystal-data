@@ -323,7 +323,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 <div className="flex gap-1 font-bold">
                   <button
                     type="button"
-                    className="rounded px-1 hover:bg-[#e9e9e9]"
+                    className="rounded-sm px-1 hover:bg-[#e9e9e9]"
                     onClick={() => clearSlot(1)}
                     aria-label="Clear element group 1"
                   >
@@ -337,7 +337,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 <div className="flex gap-1 font-bold">
                   <button
                     type="button"
-                    className="rounded px-1 hover:bg-[#e9e9e9]"
+                    className="rounded-sm px-1 hover:bg-[#e9e9e9]"
                     onClick={() => clearSlot(2)}
                     aria-label="Clear element group 2"
                   >
@@ -386,7 +386,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 )}
               </div>
 
-              <fieldset className="rounded-md border border-stroke bg-[#fafafa] px-2 py-1.5">
+              <fieldset className="rounded-sm border border-stroke bg-[#fafafa] px-2 py-1.5">
                 <legend className="px-1.5 text-xs font-semibold text-accent">Cell lengths [nm]</legend>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <div className="flex min-w-[170px] flex-1 items-center gap-2">
@@ -526,7 +526,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
             </div>
           </div>
 
-            <div className="h-[120px] overflow-auto rounded-md border border-stroke bg-white" aria-live="polite">
+            <div className="h-[120px] overflow-auto rounded-sm border border-stroke bg-white" aria-live="polite">
               <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
