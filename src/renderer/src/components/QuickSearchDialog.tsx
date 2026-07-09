@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GROUP_LABELS, PERIOD_LABELS, PERIODIC_TABLE, CATEGORY_CLASS, isPeriodicGap } from '../periodicTable';
 import type { RestraintRow, SearchFilter } from '../../../shared/types';
+import { validateSearchInput, type SearchValidationField } from '../../../shared/searchValidation';
+import { scheduleDebouncedRequest } from '../debouncedRequest';
 
 const LEVEL_FULL = 'Complete structure determined';
 const LEVEL_CELL = 'Cell parameters determined and structure type assigned';
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
 interface Props {
   open: boolean;
@@ -66,29 +70,86 @@ function toFilter(form: FormState): SearchFilter {
 }
 
 export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [appliedForm, setAppliedForm] = useState<FormState>(emptyForm);
   const [restraints, setRestraints] = useState<RestraintRow[]>([]);
+  const [restraintsStatus, setRestraintsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [restraintsRetry, setRestraintsRetry] = useState(0);
+  const validationErrors = useMemo(() => validateSearchInput(form), [form]);
+  const isValid = Object.keys(validationErrors).length === 0;
+  const discardAndClose = useCallback(() => {
+    setForm(appliedForm);
+    onClose();
+  }, [appliedForm, onClose]);
 
   useEffect(() => {
     if (!open) return;
-    let cancelled = false;
-    window.cifApi.restraints(toFilter(form)).then((rows) => {
-      if (!cancelled) setRestraints(rows);
+    if (!isValid) {
+      setRestraints([]);
+      setRestraintsStatus('idle');
+      return;
+    }
+    return scheduleDebouncedRequest({
+      delay: 250,
+      request: () => window.cifApi.restraints(toFilter(form)),
+      onStart: () => setRestraintsStatus('loading'),
+      onSuccess: (rows) => {
+        setRestraints(rows);
+        setRestraintsStatus('ready');
+      },
+      onError: () => {
+        setRestraints([]);
+        setRestraintsStatus('error');
+      }
     });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, open]);
+  }, [form, isValid, open, restraintsRetry]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusFrame = requestAnimationFrame(() => dialogRef.current?.focus({ preventScroll: true }));
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        discardAndClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const dialog = dialogRef.current;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (element) => element.offsetParent !== null
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      if (active === dialog || !dialog.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', onKey);
+      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+    };
+  }, [discardAndClose, open]);
 
   const columns = useMemo(() => {
     const max = Math.max(...PERIODIC_TABLE.map((e) => e.col));
@@ -132,32 +193,67 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
   }
 
   function handleSearch() {
+    if (!isValid) return;
+    setAppliedForm(form);
     onSearch(toFilter(form));
     onClose();
   }
 
+  function inputClass(field: SearchValidationField): string {
+    return `input-w32 ${validationErrors[field] ? 'border-red-600 border-b-red-600' : ''}`;
+  }
+
+  const cellLengthError =
+    validationErrors.aMin ??
+    validationErrors.aMax ??
+    validationErrors.bMin ??
+    validationErrors.bMax ??
+    validationErrors.cMin ??
+    validationErrors.cMax;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) discardAndClose();
       }}
     >
-      <div className="relative flex max-h-[560px] w-[860px] max-w-[95vw] flex-col rounded-lg border border-stroke-strong bg-mica shadow-2xl">
-        <div className="flex items-center gap-2 border-b border-stroke py-1.5 pl-3 pr-11 text-sm font-semibold">
-          <span>Quick search</span>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quick-search-title"
+        tabIndex={-1}
+        className="relative flex w-[1040px] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-stroke-strong bg-mica shadow-2xl outline-none"
+      >
+        <div className="flex shrink-0 items-center gap-2 border-b border-stroke py-1.5 pl-3 pr-11 text-sm font-semibold">
+          <span id="quick-search-title">Quick search</span>
         </div>
         <button
+          type="button"
           className="absolute right-0 top-0 flex h-8 w-11 items-center justify-center rounded-tr-lg text-sm hover:bg-[#e81123] hover:text-white"
-          onClick={onClose}
+          onClick={discardAndClose}
           aria-label="Close"
         >
           ✕
         </button>
 
-        <div className="flex flex-col gap-2 p-2.5">
-          <div className="grid grid-cols-[auto_1fr] gap-3">
-            <div>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSearch();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && event.target instanceof HTMLInputElement && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              handleSearch();
+            }
+          }}
+        >
+        <div className="p-2.5">
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-[380px_minmax(0,1fr)] gap-3">
+            <div className="min-w-0">
               <div
                 className="grid"
                 style={{ gridTemplateColumns: `repeat(${columns + 1}, 20px)`, gridAutoRows: '18px' }}
@@ -200,6 +296,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                       }`}
                       style={{ gridColumn: el.col + 1, gridRow: el.row + 1 }}
                       onClick={(e) => toggleElement(el.symbol, e.ctrlKey)}
+                      aria-label={`${el.symbol}, atomic number ${el.z}`}
+                      aria-pressed={selected}
                     >
                       <span
                         className={`absolute left-0.5 top-0 text-[6px] font-normal ${
@@ -218,32 +316,43 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Element(s) 1:</label>
-                <input className="input-w32" readOnly value={form.slot1.join(' OR ')} placeholder="click elements..." />
+            <div className="flex min-w-0 flex-col gap-1">
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-elements-1">Element(s) 1:</label>
+                <input id="quick-search-elements-1" className="input-w32" readOnly value={form.slot1.join(' OR ')} placeholder="click elements..." />
                 <div className="flex gap-1 font-bold">
-                  <button type="button" className="rounded px-1 hover:bg-[#e9e9e9]" onClick={() => clearSlot(1)}>
+                  <button
+                    type="button"
+                    className="rounded px-1 hover:bg-[#e9e9e9]"
+                    onClick={() => clearSlot(1)}
+                    aria-label="Clear element group 1"
+                  >
                     ✕
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Element(s) 2:</label>
-                <input className="input-w32" readOnly value={form.slot2.join(' OR ')} />
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-elements-2">Element(s) 2:</label>
+                <input id="quick-search-elements-2" className="input-w32" readOnly value={form.slot2.join(' OR ')} />
                 <div className="flex gap-1 font-bold">
-                  <button type="button" className="rounded px-1 hover:bg-[#e9e9e9]" onClick={() => clearSlot(2)}>
+                  <button
+                    type="button"
+                    className="rounded px-1 hover:bg-[#e9e9e9]"
+                    onClick={() => clearSlot(2)}
+                    aria-label="Clear element group 2"
+                  >
                     ✕
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Combine elements:</label>
-                <div className="flex items-center gap-1">
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <span id="quick-search-combine-label">Combine elements:</span>
+                <div className="flex items-center gap-1" role="group" aria-labelledby="quick-search-combine-label">
                   <button
                     type="button"
                     className={`btn-w32 px-3 ${form.mode === 'AND' ? 'btn-on' : ''}`}
                     onClick={() => setForm((p) => ({ ...p, mode: 'AND' }))}
+                    aria-pressed={form.mode === 'AND'}
                   >
                     AND
                   </button>
@@ -251,90 +360,137 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                     type="button"
                     className={`btn-w32 px-3 ${form.mode === 'OR' ? 'btn-on' : ''}`}
                     onClick={() => setForm((p) => ({ ...p, mode: 'OR' }))}
+                    aria-pressed={form.mode === 'OR'}
                   >
                     OR
                   </button>
                 </div>
                 <div />
               </div>
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Number of elements:</label>
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-element-count">Number of elements:</label>
                 <input
-                  className="input-w32"
+                  id="quick-search-element-count"
+                  className={inputClass('elementCountQuery')}
                   placeholder="e.g. 3 or 2-4"
                   value={form.elementCountQuery}
                   onChange={(e) => setForm((p) => ({ ...p, elementCountQuery: e.target.value }))}
+                  aria-invalid={Boolean(validationErrors.elementCountQuery)}
+                  aria-describedby={validationErrors.elementCountQuery ? 'element-count-error' : undefined}
                 />
                 <div />
+                {validationErrors.elementCountQuery && (
+                  <p id="element-count-error" className="col-span-2 col-start-2 text-[10px] leading-tight text-red-700">
+                    {validationErrors.elementCountQuery}
+                  </p>
+                )}
               </div>
 
               <fieldset className="rounded-md border border-stroke bg-[#fafafa] px-2 py-1.5">
                 <legend className="px-1.5 text-xs font-semibold text-accent">Cell lengths [nm]</legend>
-                <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] items-center gap-x-2 gap-y-1">
-                  <label>a:</label>
-                  <span className="flex items-center gap-1">
-                    <input
-                      className="input-w32 w-14"
-                      placeholder="min"
-                      value={form.aMin}
-                      onChange={(e) => setForm((p) => ({ ...p, aMin: e.target.value }))}
-                    />
-                    -
-                    <input
-                      className="input-w32 w-14"
-                      placeholder="max"
-                      value={form.aMax}
-                      onChange={(e) => setForm((p) => ({ ...p, aMax: e.target.value }))}
-                    />
-                  </span>
-                  <label>b:</label>
-                  <span className="flex items-center gap-1">
-                    <input
-                      className="input-w32 w-14"
-                      placeholder="min"
-                      value={form.bMin}
-                      onChange={(e) => setForm((p) => ({ ...p, bMin: e.target.value }))}
-                    />
-                    -
-                    <input
-                      className="input-w32 w-14"
-                      placeholder="max"
-                      value={form.bMax}
-                      onChange={(e) => setForm((p) => ({ ...p, bMax: e.target.value }))}
-                    />
-                  </span>
-                  <label>c:</label>
-                  <span className="flex items-center gap-1">
-                    <input
-                      className="input-w32 w-14"
-                      placeholder="min"
-                      value={form.cMin}
-                      onChange={(e) => setForm((p) => ({ ...p, cMin: e.target.value }))}
-                    />
-                    -
-                    <input
-                      className="input-w32 w-14"
-                      placeholder="max"
-                      value={form.cMax}
-                      onChange={(e) => setForm((p) => ({ ...p, cMax: e.target.value }))}
-                    />
-                  </span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className="flex min-w-[170px] flex-1 items-center gap-2">
+                    <label>a:</label>
+                    <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+                      <input
+                        className={inputClass('aMin')}
+                        placeholder="min"
+                        aria-label="Cell length a minimum"
+                        value={form.aMin}
+                        onChange={(e) => setForm((p) => ({ ...p, aMin: e.target.value }))}
+                        aria-invalid={Boolean(validationErrors.aMin)}
+                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
+                      />
+                      -
+                      <input
+                        className={inputClass('aMax')}
+                        placeholder="max"
+                        aria-label="Cell length a maximum"
+                        value={form.aMax}
+                        onChange={(e) => setForm((p) => ({ ...p, aMax: e.target.value }))}
+                        aria-invalid={Boolean(validationErrors.aMax)}
+                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex min-w-[170px] flex-1 items-center gap-2">
+                    <label>b:</label>
+                    <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+                      <input
+                        className={inputClass('bMin')}
+                        placeholder="min"
+                        aria-label="Cell length b minimum"
+                        value={form.bMin}
+                        onChange={(e) => setForm((p) => ({ ...p, bMin: e.target.value }))}
+                        aria-invalid={Boolean(validationErrors.bMin)}
+                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
+                      />
+                      -
+                      <input
+                        className={inputClass('bMax')}
+                        placeholder="max"
+                        aria-label="Cell length b maximum"
+                        value={form.bMax}
+                        onChange={(e) => setForm((p) => ({ ...p, bMax: e.target.value }))}
+                        aria-invalid={Boolean(validationErrors.bMax)}
+                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex min-w-[170px] flex-1 items-center gap-2">
+                    <label>c:</label>
+                    <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+                      <input
+                        className={inputClass('cMin')}
+                        placeholder="min"
+                        aria-label="Cell length c minimum"
+                        value={form.cMin}
+                        onChange={(e) => setForm((p) => ({ ...p, cMin: e.target.value }))}
+                        aria-invalid={Boolean(validationErrors.cMin)}
+                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
+                      />
+                      -
+                      <input
+                        className={inputClass('cMax')}
+                        placeholder="max"
+                        aria-label="Cell length c maximum"
+                        value={form.cMax}
+                        onChange={(e) => setForm((p) => ({ ...p, cMax: e.target.value }))}
+                        aria-invalid={Boolean(validationErrors.cMax)}
+                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
+                      />
+                    </div>
+                  </div>
+                  {cellLengthError && (
+                    <p id="cell-length-error" className="basis-full text-[10px] leading-tight text-red-700">
+                      {cellLengthError}
+                    </p>
+                  )}
                 </div>
               </fieldset>
 
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Space group number:</label>
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-space-group-number">Space group number:</label>
                 <input
-                  className="input-w32"
+                  id="quick-search-space-group-number"
+                  className={inputClass('sgQuery')}
                   placeholder="e.g. 62 or 60-70"
                   value={form.sgQuery}
                   onChange={(e) => setForm((p) => ({ ...p, sgQuery: e.target.value }))}
+                  aria-invalid={Boolean(validationErrors.sgQuery)}
+                  aria-describedby={validationErrors.sgQuery ? 'space-group-number-error' : undefined}
                 />
                 <div />
+                {validationErrors.sgQuery && (
+                  <p id="space-group-number-error" className="col-span-2 col-start-2 text-[10px] leading-tight text-red-700">
+                    {validationErrors.sgQuery}
+                  </p>
+                )}
               </div>
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Space group (H-M):</label>
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-space-group-hm">Space group (H-M):</label>
                 <input
+                  id="quick-search-space-group-hm"
                   className="input-w32"
                   placeholder="e.g. Pnma"
                   value={form.spaceGroupQuery}
@@ -342,9 +498,10 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 />
                 <div />
               </div>
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Reference:</label>
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-reference">Reference:</label>
                 <input
+                  id="quick-search-reference"
                   className="input-w32"
                   placeholder="journal / year / volume..."
                   value={form.referenceQuery}
@@ -352,9 +509,10 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 />
                 <div />
               </div>
-              <div className="grid grid-cols-[130px_1fr_auto] items-center gap-1.5">
-                <label>Level of struct. studies:</label>
+              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
+                <label htmlFor="quick-search-study-level">Level of struct. studies:</label>
                 <select
+                  id="quick-search-study-level"
                   className="input-w32"
                   value={form.level}
                   onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))}
@@ -368,8 +526,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
             </div>
           </div>
 
-          <div className="h-[80px] overflow-auto rounded-md border border-stroke bg-white">
-            <table className="w-full border-collapse text-xs">
+            <div className="h-[120px] overflow-auto rounded-md border border-stroke bg-white" aria-live="polite">
+              <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
                   <th className="w-44 border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left font-semibold">Field</th>
@@ -378,7 +536,32 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {restraints.length === 0 ? (
+                {!isValid ? (
+                  <tr>
+                    <td colSpan={3} className="px-2 py-1 text-red-700">
+                      Correct the invalid search values to preview matching entries.
+                    </td>
+                  </tr>
+                ) : restraintsStatus === 'loading' ? (
+                  <tr>
+                    <td colSpan={3} className="px-2 py-1 text-text-dim">
+                      Updating preview…
+                    </td>
+                  </tr>
+                ) : restraintsStatus === 'error' ? (
+                  <tr>
+                    <td colSpan={3} className="px-2 py-1 text-red-700">
+                      Could not update the preview.
+                      <button
+                        type="button"
+                        className="ml-2 font-semibold text-accent hover:underline"
+                        onClick={() => setRestraintsRetry((value) => value + 1)}
+                      >
+                        Retry
+                      </button>
+                    </td>
+                  </tr>
+                ) : restraints.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="px-2 py-1 text-gray-400">
                       No restraints defined
@@ -394,21 +577,23 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   ))
                 )}
               </tbody>
-            </table>
-          </div>
-
-          <div className="flex items-center justify-end gap-2">
-            <button className="btn-w32 btn-primary px-6" onClick={handleSearch}>
-              Search!
-            </button>
-            <button className="btn-w32" onClick={onClose}>
-              Cancel
-            </button>
-            <button className="btn-w32" onClick={clearAll}>
-              Clear all
-            </button>
+              </table>
+            </div>
           </div>
         </div>
+
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-stroke p-2.5">
+          <button type="submit" className="btn-w32 btn-primary px-6 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isValid}>
+            Search!
+          </button>
+          <button type="button" className="btn-w32" onClick={discardAndClose}>
+            Cancel
+          </button>
+          <button type="button" className="btn-w32" onClick={clearAll}>
+            Clear all
+          </button>
+        </div>
+        </form>
       </div>
     </div>
   );

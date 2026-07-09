@@ -17,7 +17,7 @@ body {
 
 @layer components {
   .input-w32 {
-    @apply w-full rounded-sm border border-stroke-strong border-b-[#8a8a8a] bg-white px-2 py-1 font-sans text-xs;
+    @apply min-w-0 w-full rounded-sm border border-stroke-strong border-b-[#8a8a8a] bg-white px-2 py-1 font-sans text-xs;
   }
   .input-w32:focus {
     @apply outline-none border-b-2 border-b-accent;

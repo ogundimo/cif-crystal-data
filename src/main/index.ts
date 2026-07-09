@@ -12,8 +12,8 @@ function createWindow(): void {
     title: 'CIF Crystal Data',
     width: 1200,
     height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    minWidth: 1100,
+    minHeight: 650,
     backgroundColor: '#f3f3f3',
     autoHideMenuBar: true,
     webPreferences: {
