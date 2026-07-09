@@ -389,9 +389,9 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
               <fieldset className="rounded-sm border border-stroke bg-[#fafafa] px-2 py-1.5">
                 <legend className="px-1.5 text-xs font-semibold text-accent">Cell lengths [nm]</legend>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <div className="flex min-w-[170px] flex-1 items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <label>a:</label>
-                    <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+                    <div className="grid grid-cols-[72px_auto_72px] items-center gap-1">
                       <input
                         className={inputClass('aMin')}
                         placeholder="min"
@@ -413,9 +413,9 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                       />
                     </div>
                   </div>
-                  <div className="flex min-w-[170px] flex-1 items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <label>b:</label>
-                    <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+                    <div className="grid grid-cols-[72px_auto_72px] items-center gap-1">
                       <input
                         className={inputClass('bMin')}
                         placeholder="min"
@@ -437,9 +437,9 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                       />
                     </div>
                   </div>
-                  <div className="flex min-w-[170px] flex-1 items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <label>c:</label>
-                    <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
+                    <div className="grid grid-cols-[72px_auto_72px] items-center gap-1">
                       <input
                         className={inputClass('cMin')}
                         placeholder="min"

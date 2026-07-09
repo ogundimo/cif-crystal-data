@@ -31,6 +31,8 @@ async function measure(window) {
       const axisRows = new Set(
         axisGroups.map((element) => Math.round(element.getBoundingClientRect().top))
       ).size;
+      const restraintsPanel = dialog.querySelector('[aria-live="polite"]');
+      const formColumn = fieldset.parentElement;
 
       return {
         found: true,
@@ -46,7 +48,11 @@ async function measure(window) {
           document.documentElement.scrollWidth > innerWidth ||
           document.documentElement.scrollHeight > innerHeight,
         outsideControlCount: outsideControls.length,
-        axisRows
+        axisRows,
+        restraintsHeight: restraintsPanel
+          ? Math.round(restraintsPanel.getBoundingClientRect().height)
+          : null,
+        formRowGap: formColumn ? getComputedStyle(formColumn).rowGap : null
       };
     })()
   `);
@@ -66,8 +72,12 @@ async function runScenario(window, scenario) {
   if (scenario.expectedAxisRows) {
     assert.equal(result.axisRows, scenario.expectedAxisRows, `${scenario.name}: unexpected cell-length wrapping`);
   }
+  assert.equal(result.restraintsHeight, 120, `${scenario.name}: restraints panel is not 120px tall`);
 
-  console.log(`✓ ${scenario.name} (${result.viewport.width}x${result.viewport.height}, zoom ${scenario.zoom})`);
+  console.log(
+    `✓ ${scenario.name} (${result.viewport.width}x${result.viewport.height}, zoom ${scenario.zoom},` +
+      ` restraints ${result.restraintsHeight}px, form row gap ${result.formRowGap})`
+  );
 }
 
 async function run() {
@@ -89,14 +99,14 @@ async function run() {
     width: 1100,
     height: 650,
     zoom: 1,
-    expectedAxisRows: 1
+    expectedAxisRows: 2
   });
   await runScenario(window, {
     name: 'default application viewport',
     width: 1200,
     height: 800,
     zoom: 1,
-    expectedAxisRows: 1
+    expectedAxisRows: 2
   });
   await runScenario(window, {
     name: 'narrow viewport wrapping',
