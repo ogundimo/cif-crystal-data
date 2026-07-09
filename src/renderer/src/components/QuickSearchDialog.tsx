@@ -530,9 +530,9 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
               <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="w-44 border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left font-semibold">Field</th>
-                  <th className="border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left font-semibold">Content</th>
-                  <th className="w-16 border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left font-semibold">Entries</th>
+                  <th className="w-44 border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left text-[11px] font-medium">Field</th>
+                  <th className="border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left text-[11px] font-medium">Content</th>
+                  <th className="w-16 border-b border-stroke-strong bg-[#f6f6f6] px-2 py-1 text-left text-[11px] font-medium">Entries</th>
                 </tr>
               </thead>
               <tbody>
@@ -570,9 +570,9 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                 ) : (
                   restraints.map((r, i) => (
                     <tr key={i}>
-                      <td className="border-b border-[#f0f0f0] px-2 py-1">{r.field}</td>
-                      <td className="border-b border-[#f0f0f0] px-2 py-1">{r.content}</td>
-                      <td className="border-b border-[#f0f0f0] px-2 py-1">{r.entries}</td>
+                      <td className="border-b border-[#f0f0f0] px-2 py-1 text-text-dim">{r.field}</td>
+                      <td className="border-b border-[#f0f0f0] px-2 py-1 text-text-dim">{r.content}</td>
+                      <td className="border-b border-[#f0f0f0] px-2 py-1 text-text-dim">{r.entries}</td>
                     </tr>
                   ))
                 )}
