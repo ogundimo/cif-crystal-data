@@ -252,11 +252,11 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
         >
         <div className="p-2.5">
           <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-[380px_minmax(0,1fr)] gap-3">
+            <div className="grid grid-cols-[418px_minmax(0,1fr)] items-start gap-3">
             <div className="min-w-0">
               <div
                 className="grid"
-                style={{ gridTemplateColumns: `repeat(${columns + 1}, 20px)`, gridAutoRows: '18px' }}
+                style={{ gridTemplateColumns: `repeat(${columns + 1}, 22px)`, gridAutoRows: '20px' }}
               >
                 {GROUP_LABELS.map((g, i) => (
                   <div
@@ -291,7 +291,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                     <button
                       key={el.symbol}
                       type="button"
-                      className={`relative -ml-px -mt-px flex select-none flex-col items-center justify-center border border-[#c9c9c9] text-[9px] font-bold leading-none hover:z-10 hover:outline hover:outline-2 hover:outline-accent ${
+                      className={`relative -ml-px -mt-px flex select-none flex-col items-center justify-center border border-gray-400 text-[11px] font-semibold leading-none hover:z-10 hover:outline hover:outline-2 hover:outline-accent ${
                         selected ? 'z-10 border-accent bg-accent text-white' : CATEGORY_CLASS[el.category]
                       }`}
                       style={{ gridColumn: el.col + 1, gridRow: el.row + 1 }}
@@ -300,8 +300,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                       aria-pressed={selected}
                     >
                       <span
-                        className={`absolute left-0.5 top-0 text-[6px] font-normal ${
-                          selected ? 'text-white' : 'text-[#3a3a3a]'
+                        className={`absolute right-[2px] top-[1px] text-[7px] font-normal ${
+                          selected ? 'text-white' : 'text-gray-500'
                         }`}
                       >
                         {el.z}
