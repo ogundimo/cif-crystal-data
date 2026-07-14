@@ -1,11 +1,27 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { initDb, getAllEntries, searchEntries, computeRestraints } from './db';
-import { importCifFolder } from './ingest';
 import type { SearchFilter } from '../shared/types';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+type DbModule = typeof import('./db');
+
+let dbReady: Promise<DbModule> | null = null;
+
+/**
+ * Load the native SQLite module only when the renderer first needs data.
+ * This lets Electron create and paint the application window before Windows
+ * performs any native-module loading/security scanning.
+ */
+function getDbModule(): Promise<DbModule> {
+  if (!dbReady) {
+    dbReady = import('./db').then((database) => {
+      database.initDb(app.getPath('userData'));
+      return database;
+    });
+  }
+  return dbReady;
+}
 
 function createWindow(): void {
   const win = new BrowserWindow({
@@ -31,13 +47,15 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  initDb(app.getPath('userData'));
+  ipcMain.handle('cif:getAllEntries', async () => (await getDbModule()).getAllEntries());
 
-  ipcMain.handle('cif:getAllEntries', () => getAllEntries());
+  ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>
+    (await getDbModule()).searchEntries(filter)
+  );
 
-  ipcMain.handle('cif:search', (_e, filter: SearchFilter) => searchEntries(filter));
-
-  ipcMain.handle('cif:restraints', (_e, filter: SearchFilter) => computeRestraints(filter));
+  ipcMain.handle('cif:restraints', async (_e, filter: SearchFilter) =>
+    (await getDbModule()).computeRestraints(filter)
+  );
 
   ipcMain.handle('cif:importCifFolder', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -45,7 +63,26 @@ app.whenReady().then(() => {
       properties: ['openDirectory']
     });
     if (result.canceled || result.filePaths.length === 0) return null;
+    await getDbModule();
+    const { importCifFolder } = await import('./ingest');
     return importCifFolder(result.filePaths[0]);
+  });
+
+  ipcMain.handle('cif:clearCifs', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const options = {
+      type: 'warning' as const,
+      title: 'Clear imported CIFs',
+      message: 'Clear all imported CIF data?',
+      detail: 'This removes every imported entry from the local database. Your original CIF files will not be deleted.',
+      buttons: ['Cancel', 'Clear CIFs'],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true
+    };
+    const result = win ? await dialog.showMessageBox(win, options) : await dialog.showMessageBox(options);
+    if (result.response !== 1) return { cleared: false, deletedCount: 0 };
+    return { cleared: true, deletedCount: (await getDbModule()).clearAllEntries() };
   });
 
   createWindow();

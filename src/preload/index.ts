@@ -5,7 +5,8 @@ const api: CifApi = {
   getAllEntries: () => ipcRenderer.invoke('cif:getAllEntries'),
   search: (filter: SearchFilter) => ipcRenderer.invoke('cif:search', filter),
   restraints: (filter: SearchFilter) => ipcRenderer.invoke('cif:restraints', filter),
-  importCifFolder: () => ipcRenderer.invoke('cif:importCifFolder')
+  importCifFolder: () => ipcRenderer.invoke('cif:importCifFolder'),
+  clearCifs: () => ipcRenderer.invoke('cif:clearCifs')
 };
 
 contextBridge.exposeInMainWorld('cifApi', api);

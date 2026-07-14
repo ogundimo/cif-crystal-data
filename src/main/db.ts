@@ -102,6 +102,11 @@ export function getAllEntries(): EntryRow[] {
   return getDb().prepare('SELECT * FROM entries ORDER BY id').all() as EntryRow[];
 }
 
+/** Delete all imported CIF data in one transaction. Cascades remove entry_elements rows. */
+export function clearAllEntries(database: Database.Database = getDb()): number {
+  return database.transaction(() => database.prepare('DELETE FROM entries').run().changes)();
+}
+
 function buildElementCondition(elements: string[]): { sql: string; params: string[] } {
   if (elements.length === 0) return { sql: '1=1', params: [] };
   const placeholders = elements.map(() => '?').join(',');

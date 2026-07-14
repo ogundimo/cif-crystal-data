@@ -14,6 +14,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onSearch: (filter: SearchFilter) => void;
+  resetSignal?: number;
 }
 
 interface FormState {
@@ -76,7 +77,7 @@ function toFilter(form: FormState): SearchFilter {
   };
 }
 
-export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
+export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [appliedForm, setAppliedForm] = useState<FormState>(emptyForm);
@@ -90,6 +91,15 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
     setForm(appliedForm);
     onClose();
   }, [appliedForm, onClose]);
+
+  useEffect(() => {
+    if (resetSignal === undefined) return;
+    setForm(emptyForm);
+    setAppliedForm(emptyForm);
+    setActiveSlot(1);
+    setRestraints([]);
+    setRestraintsStatus('idle');
+  }, [resetSignal]);
 
   useEffect(() => {
     if (!open) return;

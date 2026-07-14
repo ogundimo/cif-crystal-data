@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildWhereClause } from './db';
+import type Database from 'better-sqlite3';
+import { buildWhereClause, clearAllEntries } from './db';
 
 describe('periodic-table selection query', () => {
   it('resolves elements, groups, and periods within one textbox using OR', () => {
@@ -32,5 +33,24 @@ describe('periodic-table selection query', () => {
 
   it('retains legacy individual-element filtering', () => {
     expect(buildWhereClause({ slot1: ['Fe'], slot2: [], mode: 'AND' }).params).toEqual(['Fe']);
+  });
+
+  it('clears entries inside a transaction and reports the deleted count', () => {
+    const statements: string[] = [];
+    let transactionRan = false;
+    const database = {
+      transaction: (operation: () => number) => () => {
+        transactionRan = true;
+        return operation();
+      },
+      prepare: (sql: string) => {
+        statements.push(sql);
+        return { run: () => ({ changes: 3 }) };
+      }
+    } as unknown as Database.Database;
+
+    expect(clearAllEntries(database)).toBe(3);
+    expect(transactionRan).toBe(true);
+    expect(statements).toEqual(['DELETE FROM entries']);
   });
 });

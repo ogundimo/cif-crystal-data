@@ -7,7 +7,8 @@ window.cifApi = {
   getAllEntries: async () => [],
   search: async () => [],
   restraints: async () => [],
-  importCifFolder: async () => null
+  importCifFolder: async () => null,
+  clearCifs: async () => ({ cleared: false, deletedCount: 0 })
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

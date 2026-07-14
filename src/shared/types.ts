@@ -22,6 +22,11 @@ export interface ImportResult {
   total: number;
 }
 
+export interface ClearCifsResult {
+  cleared: boolean;
+  deletedCount: number;
+}
+
 export interface ElementGroup {
   elements: string[];
 }
@@ -68,6 +73,7 @@ export interface CifApi {
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;
   importCifFolder: () => Promise<ImportResult | null>;
+  clearCifs: () => Promise<ClearCifsResult>;
 }
 
 declare global {

@@ -29,6 +29,9 @@ function AppInner() {
   const [qsOpen, setQsOpen] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importing, setImporting] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [searchActive, setSearchActive] = useState(false);
+  const [searchResetSignal, setSearchResetSignal] = useState(0);
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
 
   const reload = useCallback(() => {
@@ -62,6 +65,29 @@ function AppInner() {
     }
   }
 
+  async function handleResetSearch() {
+    const allEntries = await window.cifApi.getAllEntries();
+    setEntries(allEntries);
+    setAnswerSetLabel(NO_CRITERIA_LABEL);
+    setSearchActive(false);
+    setSearchResetSignal((value) => value + 1);
+  }
+
+  async function handleClearCifs() {
+    setClearing(true);
+    try {
+      const result = await window.cifApi.clearCifs();
+      if (!result.cleared) return;
+      setEntries([]);
+      setImportResult(null);
+      setAnswerSetLabel(NO_CRITERIA_LABEL);
+      setSearchActive(false);
+      setSearchResetSignal((value) => value + 1);
+    } finally {
+      setClearing(false);
+    }
+  }
+
   async function handleSearch(filter: SearchFilter) {
     const hasCriteria =
       filter.slot1.length > 0 ||
@@ -85,6 +111,7 @@ function AppInner() {
     const results = await window.cifApi.search(filter);
     setEntries(results);
     setAnswerSetLabel(hasCriteria ? `A1 (${results.length} matching)` : NO_CRITERIA_LABEL);
+    setSearchActive(hasCriteria);
   }
 
   return (
@@ -93,8 +120,23 @@ function AppInner() {
         <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={() => setQsOpen(true)}>
           <span>&#128269;</span> Quick search
         </button>
-        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing}>
+        <button
+          className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
+          onClick={handleResetSearch}
+          disabled={!searchActive}
+        >
+          <span aria-hidden="true">↺</span> Reset search
+        </button>
+        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || clearing}>
           <span>&#128193;</span> {importing ? 'Importing...' : 'Import CIFs...'}
+        </button>
+        <button
+          className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
+          onClick={handleClearCifs}
+          disabled={importing || clearing}
+          title="Remove all imported entries from the local database"
+        >
+          <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
         </button>
         <div className="mx-1.5 h-6 w-px bg-stroke-strong" />
         <span className="text-text-dim">
@@ -110,7 +152,12 @@ function AppInner() {
         <div className="px-2 py-0.5">Ready</div>
       </div>
 
-      <QuickSearchDialog open={qsOpen} onClose={() => setQsOpen(false)} onSearch={handleSearch} />
+      <QuickSearchDialog
+        open={qsOpen}
+        onClose={() => setQsOpen(false)}
+        onSearch={handleSearch}
+        resetSignal={searchResetSignal}
+      />
       {importResult && <ImportResultsPanel result={importResult} onDismiss={() => setImportResult(null)} />}
     </div>
   );
