@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GROUP_LABELS, PERIOD_LABELS, PERIODIC_TABLE, CATEGORY_CLASS, isPeriodicGap } from '../periodicTable';
-import type { RestraintRow, SearchFilter } from '../../../shared/types';
+import type { ElementSelection, RestraintRow, SearchFilter } from '../../../shared/types';
 import { validateSearchInput, type SearchValidationField } from '../../../shared/searchValidation';
 import { scheduleDebouncedRequest } from '../debouncedRequest';
+import { PeriodicTablePicker, RangeInputRow, SearchFieldRow } from './QuickSearchParts';
 
 const LEVEL_FULL = 'Complete structure determined';
 const LEVEL_CELL = 'Cell parameters determined and structure type assigned';
@@ -18,7 +18,10 @@ interface Props {
 interface FormState {
   slot1: string[];
   slot2: string[];
+  slot3: string[];
+  slot4: string[];
   mode: 'AND' | 'OR';
+  elementSelection: ElementSelection;
   aMin: string;
   aMax: string;
   bMin: string;
@@ -35,7 +38,10 @@ interface FormState {
 const emptyForm: FormState = {
   slot1: [],
   slot2: [],
+  slot3: [],
+  slot4: [],
   mode: 'AND',
+  elementSelection: { elements: [], groups: [], periods: [] },
   aMin: '',
   aMax: '',
   bMin: '',
@@ -54,7 +60,10 @@ function toFilter(form: FormState): SearchFilter {
   return {
     slot1: form.slot1,
     slot2: form.slot2,
+    slot3: form.slot3,
+    slot4: form.slot4,
     mode: form.mode,
+    elementSelection: form.elementSelection,
     aMin: num(form.aMin),
     aMax: num(form.aMax),
     bMin: num(form.bMin),
@@ -151,41 +160,28 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
     };
   }, [discardAndClose, open]);
 
-  const columns = useMemo(() => {
-    const max = Math.max(...PERIODIC_TABLE.map((e) => e.col));
-    return max;
-  }, []);
-
-  const rows = useMemo(() => {
-    const max = Math.max(...PERIODIC_TABLE.map((e) => e.row));
-    return max;
-  }, []);
-
   if (!open) return null;
 
-  // Single source of truth for periodic-table cell highlighting: derived directly from the
-  // current slot state on every render. There is no separate toggled boolean/class to drift.
-  function slotOf(symbol: string): 1 | 2 | 0 {
+  function slotOf(symbol: string): 1 | 2 | 3 | 4 | 0 {
     if (form.slot1.includes(symbol)) return 1;
     if (form.slot2.includes(symbol)) return 2;
+    if (form.slot3.includes(symbol)) return 3;
+    if (form.slot4.includes(symbol)) return 4;
     return 0;
   }
 
   function toggleElement(symbol: string, ctrl: boolean) {
-    setForm((prev) => {
-      const inSlot1 = prev.slot1.includes(symbol);
-      const inSlot2 = prev.slot2.includes(symbol);
-      // Clicking an already-selected element always removes it from whichever slot holds it.
-      if (inSlot1) return { ...prev, slot1: prev.slot1.filter((s) => s !== symbol) };
-      if (inSlot2) return { ...prev, slot2: prev.slot2.filter((s) => s !== symbol) };
-      const target: 1 | 2 = ctrl || prev.slot1.length === 0 ? 1 : 2;
-      const key = target === 1 ? 'slot1' : 'slot2';
-      return { ...prev, [key]: [...prev[key], symbol] };
+    setForm((previous) => {
+      const keys = ['slot1', 'slot2', 'slot3', 'slot4'] as const;
+      const existingKey = keys.find((key) => previous[key].includes(symbol));
+      if (existingKey) return { ...previous, [existingKey]: previous[existingKey].filter((item) => item !== symbol) };
+      const key = ctrl ? 'slot1' : (keys.find((slotKey) => previous[slotKey].length === 0) ?? 'slot4');
+      return { ...previous, [key]: [...previous[key], symbol] };
     });
   }
 
-  function clearSlot(n: 1 | 2) {
-    setForm((prev) => ({ ...prev, [n === 1 ? 'slot1' : 'slot2']: [] }));
+  function clearSlot(slot: 1 | 2 | 3 | 4) {
+    setForm((previous) => ({ ...previous, [`slot${slot}`]: [] }));
   }
 
   function clearAll() {
@@ -213,7 +209,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 p-3 backdrop-blur-[1px]"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) discardAndClose();
       }}
@@ -224,14 +220,14 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
         aria-modal="true"
         aria-labelledby="quick-search-title"
         tabIndex={-1}
-        className="relative flex w-[900px] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-stroke-strong bg-mica shadow-2xl outline-none"
+        className="quick-search-dialog"
       >
-        <div className="flex shrink-0 items-center gap-2 border-b border-stroke py-1.5 pl-3 pr-11 text-sm font-semibold">
+        <div className="quick-search-titlebar">
           <span id="quick-search-title">Quick search</span>
         </div>
         <button
           type="button"
-          className="absolute right-0 top-0 flex h-8 w-11 items-center justify-center rounded-tr-lg text-sm hover:bg-[#e81123] hover:text-white"
+          className="quick-search-close"
           onClick={discardAndClose}
           aria-label="Close"
         >
@@ -250,125 +246,46 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
             }
           }}
         >
-        <div className="p-2.5">
+        <div className="quick-search-content">
           <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-[418px_minmax(0,1fr)] items-start gap-3">
-            <div className="min-w-0">
-              <div
-                className="grid"
-                style={{ gridTemplateColumns: `repeat(${columns + 1}, 22px)`, gridAutoRows: '20px' }}
-              >
-                {GROUP_LABELS.map((g, i) => (
-                  <div
-                    key={`g-${i}`}
-                    className="flex items-center justify-center text-[8px] font-semibold text-text-dim"
-                    style={{ gridColumn: i + 2, gridRow: 1 }}
-                  >
-                    {g}
-                  </div>
-                ))}
-                {Object.entries(PERIOD_LABELS).map(([row, label]) => (
-                  <div
-                    key={`p-${row}`}
-                    className="flex items-center justify-center text-[8px] font-semibold text-text-dim"
-                    style={{ gridColumn: 1, gridRow: Number(row) + 1 }}
-                  >
-                    {label}
-                  </div>
-                ))}
-                {Array.from({ length: rows }, (_, ri) => ri + 1).flatMap((r) =>
-                  Array.from({ length: columns }, (_, ci) => ci + 1).map((c) => {
-                    if (!isPeriodicGap(r, c)) return null;
-                    return (
-                      <div key={`gap-${r}-${c}`} style={{ gridColumn: c + 1, gridRow: r + 1 }} />
-                    );
-                  })
-                )}
-                {PERIODIC_TABLE.map((el) => {
-                  const slot = slotOf(el.symbol);
-                  const selected = slot !== 0;
-                  return (
-                    <button
-                      key={el.symbol}
-                      type="button"
-                      className={`relative -ml-px -mt-px flex select-none flex-col items-center justify-center border border-gray-400 text-[11px] font-semibold leading-none hover:z-10 hover:outline hover:outline-2 hover:outline-accent ${
-                        selected ? 'z-10 border-accent bg-accent text-white' : CATEGORY_CLASS[el.category]
-                      }`}
-                      style={{ gridColumn: el.col + 1, gridRow: el.row + 1 }}
-                      onClick={(e) => toggleElement(el.symbol, e.ctrlKey)}
-                      aria-label={`${el.symbol}, atomic number ${el.z}`}
-                      aria-pressed={selected}
-                    >
-                      <span
-                        className={`absolute right-[2px] top-[1px] text-[7px] font-normal ${
-                          selected ? 'text-white' : 'text-gray-500'
-                        }`}
-                      >
-                        {el.z}
-                      </span>
-                      {el.symbol}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-1 max-w-[440px] text-[9px] text-text-dim">
-                Use Ctrl key to select multiple elements to be combined with OR.
-              </div>
-            </div>
+            <div className="quick-search-main-grid">
+            <PeriodicTablePicker
+              selection={form.elementSelection}
+              onChange={(elementSelection) => setForm((previous) => ({ ...previous, elementSelection }))}
+              slotOf={slotOf}
+              onToggleElement={toggleElement}
+            />
 
-            <div className="flex min-w-0 flex-col gap-1">
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-elements-1">Element(s) 1:</label>
-                <input id="quick-search-elements-1" className="input-w32" readOnly value={form.slot1.join(' OR ')} placeholder="click elements..." />
-                <div className="flex gap-1 font-bold">
-                  <button
-                    type="button"
-                    className="rounded-sm px-1 text-red-500 hover:bg-[#e9e9e9] hover:text-red-600"
-                    onClick={() => clearSlot(1)}
-                    aria-label="Clear element group 1"
+            <div className="quick-search-fields">
+              <div className="quick-search-element-groups">
+                {([1, 3, 2, 4] as const).map((slot) => (
+                  <SearchFieldRow
+                    key={slot}
+                    label={slot <= 2 ? `Element(s) ${slot}:` : `${slot}:`}
+                    htmlFor={`quick-search-elements-${slot}`}
+                    action={<button type="button" className="quick-search-clear" onClick={() => clearSlot(slot)} aria-label={`Clear element group ${slot}`}>✕</button>}
                   >
-                    ✕
-                  </button>
-                </div>
+                    <input
+                      id={`quick-search-elements-${slot}`}
+                      className="input-w32"
+                      readOnly
+                      value={form[`slot${slot}`].join(' OR ')}
+                      placeholder={slot === 1 ? 'click elements...' : undefined}
+                    />
+                  </SearchFieldRow>
+                ))}
               </div>
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-elements-2">Element(s) 2:</label>
-                <input id="quick-search-elements-2" className="input-w32" readOnly value={form.slot2.join(' OR ')} />
-                <div className="flex gap-1 font-bold">
-                  <button
-                    type="button"
-                    className="rounded-sm px-1 text-red-500 hover:bg-[#e9e9e9] hover:text-red-600"
-                    onClick={() => clearSlot(2)}
-                    aria-label="Clear element group 2"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <span id="quick-search-combine-label">Combine elements:</span>
+              <SearchFieldRow label={<span id="quick-search-combine-label">Combine elements:</span>}>
                 <div className="flex items-center gap-1" role="group" aria-labelledby="quick-search-combine-label">
-                  <button
-                    type="button"
-                    className={`btn-w32 px-3 ${form.mode === 'AND' ? 'btn-on' : ''}`}
-                    onClick={() => setForm((p) => ({ ...p, mode: 'AND' }))}
-                    aria-pressed={form.mode === 'AND'}
-                  >
-                    AND
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn-w32 px-3 ${form.mode === 'OR' ? 'btn-on' : ''}`}
-                    onClick={() => setForm((p) => ({ ...p, mode: 'OR' }))}
-                    aria-pressed={form.mode === 'OR'}
-                  >
-                    OR
-                  </button>
+                  <button type="button" className={`btn-w32 px-3 ${form.mode === 'AND' ? 'btn-on' : ''}`} onClick={() => setForm((previous) => ({ ...previous, mode: 'AND' }))} aria-pressed={form.mode === 'AND'}>AND</button>
+                  <button type="button" className={`btn-w32 px-3 ${form.mode === 'OR' ? 'btn-on' : ''}`} onClick={() => setForm((previous) => ({ ...previous, mode: 'OR' }))} aria-pressed={form.mode === 'OR'}>OR</button>
                 </div>
-                <div />
-              </div>
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-element-count">Number of elements:</label>
+              </SearchFieldRow>
+              <SearchFieldRow
+                label="Number of elements:"
+                htmlFor="quick-search-element-count"
+                message={validationErrors.elementCountQuery && <span id="element-count-error">{validationErrors.elementCountQuery}</span>}
+              >
                 <input
                   id="quick-search-element-count"
                   className={inputClass('elementCountQuery')}
@@ -378,99 +295,39 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   aria-invalid={Boolean(validationErrors.elementCountQuery)}
                   aria-describedby={validationErrors.elementCountQuery ? 'element-count-error' : undefined}
                 />
-                <div />
-                {validationErrors.elementCountQuery && (
-                  <p id="element-count-error" className="col-span-2 col-start-2 text-[10px] leading-tight text-red-700">
-                    {validationErrors.elementCountQuery}
-                  </p>
-                )}
-              </div>
+              </SearchFieldRow>
 
-              <fieldset className="rounded-sm border border-stroke bg-[#fafafa] px-2 py-1.5">
-                <legend className="px-1.5 text-xs font-semibold text-accent">Cell lengths [nm]</legend>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <div className="flex items-center gap-2">
-                    <label>a:</label>
-                    <div className="grid grid-cols-[72px_auto_72px] items-center gap-1">
-                      <input
-                        className={inputClass('aMin')}
-                        placeholder="min"
-                        aria-label="Cell length a minimum"
-                        value={form.aMin}
-                        onChange={(e) => setForm((p) => ({ ...p, aMin: e.target.value }))}
-                        aria-invalid={Boolean(validationErrors.aMin)}
-                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
-                      />
-                      -
-                      <input
-                        className={inputClass('aMax')}
-                        placeholder="max"
-                        aria-label="Cell length a maximum"
-                        value={form.aMax}
-                        onChange={(e) => setForm((p) => ({ ...p, aMax: e.target.value }))}
-                        aria-invalid={Boolean(validationErrors.aMax)}
-                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label>b:</label>
-                    <div className="grid grid-cols-[72px_auto_72px] items-center gap-1">
-                      <input
-                        className={inputClass('bMin')}
-                        placeholder="min"
-                        aria-label="Cell length b minimum"
-                        value={form.bMin}
-                        onChange={(e) => setForm((p) => ({ ...p, bMin: e.target.value }))}
-                        aria-invalid={Boolean(validationErrors.bMin)}
-                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
-                      />
-                      -
-                      <input
-                        className={inputClass('bMax')}
-                        placeholder="max"
-                        aria-label="Cell length b maximum"
-                        value={form.bMax}
-                        onChange={(e) => setForm((p) => ({ ...p, bMax: e.target.value }))}
-                        aria-invalid={Boolean(validationErrors.bMax)}
-                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <label>c:</label>
-                    <div className="grid grid-cols-[72px_auto_72px] items-center gap-1">
-                      <input
-                        className={inputClass('cMin')}
-                        placeholder="min"
-                        aria-label="Cell length c minimum"
-                        value={form.cMin}
-                        onChange={(e) => setForm((p) => ({ ...p, cMin: e.target.value }))}
-                        aria-invalid={Boolean(validationErrors.cMin)}
-                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
-                      />
-                      -
-                      <input
-                        className={inputClass('cMax')}
-                        placeholder="max"
-                        aria-label="Cell length c maximum"
-                        value={form.cMax}
-                        onChange={(e) => setForm((p) => ({ ...p, cMax: e.target.value }))}
-                        aria-invalid={Boolean(validationErrors.cMax)}
-                        aria-describedby={cellLengthError ? 'cell-length-error' : undefined}
-                      />
-                    </div>
-                  </div>
+              <fieldset className="quick-search-range-group">
+                <legend>Cell lengths [nm]</legend>
+                <div className="quick-search-ranges">
+                  {(['a', 'b', 'c'] as const).map((axis) => (
+                    <RangeInputRow
+                      key={axis}
+                      axis={axis}
+                      min={form[`${axis}Min`]}
+                      max={form[`${axis}Max`]}
+                      inputClass={inputClass}
+                      onChange={(bound, value) =>
+                        setForm((previous) => ({ ...previous, [`${axis}${bound === 'min' ? 'Min' : 'Max'}`]: value }))
+                      }
+                      invalidMin={Boolean(validationErrors[`${axis}Min`])}
+                      invalidMax={Boolean(validationErrors[`${axis}Max`])}
+                      describedBy={cellLengthError ? 'cell-length-error' : undefined}
+                    />
+                  ))}
                   {cellLengthError && (
-                    <p id="cell-length-error" className="basis-full text-[10px] leading-tight text-red-700">
+                    <p id="cell-length-error" className="quick-search-range-error">
                       {cellLengthError}
                     </p>
                   )}
                 </div>
               </fieldset>
 
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-space-group-number">Space group number:</label>
+              <SearchFieldRow
+                label="Space group number:"
+                htmlFor="quick-search-space-group-number"
+                message={validationErrors.sgQuery && <span id="space-group-number-error">{validationErrors.sgQuery}</span>}
+              >
                 <input
                   id="quick-search-space-group-number"
                   className={inputClass('sgQuery')}
@@ -480,15 +337,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   aria-invalid={Boolean(validationErrors.sgQuery)}
                   aria-describedby={validationErrors.sgQuery ? 'space-group-number-error' : undefined}
                 />
-                <div />
-                {validationErrors.sgQuery && (
-                  <p id="space-group-number-error" className="col-span-2 col-start-2 text-[10px] leading-tight text-red-700">
-                    {validationErrors.sgQuery}
-                  </p>
-                )}
-              </div>
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-space-group-hm">Space group (H-M):</label>
+              </SearchFieldRow>
+              <SearchFieldRow label="Space group (H-M):" htmlFor="quick-search-space-group-hm">
                 <input
                   id="quick-search-space-group-hm"
                   className="input-w32"
@@ -496,10 +346,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   value={form.spaceGroupQuery}
                   onChange={(e) => setForm((p) => ({ ...p, spaceGroupQuery: e.target.value }))}
                 />
-                <div />
-              </div>
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-reference">Reference:</label>
+              </SearchFieldRow>
+              <SearchFieldRow label="Reference:" htmlFor="quick-search-reference">
                 <input
                   id="quick-search-reference"
                   className="input-w32"
@@ -507,10 +355,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   value={form.referenceQuery}
                   onChange={(e) => setForm((p) => ({ ...p, referenceQuery: e.target.value }))}
                 />
-                <div />
-              </div>
-              <div className="grid grid-cols-[130px_minmax(0,1fr)_20px] items-center gap-1.5">
-                <label htmlFor="quick-search-study-level">Level of struct. studies:</label>
+              </SearchFieldRow>
+              <SearchFieldRow label="Level of struct. studies:" htmlFor="quick-search-study-level">
                 <select
                   id="quick-search-study-level"
                   className="input-w32"
@@ -521,12 +367,11 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
                   <option value={LEVEL_FULL}>{LEVEL_FULL}</option>
                   <option value={LEVEL_CELL}>{LEVEL_CELL}</option>
                 </select>
-                <div />
-              </div>
+              </SearchFieldRow>
             </div>
           </div>
 
-            <div className="h-[120px] overflow-auto rounded-sm border border-stroke bg-white" aria-live="polite">
+            <div className="quick-search-preview" aria-live="polite">
               <table className="w-full border-collapse text-xs">
               <thead>
                 <tr>
@@ -582,8 +427,8 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-stroke p-2.5">
-          <button type="submit" className="btn-w32 btn-primary px-6 disabled:cursor-not-allowed disabled:opacity-50" disabled={!isValid}>
+        <div className="quick-search-footer">
+          <button type="submit" className="btn-w32 btn-primary min-w-[74px] disabled:cursor-not-allowed disabled:opacity-50" disabled={!isValid}>
             Search!
           </button>
           <button type="button" className="btn-w32" onClick={discardAndClose}>

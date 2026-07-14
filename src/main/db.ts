@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import type { CifEntry } from '../parser/cifParser';
 import type { EntryRow, RestraintRow, SearchFilter } from '../shared/types';
+import { resolveElementSelection } from '../shared/periodicTableData';
 
 let db: Database.Database | null = null;
 
@@ -144,25 +145,25 @@ function parseElementCountQuery(query: string | undefined): { sql: string; param
   return { sql: '1=1', params: [] };
 }
 
-function buildWhereClause(filter: SearchFilter): { sql: string; params: (string | number)[] } {
+export function buildWhereClause(filter: SearchFilter): { sql: string; params: (string | number)[] } {
   const clauses: string[] = [];
   const params: (string | number)[] = [];
 
-  const slot1 = filter.slot1 ?? [];
-  const slot2 = filter.slot2 ?? [];
-  if (slot1.length > 0 || slot2.length > 0) {
+  const resolvedSelection = filter.elementSelection ? resolveElementSelection(filter.elementSelection) : [];
+  // Group and period choices extend element box 1, whose contents already use OR semantics.
+  // Boxes 2-4 retain the existing AND/OR combination behavior.
+  const firstElementGroup = [...new Set([...(filter.slot1 ?? []), ...resolvedSelection])];
+  const elementGroups = [firstElementGroup, filter.slot2 ?? [], filter.slot3 ?? [], filter.slot4 ?? []].filter(
+    (group) => group.length > 0
+  );
+  if (elementGroups.length > 0) {
     const groupClauses: string[] = [];
-    if (slot1.length > 0) {
-      const c = buildElementCondition(slot1);
+    for (const group of elementGroups) {
+      const c = buildElementCondition(group);
       groupClauses.push(c.sql);
       params.push(...c.params);
     }
-    if (slot2.length > 0) {
-      const c = buildElementCondition(slot2);
-      groupClauses.push(c.sql);
-      params.push(...c.params);
-    }
-    if (groupClauses.length === 2) {
+    if (groupClauses.length > 1) {
       const joiner = filter.mode === 'OR' ? ' OR ' : ' AND ';
       clauses.push(`(${groupClauses.join(joiner)})`);
     } else {
@@ -246,11 +247,14 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
 
   const slot1 = filter.slot1 ?? [];
   const slot2 = filter.slot2 ?? [];
-  if (slot1.length || slot2.length) {
-    const content = slot2.length
-      ? `(${slot1.join(' OR ')}) ${filter.mode} (${slot2.join(' OR ')})`
-      : slot1.join(' OR ');
-    const n = countForFilter({ slot1, slot2, mode: filter.mode });
+  const slot3 = filter.slot3 ?? [];
+  const slot4 = filter.slot4 ?? [];
+  const resolved = filter.elementSelection ? resolveElementSelection(filter.elementSelection) : [];
+  const firstElementGroup = [...new Set([...slot1, ...resolved])];
+  const elementGroups = [firstElementGroup, slot2, slot3, slot4].filter((group) => group.length > 0);
+  if (elementGroups.length) {
+    const content = elementGroups.map((group) => `(${group.join(' OR ')})`).join(` ${filter.mode} `);
+    const n = countForFilter({ slot1, slot2, slot3, slot4, mode: filter.mode, elementSelection: filter.elementSelection });
     rows.push({ field: 'Elements', content, entries: n });
   }
 

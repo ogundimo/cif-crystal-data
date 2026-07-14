@@ -26,10 +26,19 @@ export interface ElementGroup {
   elements: string[];
 }
 
+export interface ElementSelection {
+  elements: string[];
+  groups: number[];
+  periods: number[];
+}
+
 export interface SearchFilter {
   slot1: string[];
   slot2: string[];
+  slot3?: string[];
+  slot4?: string[];
   mode: 'AND' | 'OR';
+  elementSelection?: ElementSelection;
   aMin?: number;
   aMax?: number;
   bMin?: number;
