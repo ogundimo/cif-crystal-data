@@ -1,0 +1,150 @@
+name: Release Windows application
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag to build and release (for example, v1.0.0)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Test, package, and publish
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Validate tag and package version
+        id: release
+        shell: pwsh
+        run: |
+          $tag = if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            '${{ inputs.tag }}'
+          } else {
+            '${{ github.ref_name }}'
+          }
+
+          if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$') {
+            throw "Release tag '$tag' must use semantic version syntax such as v1.2.3 or v1.2.3-beta.1."
+          }
+
+          git show-ref --verify --quiet "refs/tags/$tag"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Tag '$tag' does not exist. Create and push the tag before running this workflow."
+          }
+
+          $tagCommit = (git rev-list -n 1 $tag).Trim()
+          $headCommit = (git rev-parse HEAD).Trim()
+          if ($tagCommit -ne $headCommit) {
+            throw "Checked-out commit $headCommit does not match tag '$tag' at $tagCommit."
+          }
+
+          $packageVersion = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($packageVersion -ne $Matches.version) {
+            throw "Tag version '$($Matches.version)' does not match package.json version '$packageVersion'."
+          }
+          $lockVersion = (Get-Content package-lock.json -Raw | ConvertFrom-Json).version
+          if ($lockVersion -ne $packageVersion) {
+            throw "package-lock.json version '$lockVersion' does not match package.json version '$packageVersion'."
+          }
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$packageVersion" >> $env:GITHUB_OUTPUT
+          "prerelease=$($packageVersion.Contains('-').ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run complete test suite
+        run: npm run test:all
+
+      - name: Package Windows installers
+        run: npm run package -- --publish never
+
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          $installers = @(Get-ChildItem release -File -Filter '*.exe' | Sort-Object Name)
+          if ($installers.Count -lt 2) {
+            throw "Expected both NSIS and portable executables, but found $($installers.Count)."
+          }
+
+          $checksums = $installers | ForEach-Object {
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          }
+          $checksums | Set-Content release/SHA256SUMS.txt -Encoding utf8
+          Get-Content release/SHA256SUMS.txt
+
+      - name: Retain packaged assets
+        uses: actions/upload-artifact@v6
+        with:
+          name: cif-crystal-data-${{ steps.release.outputs.version }}-windows
+          path: |
+            release/*.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}
+        run: |
+          $assets = @(
+            Get-ChildItem release -File |
+              Where-Object { $_.Extension -eq '.exe' -or $_.Name -eq 'SHA256SUMS.txt' } |
+              Sort-Object Name |
+              ForEach-Object { $_.FullName }
+          )
+          if ($assets.Count -lt 3) {
+            throw "Release asset list is incomplete: $($assets -join ', ')"
+          }
+
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:RELEASE_TAG @assets --clobber --repo $env:GITHUB_REPOSITORY
+          } else {
+            $arguments = @(
+              'release', 'create', $env:RELEASE_TAG
+            ) + $assets + @(
+              '--repo', $env:GITHUB_REPOSITORY,
+              '--verify-tag',
+              '--generate-notes',
+              '--title', "CIF Crystal Data $env:RELEASE_VERSION"
+            )
+            if ($env:IS_PRERELEASE -eq 'true') {
+              $arguments += '--prerelease'
+            }
+            gh @arguments
+          }
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub Release publishing failed with exit code $LASTEXITCODE."
+          }

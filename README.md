@@ -38,3 +38,29 @@ installer and a portable executable, targeting Windows x64.
 better-sqlite3 is a native Node addon and must be built against Electron's ABI, not the
 system Node's. This is handled by `electron-rebuild` (via `postinstall`) for dev mode, and by
 `electron-builder`'s built-in native dependency rebuild step when packaging.
+
+## Publishing a GitHub release
+
+The `Release Windows application` GitHub Actions workflow publishes the NSIS installer,
+portable executable, and a `SHA256SUMS.txt` file. It runs the complete test suite before
+packaging and retains the same files as a workflow artifact for 14 days.
+
+To publish a release:
+
+1. Update `version` in `package.json` and `package-lock.json`, then commit the change.
+2. Create a matching semantic-version tag, such as `v1.1.0`:
+
+   ```powershell
+   git tag v1.1.0
+   git push origin main v1.1.0
+   ```
+
+3. The tag push starts the release workflow. GitHub generates the release notes and attaches
+   both Windows executables and their checksums.
+
+The workflow can also be run manually from the Actions tab for an existing tag. Manual runs
+do not create tags, and the workflow fails if the tag version differs from `package.json`.
+Tags containing a prerelease suffix, such as `v1.2.0-beta.1`, create GitHub prereleases.
+
+The generated Windows executables are currently unsigned, so Windows SmartScreen may warn
+users until a code-signing certificate is configured for `electron-builder`.
