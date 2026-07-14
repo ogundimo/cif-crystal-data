@@ -34,3 +34,24 @@ export function resolveElementSelection(selection: ElementSelection): string[] {
   selection.periods.forEach((period) => PERIOD_TO_ELEMENTS[period]?.forEach((symbol) => resolved.add(symbol)));
   return ELEMENT_SYMBOLS.filter((symbol) => resolved.has(symbol));
 }
+
+export function createEmptyElementSelection(): ElementSelection {
+  return { elements: [], groups: [], periods: [] };
+}
+
+export function formatElementSelection(selection: ElementSelection): string {
+  return [
+    ...selection.elements,
+    ...selection.groups.map((group) => `Group ${group}`),
+    ...selection.periods.map((period) => `Period ${period}`)
+  ].join(' OR ');
+}
+
+export function toggleElementCriterion(selection: ElementSelection, symbol: string): ElementSelection {
+  return {
+    ...selection,
+    elements: selection.elements.includes(symbol)
+      ? selection.elements.filter((element) => element !== symbol)
+      : [...selection.elements, symbol]
+  };
+}

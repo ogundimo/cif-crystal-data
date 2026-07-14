@@ -145,17 +145,22 @@ function parseElementCountQuery(query: string | undefined): { sql: string; param
   return { sql: '1=1', params: [] };
 }
 
+function resolveFilterElementGroups(filter: SearchFilter): string[][] {
+  if (filter.elementSelections) {
+    return filter.elementSelections.map(resolveElementSelection).filter((group) => group.length > 0);
+  }
+
+  const legacyResolved = filter.elementSelection ? resolveElementSelection(filter.elementSelection) : [];
+  const firstElementGroup = [...new Set([...(filter.slot1 ?? []), ...legacyResolved])];
+  return [firstElementGroup, filter.slot2 ?? [], filter.slot3 ?? [], filter.slot4 ?? []]
+    .filter((group) => group.length > 0);
+}
+
 export function buildWhereClause(filter: SearchFilter): { sql: string; params: (string | number)[] } {
   const clauses: string[] = [];
   const params: (string | number)[] = [];
 
-  const resolvedSelection = filter.elementSelection ? resolveElementSelection(filter.elementSelection) : [];
-  // Group and period choices extend element box 1, whose contents already use OR semantics.
-  // Boxes 2-4 retain the existing AND/OR combination behavior.
-  const firstElementGroup = [...new Set([...(filter.slot1 ?? []), ...resolvedSelection])];
-  const elementGroups = [firstElementGroup, filter.slot2 ?? [], filter.slot3 ?? [], filter.slot4 ?? []].filter(
-    (group) => group.length > 0
-  );
+  const elementGroups = resolveFilterElementGroups(filter);
   if (elementGroups.length > 0) {
     const groupClauses: string[] = [];
     for (const group of elementGroups) {
@@ -249,12 +254,18 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
   const slot2 = filter.slot2 ?? [];
   const slot3 = filter.slot3 ?? [];
   const slot4 = filter.slot4 ?? [];
-  const resolved = filter.elementSelection ? resolveElementSelection(filter.elementSelection) : [];
-  const firstElementGroup = [...new Set([...slot1, ...resolved])];
-  const elementGroups = [firstElementGroup, slot2, slot3, slot4].filter((group) => group.length > 0);
+  const elementGroups = resolveFilterElementGroups(filter);
   if (elementGroups.length) {
     const content = elementGroups.map((group) => `(${group.join(' OR ')})`).join(` ${filter.mode} `);
-    const n = countForFilter({ slot1, slot2, slot3, slot4, mode: filter.mode, elementSelection: filter.elementSelection });
+    const n = countForFilter({
+      slot1,
+      slot2,
+      slot3,
+      slot4,
+      mode: filter.mode,
+      elementSelections: filter.elementSelections,
+      elementSelection: filter.elementSelection
+    });
     rows.push({ field: 'Elements', content, entries: n });
   }
 

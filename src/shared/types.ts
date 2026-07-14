@@ -32,12 +32,17 @@ export interface ElementSelection {
   periods: number[];
 }
 
+export type ElementSelections = [ElementSelection, ElementSelection, ElementSelection, ElementSelection];
+
 export interface SearchFilter {
   slot1: string[];
   slot2: string[];
   slot3?: string[];
   slot4?: string[];
   mode: 'AND' | 'OR';
+  /** Per-textbox criteria used by the active-field periodic-table workflow. */
+  elementSelections?: ElementSelection[];
+  /** Legacy global criteria retained for compatibility with older saved filters. */
   elementSelection?: ElementSelection;
   aMin?: number;
   aMax?: number;

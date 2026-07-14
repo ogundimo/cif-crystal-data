@@ -39,7 +39,7 @@ body {
   }
 
   .quick-search-dialog {
-    @apply relative flex max-h-[calc(100vh-1.5rem)] w-[970px] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-[6px] border border-[#b7b7b7] bg-[#f2f2f2] text-[12px] shadow-2xl outline-none;
+    @apply relative flex max-h-[calc(100vh-1.5rem)] w-[1070px] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-[6px] border border-[#b7b7b7] bg-[#f2f2f2] text-[12px] shadow-2xl outline-none;
     font-family: 'Segoe UI', Tahoma, sans-serif;
   }
   .quick-search-dialog .btn-w32 {
@@ -71,8 +71,11 @@ body {
   .quick-search-fields {
     @apply flex min-w-0 flex-col gap-1;
   }
+  .quick-search-elements-heading {
+    @apply -mb-0.5 text-[11px] font-semibold text-[#444];
+  }
   .quick-search-element-groups {
-    @apply grid grid-cols-2 gap-x-2 gap-y-1;
+    @apply grid grid-cols-2 gap-x-2 gap-y-0.5;
     grid-template-areas:
       'one three'
       'two four';
@@ -82,7 +85,10 @@ body {
   .quick-search-element-groups > :nth-child(3) { grid-area: two; }
   .quick-search-element-groups > :nth-child(4) { grid-area: four; }
   .quick-search-element-groups .quick-search-field-row {
-    @apply grid-cols-[76px_minmax(0,1fr)_20px];
+    @apply grid-cols-[18px_minmax(0,1fr)_20px];
+  }
+  .quick-search-element-field-active {
+    @apply border-accent ring-1 ring-inset ring-accent/40;
   }
   .quick-search-field-row {
     @apply grid grid-cols-[128px_minmax(0,1fr)_20px] items-center gap-x-1.5 gap-y-0.5;
@@ -216,7 +222,7 @@ body {
     grid-template-areas: 'one' 'two' 'three' 'four';
   }
   .quick-search-element-groups .quick-search-field-row {
-    grid-template-columns: 76px minmax(0, 1fr) 20px;
+    grid-template-columns: 18px minmax(0, 1fr) 20px;
   }
   .quick-search-element-groups .quick-search-field-row > label {
     grid-column: auto;

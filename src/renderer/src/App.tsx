@@ -66,6 +66,7 @@ function AppInner() {
     const hasCriteria =
       filter.slot1.length > 0 ||
       filter.slot2.length > 0 ||
+      Boolean(filter.elementSelections?.some((selection) => selection.elements.length || selection.groups.length || selection.periods.length)) ||
       Boolean(filter.elementSelection && (filter.elementSelection.elements.length || filter.elementSelection.groups.length || filter.elementSelection.periods.length)) ||
       (filter.slot3?.length ?? 0) > 0 ||
       (filter.slot4?.length ?? 0) > 0 ||

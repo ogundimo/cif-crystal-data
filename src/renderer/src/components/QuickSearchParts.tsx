@@ -147,7 +147,7 @@ export function PeriodicTablePicker({ selection, onChange, slotOf, onToggleEleme
           </div>
           <div className="quick-search-resolved-elements"><span>Group/period elements:</span> {resolved.join(', ') || 'None'}</div>
         </div>
-        <p className="quick-search-periodic-help">Top buttons select groups; left buttons select periods. All selections are combined with OR.</p>
+        <p className="quick-search-periodic-help">Selections are added to the active element box. Top buttons select groups; left buttons select periods.</p>
       </div>
     </div>
   );

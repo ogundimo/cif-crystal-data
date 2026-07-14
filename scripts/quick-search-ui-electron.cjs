@@ -33,9 +33,16 @@ async function measure(window) {
       ).size;
       const restraintsPanel = dialog.querySelector('[aria-live="polite"]');
       const formColumn = fieldset.parentElement;
+      const elementBox1 = dialog.querySelector('#quick-search-elements-1')?.getBoundingClientRect();
+      const elementBox3 = dialog.querySelector('#quick-search-elements-3')?.getBoundingClientRect();
+      const elementBox4 = dialog.querySelector('#quick-search-elements-4')?.getBoundingClientRect();
+      const elementLabel3 = dialog.querySelector('label[for="quick-search-elements-3"]')?.getBoundingClientRect();
 
       return {
         found: true,
+        elementBoxVerticalGap: elementBox3 && elementBox4 ? Math.round(elementBox4.top - elementBox3.bottom) : null,
+        elementBoxWidthDifference: elementBox1 && elementBox3 ? Math.round(Math.abs(elementBox1.width - elementBox3.width)) : null,
+        shortElementLabelGap: elementBox3 && elementLabel3 ? Math.round(elementBox3.left - elementLabel3.right) : null,
         viewport: { width: innerWidth, height: innerHeight },
         dialogInsideViewport:
           dialogRect.left >= 0 &&
@@ -69,6 +76,9 @@ async function runScenario(window, scenario) {
   assert.equal(result.dialogScrollable, false, `${scenario.name}: dialog became scrollable`);
   assert.equal(result.pageScrollable, false, `${scenario.name}: page became scrollable`);
   assert.equal(result.outsideControlCount, 0, `${scenario.name}: controls left the dialog`);
+  assert.equal(result.elementBoxVerticalGap, 2, `${scenario.name}: element boxes 3 and 4 have uneven spacing`);
+  assert.equal(result.elementBoxWidthDifference, 0, `${scenario.name}: element boxes have unequal widths`);
+  assert.equal(result.shortElementLabelGap, 6, `${scenario.name}: short element labels have excessive horizontal spacing`);
   if (scenario.expectedAxisRows) {
     assert.equal(result.axisRows, scenario.expectedAxisRows, `${scenario.name}: unexpected cell-length wrapping`);
   }
@@ -78,6 +88,35 @@ async function runScenario(window, scenario) {
     `✓ ${scenario.name} (${result.viewport.width}x${result.viewport.height}, zoom ${scenario.zoom},` +
       ` restraints ${result.restraintsHeight}px, form row gap ${result.formRowGap})`
   );
+}
+
+async function testActiveElementBoxFlow(window) {
+  await window.webContents.executeJavaScript(`
+    (() => {
+      document.querySelector('#quick-search-elements-3').click();
+    })()
+  `);
+  await pause(50);
+  await window.webContents.executeJavaScript(`
+    (() => {
+      document.querySelector('[aria-label="Group 16"]').click();
+      document.querySelector('[aria-label^="Fe, atomic number"]').click();
+    })()
+  `);
+  await pause(50);
+  const result = await window.webContents.executeJavaScript(`
+    (() => ({
+      box1: document.querySelector('#quick-search-elements-1').value,
+      box3: document.querySelector('#quick-search-elements-3').value,
+      box3Active: document.querySelector('#quick-search-elements-3').getAttribute('aria-current'),
+      group16Pressed: document.querySelector('[aria-label="Group 16"]').getAttribute('aria-pressed')
+    }))()
+  `);
+  assert.equal(result.box1, '', 'active-box flow unexpectedly changed element box 1');
+  assert.equal(result.box3, 'Fe OR Group 16', 'periodic-table selections did not target element box 3');
+  assert.equal(result.box3Active, 'true', 'element box 3 did not remain active');
+  assert.equal(result.group16Pressed, 'true', 'active box did not retain its group selection');
+  console.log('✓ active element-box selection flow');
 }
 
 async function run() {
@@ -122,6 +161,7 @@ async function run() {
     zoom: 1.25,
     expectedAxisRows: 2
   });
+  await testActiveElementBoxFlow(window);
 
   window.destroy();
 }

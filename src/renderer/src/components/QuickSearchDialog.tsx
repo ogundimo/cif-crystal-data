@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ElementSelection, RestraintRow, SearchFilter } from '../../../shared/types';
+import type { ElementSelection, ElementSelections, RestraintRow, SearchFilter } from '../../../shared/types';
+import { createEmptyElementSelection, formatElementSelection, toggleElementCriterion } from '../../../shared/periodicTableData';
 import { validateSearchInput, type SearchValidationField } from '../../../shared/searchValidation';
 import { scheduleDebouncedRequest } from '../debouncedRequest';
 import { PeriodicTablePicker, RangeInputRow, SearchFieldRow } from './QuickSearchParts';
@@ -16,12 +17,8 @@ interface Props {
 }
 
 interface FormState {
-  slot1: string[];
-  slot2: string[];
-  slot3: string[];
-  slot4: string[];
+  elementSelections: ElementSelections;
   mode: 'AND' | 'OR';
-  elementSelection: ElementSelection;
   aMin: string;
   aMax: string;
   bMin: string;
@@ -36,12 +33,13 @@ interface FormState {
 }
 
 const emptyForm: FormState = {
-  slot1: [],
-  slot2: [],
-  slot3: [],
-  slot4: [],
+  elementSelections: [
+    createEmptyElementSelection(),
+    createEmptyElementSelection(),
+    createEmptyElementSelection(),
+    createEmptyElementSelection()
+  ],
   mode: 'AND',
-  elementSelection: { elements: [], groups: [], periods: [] },
   aMin: '',
   aMax: '',
   bMin: '',
@@ -58,12 +56,12 @@ const emptyForm: FormState = {
 function toFilter(form: FormState): SearchFilter {
   const num = (s: string): number | undefined => (s.trim() === '' ? undefined : Number(s));
   return {
-    slot1: form.slot1,
-    slot2: form.slot2,
-    slot3: form.slot3,
-    slot4: form.slot4,
+    slot1: form.elementSelections[0].elements,
+    slot2: form.elementSelections[1].elements,
+    slot3: form.elementSelections[2].elements,
+    slot4: form.elementSelections[3].elements,
     mode: form.mode,
-    elementSelection: form.elementSelection,
+    elementSelections: form.elementSelections,
     aMin: num(form.aMin),
     aMax: num(form.aMax),
     bMin: num(form.bMin),
@@ -82,6 +80,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [appliedForm, setAppliedForm] = useState<FormState>(emptyForm);
+  const [activeSlot, setActiveSlot] = useState<1 | 2 | 3 | 4>(1);
   const [restraints, setRestraints] = useState<RestraintRow[]>([]);
   const [restraintsStatus, setRestraintsStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [restraintsRetry, setRestraintsRetry] = useState(0);
@@ -163,29 +162,29 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
   if (!open) return null;
 
   function slotOf(symbol: string): 1 | 2 | 3 | 4 | 0 {
-    if (form.slot1.includes(symbol)) return 1;
-    if (form.slot2.includes(symbol)) return 2;
-    if (form.slot3.includes(symbol)) return 3;
-    if (form.slot4.includes(symbol)) return 4;
-    return 0;
+    return form.elementSelections[activeSlot - 1].elements.includes(symbol) ? activeSlot : 0;
   }
 
-  function toggleElement(symbol: string, ctrl: boolean) {
+  function updateSelection(slot: 1 | 2 | 3 | 4, update: (selection: ElementSelection) => ElementSelection) {
     setForm((previous) => {
-      const keys = ['slot1', 'slot2', 'slot3', 'slot4'] as const;
-      const existingKey = keys.find((key) => previous[key].includes(symbol));
-      if (existingKey) return { ...previous, [existingKey]: previous[existingKey].filter((item) => item !== symbol) };
-      const key = ctrl ? 'slot1' : (keys.find((slotKey) => previous[slotKey].length === 0) ?? 'slot4');
-      return { ...previous, [key]: [...previous[key], symbol] };
+      const elementSelections = [...previous.elementSelections] as ElementSelections;
+      elementSelections[slot - 1] = update(elementSelections[slot - 1]);
+      return { ...previous, elementSelections };
     });
   }
 
+  function toggleElement(symbol: string) {
+    updateSelection(activeSlot, (selection) => toggleElementCriterion(selection, symbol));
+  }
+
   function clearSlot(slot: 1 | 2 | 3 | 4) {
-    setForm((previous) => ({ ...previous, [`slot${slot}`]: [] }));
+    setActiveSlot(slot);
+    updateSelection(slot, createEmptyElementSelection);
   }
 
   function clearAll() {
     setForm(emptyForm);
+    setActiveSlot(1);
   }
 
   function handleSearch() {
@@ -250,27 +249,32 @@ export default function QuickSearchDialog({ open, onClose, onSearch }: Props) {
           <div className="flex flex-col gap-2">
             <div className="quick-search-main-grid">
             <PeriodicTablePicker
-              selection={form.elementSelection}
-              onChange={(elementSelection) => setForm((previous) => ({ ...previous, elementSelection }))}
+              selection={form.elementSelections[activeSlot - 1]}
+              onChange={(selection) => updateSelection(activeSlot, () => selection)}
               slotOf={slotOf}
               onToggleElement={toggleElement}
             />
 
             <div className="quick-search-fields">
+              <span className="quick-search-elements-heading">Element(s)</span>
               <div className="quick-search-element-groups">
                 {([1, 3, 2, 4] as const).map((slot) => (
                   <SearchFieldRow
                     key={slot}
-                    label={slot <= 2 ? `Element(s) ${slot}:` : `${slot}:`}
+                    label={`${slot}:`}
                     htmlFor={`quick-search-elements-${slot}`}
                     action={<button type="button" className="quick-search-clear" onClick={() => clearSlot(slot)} aria-label={`Clear element group ${slot}`}>✕</button>}
                   >
                     <input
                       id={`quick-search-elements-${slot}`}
-                      className="input-w32"
+                      className={`input-w32 ${activeSlot === slot ? 'quick-search-element-field-active' : ''}`}
                       readOnly
-                      value={form[`slot${slot}`].join(' OR ')}
+                      value={formatElementSelection(form.elementSelections[slot - 1])}
                       placeholder={slot === 1 ? 'click elements...' : undefined}
+                      onFocus={() => setActiveSlot(slot)}
+                      onClick={() => setActiveSlot(slot)}
+                      aria-label={`Element criterion ${slot}`}
+                      aria-current={activeSlot === slot ? 'true' : undefined}
                     />
                   </SearchFieldRow>
                 ))}

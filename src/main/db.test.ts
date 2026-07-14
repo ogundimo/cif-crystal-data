@@ -2,12 +2,32 @@ import { describe, expect, it } from 'vitest';
 import { buildWhereClause } from './db';
 
 describe('periodic-table selection query', () => {
-  it('uses a single IN expression for OR semantics', () => {
-    const result = buildWhereClause({ slot1: ['Fe'], slot2: [], mode: 'OR', elementSelection: { elements: [], groups: [16], periods: [4] } });
+  it('resolves elements, groups, and periods within one textbox using OR', () => {
+    const result = buildWhereClause({
+      slot1: ['Fe'],
+      slot2: [],
+      mode: 'AND',
+      elementSelections: [{ elements: ['Fe'], groups: [16], periods: [4] }]
+    });
     expect(result.sql.match(/element IN/g)).toHaveLength(1);
     expect(result.params).toContain('O');
     expect(result.params).toContain('Fe');
     expect(new Set(result.params).size).toBe(result.params.length);
+  });
+
+  it('combines independently resolved textboxes with the selected mode', () => {
+    const result = buildWhereClause({
+      slot1: ['Fe'],
+      slot2: ['O'],
+      mode: 'AND',
+      elementSelections: [
+        { elements: ['Fe'], groups: [8], periods: [] },
+        { elements: ['O'], groups: [16], periods: [] }
+      ]
+    });
+    expect(result.sql.match(/element IN/g)).toHaveLength(2);
+    expect(result.sql).toContain(' AND ');
+    expect(result.params).toEqual(['Fe', 'Ru', 'Os', 'Hs', 'O', 'S', 'Se', 'Te', 'Po', 'Lv']);
   });
 
   it('retains legacy individual-element filtering', () => {
