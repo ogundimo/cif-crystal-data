@@ -167,6 +167,26 @@ async function testLargeGridVirtualization(window) {
   console.log(`✓ 10,000-row grid virtualization (${after.renderedRows} DOM rows near entry ${after.firstId})`);
 }
 
+async function testImportProgressIndicator(window) {
+  const result = await window.webContents.executeJavaScript(`
+    (() => {
+      const indicator = document.querySelector('[data-testid="import-progress"]');
+      const progress = indicator?.querySelector('progress');
+      return {
+        label: indicator?.getAttribute('aria-label'),
+        text: indicator?.textContent,
+        value: progress?.value,
+        max: progress?.max
+      };
+    })()
+  `);
+  assert.equal(result.label, 'Import progress: 800 of 1000 files processed');
+  assert.match(result.text, /790 imported, 10 failed/);
+  assert.equal(result.value, 800);
+  assert.equal(result.max, 1000);
+  console.log('✓ import progress indicator counts and accessibility label');
+}
+
 async function run() {
   const window = new BrowserWindow({
     show: false,
@@ -211,6 +231,7 @@ async function run() {
   });
   await testActiveElementBoxFlow(window);
   await testLargeGridVirtualization(window);
+  await testImportProgressIndicator(window);
 
   window.destroy();
 }

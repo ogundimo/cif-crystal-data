@@ -1,4 +1,4 @@
-import type { ImportResult } from '../shared/types';
+import type { ImportProgress, ImportResult } from '../shared/types';
 
 export interface ImportWorkerData {
   rootDir: string;
@@ -6,5 +6,6 @@ export interface ImportWorkerData {
 }
 
 export type ImportWorkerMessage =
-  | { ok: true; result: ImportResult }
-  | { ok: false; error: string };
+  | { type: 'progress'; progress: ImportProgress }
+  | { type: 'result'; result: ImportResult }
+  | { type: 'error'; phase: 'database' | 'import'; error: string };

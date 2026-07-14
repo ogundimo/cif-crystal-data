@@ -2,7 +2,7 @@ import { readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
 import { parseCif } from '../parser/cifParser';
 import { createEntryWriter, type EntryWriteItem, type EntryWriter } from './db';
-import type { ImportFailure, ImportResult } from '../shared/types';
+import type { ImportFailure, ImportProgress, ImportResult } from '../shared/types';
 
 const IMPORT_BATCH_SIZE = 250;
 
@@ -37,14 +37,15 @@ function walkCifFiles(root: string): string[] {
 
 export function importCifFolder(
   rootDir: string,
-  writer: EntryWriter = createEntryWriter()
+  writer: EntryWriter = createEntryWriter(),
+  onProgress?: (progress: ImportProgress) => void
 ): ImportResult {
   const files = walkCifFiles(rootDir);
   const failures: ImportFailure[] = [];
   let importedCount = 0;
-  let pending: EntryWriteItem[] = [];
+  onProgress?.({ processed: 0, total: files.length, importedCount: 0, failureCount: 0 });
 
-  const flush = () => {
+  const writePending = (pending: EntryWriteItem[]) => {
     if (pending.length === 0) return;
     const writeFailures = writer.writeBatch(pending);
     const failedItems = new Set(writeFailures.map((failure) => failure.item));
@@ -55,22 +56,29 @@ export function importCifFolder(
         reason: failure.error instanceof Error ? failure.error.message : String(failure.error)
       });
     }
-    pending = [];
   };
 
-  for (const filePath of files) {
-    const filename = basename(filePath);
-    try {
-      const text = readFileSync(filePath, 'utf-8');
-      const entry = parseCif(text);
-      pending.push({ sourceFilename: filename, entry });
-      if (pending.length >= IMPORT_BATCH_SIZE) flush();
-    } catch (err) {
-      failures.push({ filename, reason: err instanceof Error ? err.message : String(err) });
+  for (let offset = 0; offset < files.length; offset += IMPORT_BATCH_SIZE) {
+    const fileBatch = files.slice(offset, offset + IMPORT_BATCH_SIZE);
+    const pending: EntryWriteItem[] = [];
+    for (const filePath of fileBatch) {
+      const filename = basename(filePath);
+      try {
+        const text = readFileSync(filePath, 'utf-8');
+        const entry = parseCif(text);
+        pending.push({ sourceFilename: filename, entry });
+      } catch (err) {
+        failures.push({ filename, reason: err instanceof Error ? err.message : String(err) });
+      }
     }
+    writePending(pending);
+    onProgress?.({
+      processed: offset + fileBatch.length,
+      total: files.length,
+      importedCount,
+      failureCount: failures.length
+    });
   }
-
-  flush();
 
   return { importedCount, failures, total: files.length };
 }

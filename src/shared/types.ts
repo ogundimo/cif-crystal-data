@@ -25,6 +25,13 @@ export interface ImportResult {
   total: number;
 }
 
+export interface ImportProgress {
+  processed: number;
+  total: number;
+  importedCount: number;
+  failureCount: number;
+}
+
 export interface ClearCifsResult {
   cleared: boolean;
   deletedCount: number;
@@ -76,6 +83,7 @@ export interface CifApi {
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;
   importCifFolder: () => Promise<ImportResult | null>;
+  onImportProgress: (listener: (progress: ImportProgress) => void) => () => void;
   clearCifs: () => Promise<ClearCifsResult>;
 }
 

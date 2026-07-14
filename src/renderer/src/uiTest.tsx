@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import DataGrid from './components/DataGrid';
+import ImportProgressIndicator from './components/ImportProgressIndicator';
 import type { EntryRow } from '../../shared/types';
 import './index.css';
 
@@ -23,12 +24,18 @@ window.cifApi = {
   search: async () => [],
   restraints: async () => [],
   importCifFolder: async () => null,
+  onImportProgress: () => () => undefined,
   clearCifs: async () => ({ cleared: false, deletedCount: 0 })
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <div className="flex h-screen flex-col">
     <DataGrid rows={gridRows} />
+    <div className="fixed left-2 top-2">
+      <ImportProgressIndicator
+        progress={{ processed: 800, total: 1_000, importedCount: 790, failureCount: 10 }}
+      />
+    </div>
     <QuickSearchDialog open onClose={() => undefined} onSearch={() => undefined} />
   </div>
 );

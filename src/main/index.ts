@@ -3,13 +3,25 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchFilter } from '../shared/types';
 import { validateSearchFilter } from './searchFilterValidation';
-import { runImportWorker } from './importRunner';
+import { ImportWorkerError, runImportWorker } from './importRunner';
+import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
 
 let dbReady: Promise<DbModule> | null = null;
 let dataMutationInFlight: 'import' | 'clear' | null = null;
+let lastDatabaseErrorMessage: string | null = null;
+
+function databaseInitializationError(error: unknown): Error {
+  const databasePath = join(app.getPath('userData'), 'cif-local.db');
+  const message = buildDatabaseInitializationMessage(databasePath, error);
+  if (message !== lastDatabaseErrorMessage) {
+    lastDatabaseErrorMessage = message;
+    dialog.showErrorBox('CIF database unavailable', message);
+  }
+  return new Error(message, { cause: error });
+}
 
 /**
  * Load the native SQLite module only when the renderer first needs data.
@@ -21,11 +33,12 @@ function getDbModule(): Promise<DbModule> {
     dbReady = import('./db')
       .then((database) => {
         database.initDb(app.getPath('userData'));
+        lastDatabaseErrorMessage = null;
         return database;
       })
       .catch((error) => {
         dbReady = null;
-        throw error;
+        throw databaseInitializationError(error);
       });
   }
   return dbReady;
@@ -75,7 +88,18 @@ app.whenReady().then(() => {
         ? await dialog.showOpenDialog(win, options)
         : await dialog.showOpenDialog(options);
       if (result.canceled || result.filePaths.length === 0) return null;
-      return await runImportWorker(result.filePaths[0], app.getPath('userData'));
+      try {
+        const importResult = await runImportWorker(result.filePaths[0], app.getPath('userData'), (progress) => {
+          if (!event.sender.isDestroyed()) event.sender.send('cif:importProgress', progress);
+        });
+        lastDatabaseErrorMessage = null;
+        return importResult;
+      } catch (error) {
+        if (error instanceof ImportWorkerError && error.phase === 'database') {
+          throw databaseInitializationError(error);
+        }
+        throw error;
+      }
     } finally {
       dataMutationInFlight = null;
     }

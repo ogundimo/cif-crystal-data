@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import DataGrid from './components/DataGrid';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';
-import type { EntryRow, ImportResult, SearchFilter } from '../../shared/types';
+import ImportProgressIndicator from './components/ImportProgressIndicator';
+import type { EntryRow, ImportProgress, ImportResult, SearchFilter } from '../../shared/types';
 
 const NO_CRITERIA_LABEL = 'A0 (No selection criteria)';
 
@@ -28,6 +29,7 @@ function AppInner() {
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [qsOpen, setQsOpen] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
   const [importing, setImporting] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [searchActive, setSearchActive] = useState(false);
@@ -53,8 +55,11 @@ function AppInner() {
     reload();
   }, [reload]);
 
+  useEffect(() => window.cifApi.onImportProgress(setImportProgress), []);
+
   async function handleImport() {
     setImporting(true);
+    setImportProgress(null);
     setApiError(null);
     try {
       const result = await window.cifApi.importCifFolder();
@@ -66,6 +71,7 @@ function AppInner() {
       showApiError('import CIF files', error);
     } finally {
       setImporting(false);
+      setImportProgress(null);
     }
   }
 
@@ -145,8 +151,16 @@ function AppInner() {
           <span aria-hidden="true">↺</span> Reset search
         </button>
         <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || clearing}>
-          <span>&#128193;</span> {importing ? 'Importing...' : 'Import CIFs...'}
+          <span>&#128193;</span>{' '}
+          {importing && importProgress
+            ? `Importing ${importProgress.processed}/${importProgress.total}...`
+            : importing
+              ? 'Importing...'
+              : 'Import CIFs...'}
         </button>
+        {importing && importProgress && (
+          <ImportProgressIndicator progress={importProgress} />
+        )}
         <button
           className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
           onClick={handleClearCifs}

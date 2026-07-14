@@ -10,15 +10,34 @@ const data = workerData as ImportWorkerData;
 let database: ReturnType<typeof initDb> | null = null;
 
 try {
-  database = initDb(data.userDataPath);
-  const message: ImportWorkerMessage = { ok: true, result: importCifFolder(data.rootDir) };
-  port.postMessage(message);
-} catch (error) {
-  const message: ImportWorkerMessage = {
-    ok: false,
-    error: error instanceof Error ? error.message : String(error)
-  };
-  port.postMessage(message);
+  try {
+    database = initDb(data.userDataPath);
+  } catch (error) {
+    const message: ImportWorkerMessage = {
+      type: 'error',
+      phase: 'database',
+      error: error instanceof Error ? error.message : String(error)
+    };
+    port.postMessage(message);
+  }
+
+  if (database) {
+    try {
+      const result = importCifFolder(data.rootDir, undefined, (progress) => {
+        const progressMessage: ImportWorkerMessage = { type: 'progress', progress };
+        port.postMessage(progressMessage);
+      });
+      const message: ImportWorkerMessage = { type: 'result', result };
+      port.postMessage(message);
+    } catch (error) {
+      const message: ImportWorkerMessage = {
+        type: 'error',
+        phase: 'import',
+        error: error instanceof Error ? error.message : String(error)
+      };
+      port.postMessage(message);
+    }
+  }
 } finally {
   database?.close();
 }
