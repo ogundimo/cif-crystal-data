@@ -76,7 +76,7 @@ interface PeriodicTablePickerProps {
   selection: ElementSelection;
   onChange: (selection: ElementSelection) => void;
   slotOf: (symbol: string) => 0 | 1 | 2 | 3 | 4;
-  onToggleElement: (symbol: string, ctrl: boolean) => void;
+  onToggleElement: (symbol: string) => void;
 }
 
 export function PeriodicTablePicker({ selection, onChange, slotOf, onToggleElement }: PeriodicTablePickerProps) {
@@ -128,7 +128,7 @@ export function PeriodicTablePicker({ selection, onChange, slotOf, onToggleEleme
                 type="button"
                 className={`quick-search-element ${explicit ? 'quick-search-element-selected' : included ? 'quick-search-element-included' : CATEGORY_CLASS[element.category]}`}
                 style={{ gridColumn: element.col + 1, gridRow: element.row + 1 }}
-                onClick={(event) => onToggleElement(element.symbol, event.ctrlKey)}
+                onClick={() => onToggleElement(element.symbol)}
                 aria-label={`${element.symbol}, atomic number ${element.z}${included && !explicit ? ', included by group or period' : ''}`}
                 aria-pressed={explicit}
               >

@@ -5,6 +5,8 @@ Electron, React, TypeScript, Tailwind CSS, and better-sqlite3.
 
 ## Dev mode
 
+Development requires Node.js 22.12 or newer.
+
 ```
 npm install
 npm run dev
@@ -36,8 +38,8 @@ installer and a portable executable, targeting Windows x64.
 ### Native module (better-sqlite3)
 
 better-sqlite3 is a native Node addon and must be built against Electron's ABI, not the
-system Node's. This is handled by `electron-rebuild` (via `postinstall`) for dev mode, and by
-`electron-builder`'s built-in native dependency rebuild step when packaging.
+system Node's. The `postinstall` script and packaging both use `electron-builder`'s native
+dependency rebuild step.
 
 ## Publishing a GitHub release
 

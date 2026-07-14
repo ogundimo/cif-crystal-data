@@ -138,10 +138,10 @@ function stripQuotes(value: string): string {
   return s;
 }
 
-function isNullish(value: string | undefined): value is undefined {
-  if (value === undefined) return true;
+function hasCifValue(value: string | undefined): value is string {
+  if (value === undefined) return false;
   const t = value.trim();
-  return t === '' || t === '?' || t === '.';
+  return t !== '' && t !== '?' && t !== '.';
 }
 
 /** Strip a trailing parenthesized uncertainty, e.g. "16.5(3)" -> 16.5 */
@@ -152,8 +152,8 @@ export function stripUncertainty(value: string): number {
 
 function getClean(tags: Map<string, string>, tag: string): string | null {
   const v = tags.get(tag);
-  if (isNullish(v)) return null;
-  return stripQuotes(v as string);
+  if (!hasCifValue(v)) return null;
+  return stripQuotes(v);
 }
 
 /** Parse a quoted, space-separated chemical formula sum into element/count pairs. */
@@ -199,39 +199,39 @@ export function parseCif(text: string): CifEntry {
   const { tags, hasAnisoLabel } = scanCif(text);
 
   const sumRaw = tags.get('_chemical_formula_sum');
-  if (isNullish(sumRaw)) {
+  if (!hasCifValue(sumRaw)) {
     throw new Error('Missing _chemical_formula_sum');
   }
-  const elements = parseFormulaSum(sumRaw as string);
+  const elements = parseFormulaSum(sumRaw);
   const formula = formatFormula(elements);
 
   const aRaw = tags.get('_cell_length_a');
   const bRaw = tags.get('_cell_length_b');
   const cRaw = tags.get('_cell_length_c');
-  if (isNullish(aRaw) || isNullish(bRaw) || isNullish(cRaw)) {
+  if (!hasCifValue(aRaw) || !hasCifValue(bRaw) || !hasCifValue(cRaw)) {
     throw new Error('Missing cell length tag(s)');
   }
-  const cell_a = stripUncertainty(aRaw as string) / 10;
-  const cell_b = stripUncertainty(bRaw as string) / 10;
-  const cell_c = stripUncertainty(cRaw as string) / 10;
+  const cell_a = stripUncertainty(aRaw) / 10;
+  const cell_b = stripUncertainty(bRaw) / 10;
+  const cell_c = stripUncertainty(cRaw) / 10;
   if (!Number.isFinite(cell_a)) throw new Error('Invalid _cell_length_a');
   if (!Number.isFinite(cell_b)) throw new Error('Invalid _cell_length_b');
   if (!Number.isFinite(cell_c)) throw new Error('Invalid _cell_length_c');
 
   const sgRaw = tags.get('_space_group_IT_number');
-  if (isNullish(sgRaw)) {
+  if (!hasCifValue(sgRaw)) {
     throw new Error('Missing _space_group_IT_number');
   }
-  const sg_number = Number(stripQuotes(sgRaw as string));
+  const sg_number = Number(stripQuotes(sgRaw));
   if (!Number.isInteger(sg_number) || sg_number < 1 || sg_number > 230) {
     throw new Error('Invalid _space_group_IT_number');
   }
 
   const spgRaw = tags.get('_space_group_name_H-M_alt');
-  if (isNullish(spgRaw)) {
+  if (!hasCifValue(spgRaw)) {
     throw new Error('Missing _space_group_name_H-M_alt');
   }
-  const space_group = stripQuotes(spgRaw as string).replace(/\s+/g, '');
+  const space_group = stripQuotes(spgRaw).replace(/\s+/g, '');
 
   const reference = buildReference(tags);
   const level = hasAnisoLabel ? LEVEL_FULL : LEVEL_CELL;
