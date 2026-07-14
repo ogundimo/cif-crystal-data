@@ -11,6 +11,9 @@ export interface EntryRow {
   level_struct_studies: string;
 }
 
+export const LEVEL_FULL = 'Complete structure determined';
+export const LEVEL_CELL = 'Cell parameters determined and structure type assigned';
+
 export interface ImportFailure {
   filename: string;
   reason: string;

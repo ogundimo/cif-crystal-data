@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ElementSelection, ElementSelections, RestraintRow, SearchFilter } from '../../../shared/types';
+import { LEVEL_CELL, LEVEL_FULL, type ElementSelection, type ElementSelections, type RestraintRow, type SearchFilter } from '../../../shared/types';
 import { createEmptyElementSelection, formatElementSelection, toggleElementCriterion } from '../../../shared/periodicTableData';
 import { validateSearchInput, type SearchValidationField } from '../../../shared/searchValidation';
 import { scheduleDebouncedRequest } from '../debouncedRequest';
 import { PeriodicTablePicker, RangeInputRow, SearchFieldRow } from './QuickSearchParts';
 
-const LEVEL_FULL = 'Complete structure determined';
-const LEVEL_CELL = 'Cell parameters determined and structure type assigned';
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 

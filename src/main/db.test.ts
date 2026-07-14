@@ -35,6 +35,19 @@ describe('periodic-table selection query', () => {
     expect(buildWhereClause({ slot1: ['Fe'], slot2: [], mode: 'AND' }).params).toEqual(['Fe']);
   });
 
+  it('treats LIKE metacharacters in text searches as literal characters', () => {
+    const result = buildWhereClause({
+      slot1: [],
+      slot2: [],
+      mode: 'AND',
+      spaceGroupQuery: 'P_1%',
+      referenceQuery: '100%_complete'
+    });
+
+    expect(result.sql.match(/ESCAPE/g)).toHaveLength(2);
+    expect(result.params).toEqual(['%p\\_1\\%%', '%100\\%\\_complete%']);
+  });
+
   it('clears entries inside a transaction and reports the deleted count', () => {
     const statements: string[] = [];
     let transactionRan = false;

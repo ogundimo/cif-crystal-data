@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchFilter } from '../shared/types';
+import { validateSearchFilter } from './searchFilterValidation';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
@@ -15,10 +16,15 @@ let dbReady: Promise<DbModule> | null = null;
  */
 function getDbModule(): Promise<DbModule> {
   if (!dbReady) {
-    dbReady = import('./db').then((database) => {
-      database.initDb(app.getPath('userData'));
-      return database;
-    });
+    dbReady = import('./db')
+      .then((database) => {
+        database.initDb(app.getPath('userData'));
+        return database;
+      })
+      .catch((error) => {
+        dbReady = null;
+        throw error;
+      });
   }
   return dbReady;
 }
@@ -50,18 +56,19 @@ app.whenReady().then(() => {
   ipcMain.handle('cif:getAllEntries', async () => (await getDbModule()).getAllEntries());
 
   ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>
-    (await getDbModule()).searchEntries(filter)
+    (await getDbModule()).searchEntries(validateSearchFilter(filter))
   );
 
   ipcMain.handle('cif:restraints', async (_e, filter: SearchFilter) =>
-    (await getDbModule()).computeRestraints(filter)
+    (await getDbModule()).computeRestraints(validateSearchFilter(filter))
   );
 
   ipcMain.handle('cif:importCifFolder', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    const result = await dialog.showOpenDialog(win ?? undefined as unknown as BrowserWindow, {
-      properties: ['openDirectory']
-    });
+    const options = { properties: ['openDirectory'] as ['openDirectory'] };
+    const result = win
+      ? await dialog.showOpenDialog(win, options)
+      : await dialog.showOpenDialog(options);
     if (result.canceled || result.filePaths.length === 0) return null;
     await getDbModule();
     const { importCifFolder } = await import('./ingest');

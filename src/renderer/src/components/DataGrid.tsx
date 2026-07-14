@@ -13,6 +13,10 @@ import { formatFormula } from '../formatFormula';
 
 const columnHelper = createColumnHelper<EntryRow>();
 
+function formatCellLength(value: number | null | undefined): string {
+  return Number.isFinite(value) ? (value as number).toFixed(4) : '';
+}
+
 const columns = [
   columnHelper.accessor('formula', {
     header: 'Formula',
@@ -22,17 +26,17 @@ const columns = [
   columnHelper.accessor('cell_a', {
     header: 'a [nm]',
     size: 75,
-    cell: (info) => info.getValue().toFixed(4)
+    cell: (info) => formatCellLength(info.getValue())
   }),
   columnHelper.accessor('cell_b', {
     header: 'b [nm]',
     size: 75,
-    cell: (info) => info.getValue().toFixed(4)
+    cell: (info) => formatCellLength(info.getValue())
   }),
   columnHelper.accessor('cell_c', {
     header: 'c [nm]',
     size: 75,
-    cell: (info) => info.getValue().toFixed(4)
+    cell: (info) => formatCellLength(info.getValue())
   }),
   columnHelper.accessor('sg_number', {
     header: 'SG number',

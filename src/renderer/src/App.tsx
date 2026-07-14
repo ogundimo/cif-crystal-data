@@ -33,48 +33,58 @@ function AppInner() {
   const [searchActive, setSearchActive] = useState(false);
   const [searchResetSignal, setSearchResetSignal] = useState(0);
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  const reload = useCallback(() => {
-    if (!window.cifApi) return;
-    window.cifApi.getAllEntries().then(setEntries);
+  const showApiError = useCallback((action: string, error: unknown) => {
+    const detail = error instanceof Error && error.message ? ` ${error.message}` : '';
+    setApiError(`Could not ${action}.${detail}`);
   }, []);
+
+  const reload = useCallback(async () => {
+    try {
+      setEntries(await window.cifApi.getAllEntries());
+      setApiError(null);
+    } catch (error) {
+      showApiError('load entries', error);
+    }
+  }, [showApiError]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
-  if (!window.cifApi) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-mica p-6 text-center text-sm text-red-700">
-        Backend bridge failed to load. The application preload script did not run correctly.
-        Please reinstall the application or contact support.
-      </div>
-    );
-  }
-
   async function handleImport() {
     setImporting(true);
+    setApiError(null);
     try {
       const result = await window.cifApi.importCifFolder();
       if (result) {
         setImportResult(result);
-        reload();
+        await reload();
       }
+    } catch (error) {
+      showApiError('import CIF files', error);
     } finally {
       setImporting(false);
     }
   }
 
   async function handleResetSearch() {
-    const allEntries = await window.cifApi.getAllEntries();
-    setEntries(allEntries);
-    setAnswerSetLabel(NO_CRITERIA_LABEL);
-    setSearchActive(false);
-    setSearchResetSignal((value) => value + 1);
+    setApiError(null);
+    try {
+      const allEntries = await window.cifApi.getAllEntries();
+      setEntries(allEntries);
+      setAnswerSetLabel(NO_CRITERIA_LABEL);
+      setSearchActive(false);
+      setSearchResetSignal((value) => value + 1);
+    } catch (error) {
+      showApiError('reset the search', error);
+    }
   }
 
   async function handleClearCifs() {
     setClearing(true);
+    setApiError(null);
     try {
       const result = await window.cifApi.clearCifs();
       if (!result.cleared) return;
@@ -83,6 +93,8 @@ function AppInner() {
       setAnswerSetLabel(NO_CRITERIA_LABEL);
       setSearchActive(false);
       setSearchResetSignal((value) => value + 1);
+    } catch (error) {
+      showApiError('clear imported CIF data', error);
     } finally {
       setClearing(false);
     }
@@ -108,10 +120,15 @@ function AppInner() {
       Boolean(filter.level && filter.level.trim()) ||
       Boolean(filter.elementCountQuery && filter.elementCountQuery.trim());
 
-    const results = await window.cifApi.search(filter);
-    setEntries(results);
-    setAnswerSetLabel(hasCriteria ? `A1 (${results.length} matching)` : NO_CRITERIA_LABEL);
-    setSearchActive(hasCriteria);
+    setApiError(null);
+    try {
+      const results = await window.cifApi.search(filter);
+      setEntries(results);
+      setAnswerSetLabel(hasCriteria ? `A1 (${results.length} matching)` : NO_CRITERIA_LABEL);
+      setSearchActive(hasCriteria);
+    } catch (error) {
+      showApiError('search entries', error);
+    }
   }
 
   return (
@@ -158,6 +175,17 @@ function AppInner() {
         onSearch={handleSearch}
         resetSignal={searchResetSignal}
       />
+      {apiError && (
+        <div
+          role="alert"
+          className="fixed bottom-4 left-1/2 z-40 flex w-[min(42rem,calc(100vw-2rem))] -translate-x-1/2 items-start gap-3 rounded-md border border-[#c42b1c] bg-white px-3 py-2 text-[#8a1c13] shadow-2xl"
+        >
+          <span className="flex-1">{apiError}</span>
+          <button className="rounded px-2 hover:bg-[#f5e5e3]" onClick={() => setApiError(null)} aria-label="Dismiss error">
+            ✕
+          </button>
+        </div>
+      )}
       {importResult && <ImportResultsPanel result={importResult} onDismiss={() => setImportResult(null)} />}
     </div>
   );

@@ -1,6 +1,8 @@
 // Hand-written CIF parser (plain TypeScript, no external CIF library).
 // Extracts only the tags this application needs.
 
+import { LEVEL_CELL, LEVEL_FULL } from '../shared/types';
+
 export interface ElementCount {
   element: string;
   count: number;
@@ -17,9 +19,6 @@ export interface CifEntry {
   reference: string;
   level: string;
 }
-
-export const LEVEL_FULL = 'Complete structure determined';
-export const LEVEL_CELL = 'Cell parameters determined and structure type assigned';
 
 interface RawCif {
   tags: Map<string, string>;
@@ -148,7 +147,7 @@ function isNullish(value: string | undefined): value is undefined {
 /** Strip a trailing parenthesized uncertainty, e.g. "16.5(3)" -> 16.5 */
 export function stripUncertainty(value: string): number {
   const cleaned = value.trim().replace(/\(\d+\)\s*$/, '');
-  return parseFloat(cleaned);
+  return Number(cleaned);
 }
 
 function getClean(tags: Map<string, string>, tag: string): string | null {
@@ -176,7 +175,6 @@ export function parseFormulaSum(rawSum: string): ElementCount[] {
 }
 
 function formatCount(count: number): string {
-  if (Number.isInteger(count)) return String(count);
   return String(count);
 }
 
@@ -216,12 +214,18 @@ export function parseCif(text: string): CifEntry {
   const cell_a = stripUncertainty(aRaw as string) / 10;
   const cell_b = stripUncertainty(bRaw as string) / 10;
   const cell_c = stripUncertainty(cRaw as string) / 10;
+  if (!Number.isFinite(cell_a)) throw new Error('Invalid _cell_length_a');
+  if (!Number.isFinite(cell_b)) throw new Error('Invalid _cell_length_b');
+  if (!Number.isFinite(cell_c)) throw new Error('Invalid _cell_length_c');
 
   const sgRaw = tags.get('_space_group_IT_number');
   if (isNullish(sgRaw)) {
     throw new Error('Missing _space_group_IT_number');
   }
-  const sg_number = parseInt(stripQuotes(sgRaw as string), 10);
+  const sg_number = Number(stripQuotes(sgRaw as string));
+  if (!Number.isInteger(sg_number) || sg_number < 1 || sg_number > 230) {
+    throw new Error('Invalid _space_group_IT_number');
+  }
 
   const spgRaw = tags.get('_space_group_name_H-M_alt');
   if (isNullish(spgRaw)) {

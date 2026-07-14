@@ -56,6 +56,29 @@ describe('stripUncertainty', () => {
   it('handles multi-digit uncertainties', () => {
     expect(stripUncertainty('23.860(12)')).toBeCloseTo(23.86, 10);
   });
+
+  it('does not accept a partially numeric malformed value', () => {
+    expect(stripUncertainty('16.5junk')).toBeNaN();
+  });
+});
+
+describe('parseCif numeric validation', () => {
+  function withTagValue(tag: string, value: string): string {
+    const pattern = new RegExp(`(${tag}\\s+)(?:'[^']*'|"[^"]*"|\\S+)`);
+    return fixtureText.replace(pattern, `$1${value}`);
+  }
+
+  it('rejects a non-numeric cell length instead of returning NaN', () => {
+    expect(() => parseCif(withTagValue('_cell_length_a', 'junk'))).toThrow(
+      'Invalid _cell_length_a'
+    );
+  });
+
+  it('rejects a malformed space-group number instead of partially parsing it', () => {
+    expect(() => parseCif(withTagValue('_space_group_IT_number', '62junk'))).toThrow(
+      'Invalid _space_group_IT_number'
+    );
+  });
 });
 
 describe('buildReference - missing components', () => {

@@ -150,6 +150,10 @@ function parseElementCountQuery(query: string | undefined): { sql: string; param
   return { sql: '1=1', params: [] };
 }
 
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, '\\$&');
+}
+
 function resolveFilterElementGroups(filter: SearchFilter): string[][] {
   if (filter.elementSelections) {
     return filter.elementSelections.map(resolveElementSelection).filter((group) => group.length > 0);
@@ -213,13 +217,13 @@ export function buildWhereClause(filter: SearchFilter): { sql: string; params: (
   }
 
   if (filter.spaceGroupQuery && filter.spaceGroupQuery.trim() !== '') {
-    clauses.push('LOWER(space_group) LIKE ?');
-    params.push(`%${filter.spaceGroupQuery.trim().toLowerCase()}%`);
+    clauses.push("LOWER(space_group) LIKE ? ESCAPE '\\'");
+    params.push(`%${escapeLike(filter.spaceGroupQuery.trim().toLowerCase())}%`);
   }
 
   if (filter.referenceQuery && filter.referenceQuery.trim() !== '') {
-    clauses.push('LOWER(reference) LIKE ?');
-    params.push(`%${filter.referenceQuery.trim().toLowerCase()}%`);
+    clauses.push("LOWER(reference) LIKE ? ESCAPE '\\'");
+    params.push(`%${escapeLike(filter.referenceQuery.trim().toLowerCase())}%`);
   }
 
   if (filter.level && filter.level.trim() !== '') {
