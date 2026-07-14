@@ -119,6 +119,54 @@ async function testActiveElementBoxFlow(window) {
   console.log('✓ active element-box selection flow');
 }
 
+async function testLargeGridVirtualization(window) {
+  const before = await window.webContents.executeJavaScript(`
+    (() => {
+      const grid = document.querySelector('[data-testid="data-grid-scroll"]');
+      const rows = Array.from(grid.querySelectorAll('tbody tr[data-entry-id]'));
+      return {
+        renderedRows: rows.length,
+        firstId: Number(rows[0]?.getAttribute('data-entry-id')),
+        scrollable: grid.scrollHeight > grid.clientHeight
+      };
+    })()
+  `);
+  assert.equal(before.scrollable, true, '10,000-row grid is not scrollable');
+  assert.ok(before.renderedRows < 100, `grid rendered ${before.renderedRows} rows at once`);
+  assert.equal(before.firstId, 1, 'grid did not begin with the first entry');
+
+  await window.webContents.executeJavaScript(`
+    (() => {
+      const grid = document.querySelector('[data-testid="data-grid-scroll"]');
+      grid.scrollTop = grid.scrollHeight * 0.9;
+      grid.dispatchEvent(new Event('scroll', { bubbles: true }));
+    })()
+  `);
+  await pause(100);
+
+  const after = await window.webContents.executeJavaScript(`
+    (() => {
+      const rows = Array.from(
+        document.querySelectorAll('[data-testid="data-grid-scroll"] tbody tr[data-entry-id]')
+      );
+      return {
+        renderedRows: rows.length,
+        firstId: Number(rows[0]?.getAttribute('data-entry-id')),
+        lastId: Number(rows.at(-1)?.getAttribute('data-entry-id')),
+        scrollTop: document.querySelector('[data-testid="data-grid-scroll"]').scrollTop,
+        scrollHeight: document.querySelector('[data-testid="data-grid-scroll"]').scrollHeight
+      };
+    })()
+  `);
+  assert.ok(after.renderedRows < 100, `deep scroll rendered ${after.renderedRows} rows at once`);
+  assert.ok(
+    after.firstId > 8_000,
+    `deep scroll stopped near entry ${after.firstId} (scrollTop ${after.scrollTop}/${after.scrollHeight})`
+  );
+  assert.ok(after.lastId > after.firstId, 'deep-scroll virtual window is empty');
+  console.log(`✓ 10,000-row grid virtualization (${after.renderedRows} DOM rows near entry ${after.firstId})`);
+}
+
 async function run() {
   const window = new BrowserWindow({
     show: false,
@@ -162,6 +210,7 @@ async function run() {
     expectedAxisRows: 2
   });
   await testActiveElementBoxFlow(window);
+  await testLargeGridVirtualization(window);
 
   window.destroy();
 }

@@ -1,7 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import QuickSearchDialog from './components/QuickSearchDialog';
+import DataGrid from './components/DataGrid';
+import type { EntryRow } from '../../shared/types';
 import './index.css';
+
+const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
+  id: index + 1,
+  source_filename: `${index + 1}.cif`,
+  formula: 'Fe1O1',
+  cell_a: 0.1,
+  cell_b: 0.2,
+  cell_c: 0.3,
+  sg_number: 1,
+  space_group: 'P1',
+  reference: `Reference ${index + 1}`,
+  level_struct_studies: 'Complete structure determined'
+}));
 
 window.cifApi = {
   getAllEntries: async () => [],
@@ -12,5 +27,8 @@ window.cifApi = {
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <QuickSearchDialog open onClose={() => undefined} onSearch={() => undefined} />
+  <div className="flex h-screen flex-col">
+    <DataGrid rows={gridRows} />
+    <QuickSearchDialog open onClose={() => undefined} onSearch={() => undefined} />
+  </div>
 );
