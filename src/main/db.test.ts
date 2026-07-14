@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
-import { buildWhereClause, clearAllEntries } from './db';
+import { buildWhereClause, clearAllEntries, createEntryWriter } from './db';
+import type { CifEntry } from '../parser/cifParser';
+
+const sampleEntry: CifEntry = {
+  formula: 'Fe1O1',
+  elements: [
+    { element: 'Fe', count: 1 },
+    { element: 'O', count: 1 }
+  ],
+  cell_a: 0.1,
+  cell_b: 0.2,
+  cell_c: 0.3,
+  sg_number: 1,
+  space_group: 'P1',
+  reference: 'Test reference',
+  level: 'Complete structure determined'
+};
 
 describe('periodic-table selection query', () => {
   it('resolves elements, groups, and periods within one textbox using OR', () => {
@@ -65,5 +81,39 @@ describe('periodic-table selection query', () => {
     expect(clearAllEntries(database)).toBe(3);
     expect(transactionRan).toBe(true);
     expect(statements).toEqual(['DELETE FROM entries']);
+  });
+
+  it('reuses prepared statements and commits multiple writes as one batch', () => {
+    const preparedSql: string[] = [];
+    let transactionExecutions = 0;
+    let nextId = 1;
+    const database = {
+      prepare: (sql: string) => {
+        preparedSql.push(sql);
+        return {
+          get: () => undefined,
+          run: () => ({ lastInsertRowid: nextId++, changes: 1 })
+        };
+      },
+      transaction: <Args extends unknown[], Result>(operation: (...args: Args) => Result) =>
+        (...args: Args): Result => {
+          transactionExecutions++;
+          return operation(...args);
+        }
+    } as unknown as Database.Database;
+
+    const writer = createEntryWriter(database);
+    expect(preparedSql).toHaveLength(5);
+    expect(
+      writer.writeBatch([
+        { sourceFilename: 'one.cif', entry: sampleEntry },
+        { sourceFilename: 'two.cif', entry: sampleEntry }
+      ])
+    ).toEqual([]);
+    expect(transactionExecutions).toBe(3); // one outer batch plus two per-entry savepoints
+
+    expect(writer.writeBatch([{ sourceFilename: 'three.cif', entry: sampleEntry }])).toEqual([]);
+    expect(preparedSql).toHaveLength(5);
+    expect(transactionExecutions).toBe(5);
   });
 });

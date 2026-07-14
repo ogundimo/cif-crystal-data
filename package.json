@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:ui": "node scripts/run-quick-search-ui-tests.mjs",
-    "test:all": "npm test && npm run test:ui",
+    "test:worker": "npm run build && electron scripts/import-worker-smoke-electron.cjs",
+    "test:all": "npm test && npm run test:ui && npm run test:worker",
     "package": "npm run build && electron-builder",
     "postinstall": "electron-rebuild -f -w better-sqlite3"
   },

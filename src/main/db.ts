@@ -6,6 +6,20 @@ import { resolveElementSelection } from '../shared/periodicTableData';
 
 let db: Database.Database | null = null;
 
+export interface EntryWriteItem {
+  sourceFilename: string;
+  entry: CifEntry;
+}
+
+export interface EntryWriteFailure {
+  item: EntryWriteItem;
+  error: unknown;
+}
+
+export interface EntryWriter {
+  writeBatch: (items: EntryWriteItem[]) => EntryWriteFailure[];
+}
+
 export function initDb(userDataPath: string): Database.Database {
   const dbPath = join(userDataPath, 'cif-local.db');
   db = new Database(dbPath);
@@ -40,62 +54,73 @@ export function getDb(): Database.Database {
   return db;
 }
 
-/** Upsert an entry by source_filename: update in place if it already exists. */
-export function upsertEntry(sourceFilename: string, entry: CifEntry): void {
-  const database = getDb();
-  const existing = database
-    .prepare('SELECT id FROM entries WHERE source_filename = ?')
-    .get(sourceFilename) as { id: number } | undefined;
+/** Prepare one reusable writer whose batches commit once while each file remains atomic. */
+export function createEntryWriter(database: Database.Database = getDb()): EntryWriter {
+  const selectEntry = database.prepare('SELECT id FROM entries WHERE source_filename = ?');
+  const updateEntry = database.prepare(
+    `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, sg_number = ?,
+     space_group = ?, reference = ?, level_struct_studies = ? WHERE id = ?`
+  );
+  const deleteElements = database.prepare('DELETE FROM entry_elements WHERE entry_id = ?');
+  const insertEntry = database.prepare(
+    `INSERT INTO entries
+     (source_filename, formula, cell_a, cell_b, cell_c, sg_number, space_group, reference, level_struct_studies)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  const insertElement = database.prepare(
+    'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
+  );
 
-  const tx = database.transaction(() => {
+  const writeOne = database.transaction(({ sourceFilename, entry }: EntryWriteItem) => {
+    const existing = selectEntry.get(sourceFilename) as { id: number } | undefined;
     let entryId: number;
     if (existing) {
       entryId = existing.id;
-      database
-        .prepare(
-          `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, sg_number = ?,
-           space_group = ?, reference = ?, level_struct_studies = ? WHERE id = ?`
-        )
-        .run(
-          entry.formula,
-          entry.cell_a,
-          entry.cell_b,
-          entry.cell_c,
-          entry.sg_number,
-          entry.space_group,
-          entry.reference,
-          entry.level,
-          entryId
-        );
-      database.prepare('DELETE FROM entry_elements WHERE entry_id = ?').run(entryId);
+      updateEntry.run(
+        entry.formula,
+        entry.cell_a,
+        entry.cell_b,
+        entry.cell_c,
+        entry.sg_number,
+        entry.space_group,
+        entry.reference,
+        entry.level,
+        entryId
+      );
+      deleteElements.run(entryId);
     } else {
-      const info = database
-        .prepare(
-          `INSERT INTO entries
-           (source_filename, formula, cell_a, cell_b, cell_c, sg_number, space_group, reference, level_struct_studies)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        )
-        .run(
-          sourceFilename,
-          entry.formula,
-          entry.cell_a,
-          entry.cell_b,
-          entry.cell_c,
-          entry.sg_number,
-          entry.space_group,
-          entry.reference,
-          entry.level
-        );
+      const info = insertEntry.run(
+        sourceFilename,
+        entry.formula,
+        entry.cell_a,
+        entry.cell_b,
+        entry.cell_c,
+        entry.sg_number,
+        entry.space_group,
+        entry.reference,
+        entry.level
+      );
       entryId = Number(info.lastInsertRowid);
     }
-    const insertElement = database.prepare(
-      'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
-    );
     for (const el of entry.elements) {
       insertElement.run(entryId, el.element, el.count);
     }
   });
-  tx();
+
+  const writeBatchTransaction = database.transaction((items: EntryWriteItem[]) => {
+    const failures: EntryWriteFailure[] = [];
+    for (const item of items) {
+      try {
+        // Nested better-sqlite3 transactions use savepoints, preserving per-file atomicity.
+        writeOne(item);
+      } catch (error) {
+        failures.push({ item, error });
+      }
+    }
+    return failures;
+  });
+
+  return { writeBatch: writeBatchTransaction };
 }
 
 export function getAllEntries(): EntryRow[] {
