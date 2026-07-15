@@ -18,7 +18,8 @@ export default function ImportResultsPanel({ result, onDismiss }: Props) {
       </div>
       <div className="max-h-72 overflow-auto px-3 py-2">
         <p className="mb-2">
-          Imported <b>{result.importedCount}</b> of <b>{result.total}</b> file(s) successfully.
+          Scanned <b>{result.total}</b> file(s): <b>{result.importedCount}</b> imported or updated
+          {result.skippedCount > 0 && <>, <b>{result.skippedCount}</b> unchanged</>}.
         </p>
         {result.failures.length > 0 && (
           <>

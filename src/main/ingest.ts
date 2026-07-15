@@ -1,13 +1,18 @@
 import { readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
 import { parseCif } from '../parser/cifParser';
-import { createEntryWriter, type EntryWriteItem, type EntryWriter } from './db';
+import {
+  createEntryWriter,
+  type EntryWriteItem,
+  type EntryWriter,
+  type FileFingerprint
+} from './db';
 import type { ImportFailure, ImportProgress, ImportResult } from '../shared/types';
 
 const IMPORT_BATCH_SIZE = 250;
 
-function walkCifFiles(root: string): string[] {
-  const results: string[] = [];
+function walkCifFiles(root: string): FileFingerprint[] {
+  const results: FileFingerprint[] = [];
   const stack: string[] = [root];
   while (stack.length) {
     const dir = stack.pop() as string;
@@ -28,7 +33,7 @@ function walkCifFiles(root: string): string[] {
       if (stat.isDirectory()) {
         stack.push(full);
       } else if (extname(name).toLowerCase() === '.cif') {
-        results.push(full);
+        results.push({ path: full, mtimeMs: stat.mtimeMs, size: stat.size });
       }
     }
   }
@@ -43,7 +48,14 @@ export function importCifFolder(
   const files = walkCifFiles(rootDir);
   const failures: ImportFailure[] = [];
   let importedCount = 0;
-  onProgress?.({ processed: 0, total: files.length, importedCount: 0, failureCount: 0 });
+  let skippedCount = 0;
+  onProgress?.({
+    processed: 0,
+    total: files.length,
+    importedCount: 0,
+    skippedCount: 0,
+    failureCount: 0
+  });
 
   const writePending = (pending: EntryWriteItem[]) => {
     if (pending.length === 0) return;
@@ -61,12 +73,22 @@ export function importCifFolder(
   for (let offset = 0; offset < files.length; offset += IMPORT_BATCH_SIZE) {
     const fileBatch = files.slice(offset, offset + IMPORT_BATCH_SIZE);
     const pending: EntryWriteItem[] = [];
-    for (const filePath of fileBatch) {
-      const filename = basename(filePath);
+    for (const file of fileBatch) {
+      const filename = basename(file.path);
       try {
-        const text = readFileSync(filePath, 'utf-8');
+        if (writer.isUnchanged?.(file)) {
+          skippedCount++;
+          continue;
+        }
+        const text = readFileSync(file.path, 'utf-8');
         const entry = parseCif(text);
-        pending.push({ sourceFilename: filename, entry });
+        pending.push({
+          sourceFilename: filename,
+          sourcePath: file.path,
+          sourceMtimeMs: file.mtimeMs,
+          sourceSize: file.size,
+          entry
+        });
       } catch (err) {
         failures.push({ filename, reason: err instanceof Error ? err.message : String(err) });
       }
@@ -76,9 +98,10 @@ export function importCifFolder(
       processed: offset + fileBatch.length,
       total: files.length,
       importedCount,
+      skippedCount,
       failureCount: failures.length
     });
   }
 
-  return { importedCount, failures, total: files.length };
+  return { importedCount, skippedCount, failures, total: files.length };
 }

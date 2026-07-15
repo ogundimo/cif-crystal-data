@@ -21,6 +21,7 @@ export interface ImportFailure {
 
 export interface ImportResult {
   importedCount: number;
+  skippedCount: number;
   failures: ImportFailure[];
   total: number;
 }
@@ -29,6 +30,7 @@ export interface ImportProgress {
   processed: number;
   total: number;
   importedCount: number;
+  skippedCount: number;
   failureCount: number;
 }
 
@@ -80,9 +82,11 @@ export interface RestraintRow {
 
 export interface CifApi {
   getAllEntries: () => Promise<EntryRow[]>;
+  getImportFolder: () => Promise<string | null>;
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;
   importCifFolder: () => Promise<ImportResult | null>;
+  refreshCifFolder: () => Promise<ImportResult>;
   onImportProgress: (listener: (progress: ImportProgress) => void) => () => void;
   clearCifs: () => Promise<ClearCifsResult>;
 }

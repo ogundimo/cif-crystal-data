@@ -21,9 +21,11 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
 
 window.cifApi = {
   getAllEntries: async () => [],
+  getImportFolder: async () => null,
   search: async () => [],
   restraints: async () => [],
   importCifFolder: async () => null,
+  refreshCifFolder: async () => ({ importedCount: 0, skippedCount: 0, failures: [], total: 0 }),
   onImportProgress: () => () => undefined,
   clearCifs: async () => ({ cleared: false, deletedCount: 0 })
 };
@@ -33,7 +35,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <DataGrid rows={gridRows} />
     <div className="fixed left-2 top-2">
       <ImportProgressIndicator
-        progress={{ processed: 800, total: 1_000, importedCount: 790, failureCount: 10 }}
+        progress={{ processed: 800, total: 1_000, importedCount: 90, skippedCount: 700, failureCount: 10 }}
       />
     </div>
     <QuickSearchDialog open onClose={() => undefined} onSearch={() => undefined} />

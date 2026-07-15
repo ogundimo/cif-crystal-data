@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchFilter } from '../shared/types';
@@ -10,7 +11,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
 
 let dbReady: Promise<DbModule> | null = null;
-let dataMutationInFlight: 'import' | 'clear' | null = null;
+let dataMutationInFlight: 'import' | 'refresh' | 'clear' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
 
 function databaseInitializationError(error: unknown): Error {
@@ -69,6 +70,7 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   ipcMain.handle('cif:getAllEntries', async () => (await getDbModule()).getAllEntries());
+  ipcMain.handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
 
   ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>
     (await getDbModule()).searchEntries(validateSearchFilter(filter))
@@ -90,6 +92,37 @@ app.whenReady().then(() => {
       if (result.canceled || result.filePaths.length === 0) return null;
       try {
         const importResult = await runImportWorker(result.filePaths[0], app.getPath('userData'), (progress) => {
+          if (!event.sender.isDestroyed()) event.sender.send('cif:importProgress', progress);
+        });
+        (await getDbModule()).setImportFolder(result.filePaths[0]);
+        lastDatabaseErrorMessage = null;
+        return importResult;
+      } catch (error) {
+        if (error instanceof ImportWorkerError && error.phase === 'database') {
+          throw databaseInitializationError(error);
+        }
+        throw error;
+      }
+    } finally {
+      dataMutationInFlight = null;
+    }
+  });
+
+  ipcMain.handle('cif:refreshCifFolder', async (event) => {
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    dataMutationInFlight = 'refresh';
+    try {
+      const folderPath = (await getDbModule()).getImportFolder();
+      if (!folderPath) {
+        throw new Error('No CIF folder has been selected. Use Import CIFs first.');
+      }
+      try {
+        if (!(await stat(folderPath)).isDirectory()) throw new Error('Path is not a directory');
+      } catch {
+        throw new Error(`The saved CIF folder is no longer available: ${folderPath}`);
+      }
+      try {
+        const importResult = await runImportWorker(folderPath, app.getPath('userData'), (progress) => {
           if (!event.sender.isDestroyed()) event.sender.send('cif:importProgress', progress);
         });
         lastDatabaseErrorMessage = null;

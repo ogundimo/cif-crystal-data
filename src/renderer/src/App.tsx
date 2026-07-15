@@ -31,6 +31,8 @@ function AppInner() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
   const [importing, setImporting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [importFolder, setImportFolder] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
   const [searchActive, setSearchActive] = useState(false);
   const [searchResetSignal, setSearchResetSignal] = useState(0);
@@ -55,6 +57,12 @@ function AppInner() {
     reload();
   }, [reload]);
 
+  useEffect(() => {
+    window.cifApi.getImportFolder().then(setImportFolder).catch((error) => {
+      showApiError('load the saved CIF folder', error);
+    });
+  }, [showApiError]);
+
   useEffect(() => window.cifApi.onImportProgress(setImportProgress), []);
 
   async function handleImport() {
@@ -65,12 +73,29 @@ function AppInner() {
       const result = await window.cifApi.importCifFolder();
       if (result) {
         setImportResult(result);
+        setImportFolder(await window.cifApi.getImportFolder());
         await reload();
       }
     } catch (error) {
       showApiError('import CIF files', error);
     } finally {
       setImporting(false);
+      setImportProgress(null);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    setImportProgress(null);
+    setApiError(null);
+    try {
+      const result = await window.cifApi.refreshCifFolder();
+      setImportResult(result);
+      await reload();
+    } catch (error) {
+      showApiError('refresh CIF files', error);
+    } finally {
+      setRefreshing(false);
       setImportProgress(null);
     }
   }
@@ -150,7 +175,7 @@ function AppInner() {
         >
           <span aria-hidden="true">↺</span> Reset search
         </button>
-        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || clearing}>
+        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing}>
           <span>&#128193;</span>{' '}
           {importing && importProgress
             ? `Importing ${importProgress.processed}/${importProgress.total}...`
@@ -158,13 +183,26 @@ function AppInner() {
               ? 'Importing...'
               : 'Import CIFs...'}
         </button>
-        {importing && importProgress && (
+        <button
+          className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
+          onClick={handleRefresh}
+          disabled={!importFolder || importing || refreshing || clearing}
+          title={importFolder ? `Scan again: ${importFolder}` : 'Choose a folder with Import CIFs first'}
+        >
+          <span aria-hidden="true">↻</span>{' '}
+          {refreshing && importProgress
+            ? `Refreshing ${importProgress.processed}/${importProgress.total}...`
+            : refreshing
+              ? 'Refreshing...'
+              : 'Refresh CIFs'}
+        </button>
+        {(importing || refreshing) && importProgress && (
           <ImportProgressIndicator progress={importProgress} />
         )}
         <button
           className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
           onClick={handleClearCifs}
-          disabled={importing || clearing}
+          disabled={importing || refreshing || clearing}
           title="Remove all imported entries from the local database"
         >
           <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
@@ -180,7 +218,7 @@ function AppInner() {
       <div className="flex gap-2 border-t border-stroke px-2.5 py-1 text-text-dim">
         <div className="flex-1 px-2 py-0.5">{entries.length} entries</div>
         <div className="px-2 py-0.5">db: cif-local.db</div>
-        <div className="px-2 py-0.5">Ready</div>
+        <div className="px-2 py-0.5">{importing ? 'Importing...' : refreshing ? 'Refreshing...' : clearing ? 'Clearing...' : 'Ready'}</div>
       </div>
 
       <QuickSearchDialog

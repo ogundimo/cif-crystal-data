@@ -36,20 +36,24 @@ async function run() {
   assert.ok(workerFilename, 'Production build did not emit the import worker chunk');
 
   const userDataPath = mkdtempSync(join(tmpdir(), 'cif-import-worker-'));
-  const rootDir = join(root, 'src', 'parser', '__fixtures__');
+  const fixtureDirectory = join(root, 'src', 'parser', '__fixtures__');
+  const fixtureText = readFileSync(join(fixtureDirectory, '540062.cif'), 'utf8');
+  const rootDir = join(userDataPath, 'input');
+  mkdirSync(rootDir);
+  writeFileSync(join(rootDir, '540062.cif'), fixtureText);
   const workerUrl = pathToFileURL(join(chunksDirectory, workerFilename));
 
   try {
     const firstImport = await runWorker(workerUrl, rootDir, userDataPath);
-    assert.deepEqual(firstImport.result, { importedCount: 1, failures: [], total: 1 });
+    assert.deepEqual(firstImport.result, { importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     assert.deepEqual(firstImport.messages.filter((message) => message.type === 'progress'), [
       {
         type: 'progress',
-        progress: { processed: 0, total: 1, importedCount: 0, failureCount: 0 }
+        progress: { processed: 0, total: 1, importedCount: 0, skippedCount: 0, failureCount: 0 }
       },
       {
         type: 'progress',
-        progress: { processed: 1, total: 1, importedCount: 1, failureCount: 0 }
+        progress: { processed: 1, total: 1, importedCount: 1, skippedCount: 0, failureCount: 0 }
       }
     ]);
 
@@ -67,8 +71,9 @@ async function run() {
       database.close();
     }
 
+    writeFileSync(join(rootDir, '540062.cif'), `${fixtureText}\n# modified for refresh test\n`);
     const updateImport = await runWorker(workerUrl, rootDir, userDataPath);
-    assert.deepEqual(updateImport.result, { importedCount: 1, failures: [], total: 1 });
+    assert.deepEqual(updateImport.result, { importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     database = new Database(databasePath);
     try {
       assert.equal(database.prepare('SELECT COUNT(*) AS count FROM entries').get().count, 1);
@@ -78,6 +83,14 @@ async function run() {
         .all()
         .map((row) => row.element);
       assert.deepEqual(elements, ['Eu', 'S', 'Sb']);
+
+      const unchangedImport = await runWorker(workerUrl, rootDir, userDataPath);
+      assert.deepEqual(unchangedImport.result, {
+        importedCount: 0,
+        skippedCount: 1,
+        failures: [],
+        total: 1
+      });
 
       database.pragma('foreign_keys = ON');
       database.prepare('DELETE FROM entries').run();
@@ -97,7 +110,6 @@ async function run() {
 
     const mixedInput = join(userDataPath, 'mixed-input');
     mkdirSync(mixedInput);
-    const fixtureText = readFileSync(join(rootDir, '540062.cif'), 'utf8');
     writeFileSync(join(mixedInput, 'eu.cif'), fixtureText);
     writeFileSync(join(mixedInput, 'fe.cif'), fixtureText.replace("'Eu3 S9 Sb4'", "'Fe1 O1'"));
 

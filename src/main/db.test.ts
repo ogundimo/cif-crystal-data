@@ -103,7 +103,7 @@ describe('periodic-table selection query', () => {
     } as unknown as Database.Database;
 
     const writer = createEntryWriter(database);
-    expect(preparedSql).toHaveLength(5);
+    expect(preparedSql).toHaveLength(7);
     expect(
       writer.writeBatch([
         { sourceFilename: 'one.cif', entry: sampleEntry },
@@ -113,7 +113,7 @@ describe('periodic-table selection query', () => {
     expect(transactionExecutions).toBe(3); // one outer batch plus two per-entry savepoints
 
     expect(writer.writeBatch([{ sourceFilename: 'three.cif', entry: sampleEntry }])).toEqual([]);
-    expect(preparedSql).toHaveLength(5);
+    expect(preparedSql).toHaveLength(7);
     expect(transactionExecutions).toBe(5);
   });
 });

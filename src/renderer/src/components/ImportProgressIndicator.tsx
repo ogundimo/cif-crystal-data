@@ -20,6 +20,7 @@ export default function ImportProgressIndicator({ progress }: Props) {
       />
       <span>
         {progress.importedCount} imported
+        {progress.skippedCount > 0 ? `, ${progress.skippedCount} unchanged` : ''}
         {progress.failureCount > 0 ? `, ${progress.failureCount} failed` : ''}
       </span>
     </div>

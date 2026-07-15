@@ -23,6 +23,10 @@ updates the existing row instead of duplicating it). Files that fail to parse ar
 with filename and reason, in a dismissible results panel, without aborting the rest of the
 batch.
 
+The selected folder is remembered. Click **Refresh CIFs** to scan that folder again without
+choosing it again. The refresh compares each file's path, modification time, and size, so
+unchanged files are skipped while new or modified CIFs are parsed and upserted.
+
 ## Building the packaged app
 
 ```

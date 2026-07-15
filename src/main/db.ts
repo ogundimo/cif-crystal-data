@@ -8,7 +8,16 @@ let db: Database.Database | null = null;
 
 export interface EntryWriteItem {
   sourceFilename: string;
+  sourcePath?: string;
+  sourceMtimeMs?: number;
+  sourceSize?: number;
   entry: CifEntry;
+}
+
+export interface FileFingerprint {
+  path: string;
+  mtimeMs: number;
+  size: number;
 }
 
 export interface EntryWriteFailure {
@@ -18,6 +27,7 @@ export interface EntryWriteFailure {
 
 export interface EntryWriter {
   writeBatch: (items: EntryWriteItem[]) => EntryWriteFailure[];
+  isUnchanged?: (file: FileFingerprint) => boolean;
 }
 
 export function initDb(userDataPath: string): Database.Database {
@@ -45,6 +55,17 @@ export function initDb(userDataPath: string): Database.Database {
     );
     CREATE INDEX IF NOT EXISTS idx_entry_elements_element ON entry_elements(element);
     CREATE INDEX IF NOT EXISTS idx_entry_elements_entry_id ON entry_elements(entry_id);
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS imported_files (
+      source_filename TEXT PRIMARY KEY REFERENCES entries(source_filename) ON DELETE CASCADE,
+      source_path TEXT NOT NULL,
+      source_mtime_ms REAL NOT NULL,
+      source_size INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_imported_files_source_path ON imported_files(source_path);
   `);
   return db;
 }
@@ -70,8 +91,19 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
   const insertElement = database.prepare(
     'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
   );
+  const selectFingerprint = database.prepare(
+    `SELECT 1 FROM imported_files
+     WHERE source_path = ? AND source_mtime_ms = ? AND source_size = ?`
+  );
+  const upsertFingerprint = database.prepare(
+    `INSERT INTO imported_files (source_filename, source_path, source_mtime_ms, source_size)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(source_filename) DO UPDATE SET source_path = excluded.source_path,
+       source_mtime_ms = excluded.source_mtime_ms, source_size = excluded.source_size`
+  );
 
-  const writeOne = database.transaction(({ sourceFilename, entry }: EntryWriteItem) => {
+  const writeOne = database.transaction((item: EntryWriteItem) => {
+    const { sourceFilename, entry } = item;
     const existing = selectEntry.get(sourceFilename) as { id: number } | undefined;
     let entryId: number;
     if (existing) {
@@ -105,6 +137,18 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
     for (const el of entry.elements) {
       insertElement.run(entryId, el.element, el.count);
     }
+    if (
+      item.sourcePath !== undefined &&
+      item.sourceMtimeMs !== undefined &&
+      item.sourceSize !== undefined
+    ) {
+      upsertFingerprint.run(
+        sourceFilename,
+        item.sourcePath,
+        item.sourceMtimeMs,
+        item.sourceSize
+      );
+    }
   });
 
   const writeBatchTransaction = database.transaction((items: EntryWriteItem[]) => {
@@ -120,7 +164,10 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
     return failures;
   });
 
-  return { writeBatch: writeBatchTransaction };
+  return {
+    writeBatch: writeBatchTransaction,
+    isUnchanged: (file) => Boolean(selectFingerprint.get(file.path, file.mtimeMs, file.size))
+  };
 }
 
 export function getAllEntries(): EntryRow[] {
@@ -132,7 +179,28 @@ export function clearAllEntries(database: Database.Database = getDb()): number {
   return database.transaction(() => database.prepare('DELETE FROM entries').run().changes)();
 }
 
-function buildElementCondition(elements: string[]): { sql: string; params: string[] } {
+const IMPORT_FOLDER_SETTING = 'import_folder';
+
+export function getImportFolder(database: Database.Database = getDb()): string | null {
+  const row = database
+    .prepare('SELECT value FROM app_settings WHERE key = ?')
+    .get(IMPORT_FOLDER_SETTING) as { value: string } | undefined;
+  return row?.value ?? null;
+}
+
+export function setImportFolder(folderPath: string, database: Database.Database = getDb()): void {
+  database
+    .prepare(
+      `INSERT INTO app_settings (key, value) VALUES (?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`
+    )
+    .run(IMPORT_FOLDER_SETTING, folderPath);
+}
+
+function buildElementCondition(
+  elements: string[],
+  exclude = false
+): { sql: string; params: string[] } {
   if (elements.length === 0) return { sql: '1=1', params: [] };
   const placeholders = elements.map(() => '?').join(',');
   return {
