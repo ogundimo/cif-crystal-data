@@ -47,6 +47,8 @@ export interface ElementSelection {
   elements: string[];
   groups: number[];
   periods: number[];
+  /** Exclude entries containing any element resolved by this selection. */
+  exclude?: boolean;
 }
 
 export type ElementSelections = [ElementSelection, ElementSelection, ElementSelection, ElementSelection];
@@ -61,6 +63,7 @@ export interface SearchFilter {
   elementSelections?: ElementSelection[];
   /** Legacy global criteria retained for compatibility with older saved filters. */
   elementSelection?: ElementSelection;
+  /** Cell-length search bounds are expressed in ångströms. */
   aMin?: number;
   aMax?: number;
   bMin?: number;

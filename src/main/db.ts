@@ -204,7 +204,7 @@ function buildElementCondition(
   if (elements.length === 0) return { sql: '1=1', params: [] };
   const placeholders = elements.map(() => '?').join(',');
   return {
-    sql: `id IN (SELECT entry_id FROM entry_elements WHERE element IN (${placeholders}))`,
+    sql: `id ${exclude ? 'NOT IN' : 'IN'} (SELECT entry_id FROM entry_elements WHERE element IN (${placeholders}))`,
     params: elements
   };
 }
@@ -247,15 +247,29 @@ function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, '\\$&');
 }
 
-function resolveFilterElementGroups(filter: SearchFilter): string[][] {
+interface ResolvedElementGroup {
+  elements: string[];
+  exclude: boolean;
+}
+
+function resolveFilterElementGroups(filter: SearchFilter): ResolvedElementGroup[] {
   if (filter.elementSelections) {
-    return filter.elementSelections.map(resolveElementSelection).filter((group) => group.length > 0);
+    return filter.elementSelections
+      .map((selection) => ({
+        elements: resolveElementSelection(selection),
+        exclude: Boolean(selection.exclude)
+      }))
+      .filter((group) => group.elements.length > 0);
   }
 
   const legacyResolved = filter.elementSelection ? resolveElementSelection(filter.elementSelection) : [];
   const firstElementGroup = [...new Set([...(filter.slot1 ?? []), ...legacyResolved])];
-  return [firstElementGroup, filter.slot2 ?? [], filter.slot3 ?? [], filter.slot4 ?? []]
-    .filter((group) => group.length > 0);
+  return [
+    { elements: firstElementGroup, exclude: Boolean(filter.elementSelection?.exclude) },
+    { elements: filter.slot2 ?? [], exclude: false },
+    { elements: filter.slot3 ?? [], exclude: false },
+    { elements: filter.slot4 ?? [], exclude: false }
+  ].filter((group) => group.elements.length > 0);
 }
 
 export function buildWhereClause(filter: SearchFilter): { sql: string; params: (string | number)[] } {
@@ -266,12 +280,12 @@ export function buildWhereClause(filter: SearchFilter): { sql: string; params: (
   if (elementGroups.length > 0) {
     const groupClauses: string[] = [];
     for (const group of elementGroups) {
-      const c = buildElementCondition(group);
+      const c = buildElementCondition(group.elements, group.exclude);
       groupClauses.push(c.sql);
       params.push(...c.params);
     }
     if (groupClauses.length > 1) {
-      const joiner = filter.mode === 'OR' ? ' OR ' : ' AND ';
+      const joiner = filter.elementSelections ? ' AND ' : filter.mode === 'OR' ? ' OR ' : ' AND ';
       clauses.push(`(${groupClauses.join(joiner)})`);
     } else {
       clauses.push(groupClauses[0]);
@@ -280,27 +294,27 @@ export function buildWhereClause(filter: SearchFilter): { sql: string; params: (
 
   if (filter.aMin !== undefined) {
     clauses.push('cell_a >= ?');
-    params.push(filter.aMin);
+    params.push(filter.aMin / 10);
   }
   if (filter.aMax !== undefined) {
     clauses.push('cell_a <= ?');
-    params.push(filter.aMax);
+    params.push(filter.aMax / 10);
   }
   if (filter.bMin !== undefined) {
     clauses.push('cell_b >= ?');
-    params.push(filter.bMin);
+    params.push(filter.bMin / 10);
   }
   if (filter.bMax !== undefined) {
     clauses.push('cell_b <= ?');
-    params.push(filter.bMax);
+    params.push(filter.bMax / 10);
   }
   if (filter.cMin !== undefined) {
     clauses.push('cell_c >= ?');
-    params.push(filter.cMin);
+    params.push(filter.cMin / 10);
   }
   if (filter.cMax !== undefined) {
     clauses.push('cell_c <= ?');
-    params.push(filter.cMax);
+    params.push(filter.cMax / 10);
   }
 
   const sg = parseSgQuery(filter.sgQuery);
@@ -358,7 +372,9 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
   const slot4 = filter.slot4 ?? [];
   const elementGroups = resolveFilterElementGroups(filter);
   if (elementGroups.length) {
-    const content = elementGroups.map((group) => `(${group.join(' OR ')})`).join(` ${filter.mode} `);
+    const content = elementGroups
+      .map((group) => `${group.exclude ? 'NOT ' : ''}(${group.elements.join(' OR ')})`)
+      .join(filter.elementSelections ? ' AND ' : ` ${filter.mode} `);
     const n = countForFilter({
       slot1,
       slot2,
@@ -375,7 +391,7 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
     const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', aMin: filter.aMin, aMax: filter.aMax });
     rows.push({
       field: 'Cell length a',
-      content: `${filter.aMin ?? '...'} - ${filter.aMax ?? '...'} nm`,
+      content: `${filter.aMin ?? '...'} - ${filter.aMax ?? '...'} Å`,
       entries: n
     });
   }
@@ -383,7 +399,7 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
     const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', bMin: filter.bMin, bMax: filter.bMax });
     rows.push({
       field: 'Cell length b',
-      content: `${filter.bMin ?? '...'} - ${filter.bMax ?? '...'} nm`,
+      content: `${filter.bMin ?? '...'} - ${filter.bMax ?? '...'} Å`,
       entries: n
     });
   }
@@ -391,7 +407,7 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
     const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', cMin: filter.cMin, cMax: filter.cMax });
     rows.push({
       field: 'Cell length c',
-      content: `${filter.cMin ?? '...'} - ${filter.cMax ?? '...'} nm`,
+      content: `${filter.cMin ?? '...'} - ${filter.cMax ?? '...'} Å`,
       entries: n
     });
   }

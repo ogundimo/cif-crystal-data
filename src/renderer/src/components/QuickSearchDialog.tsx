@@ -4,6 +4,8 @@ import { createEmptyElementSelection, formatElementSelection, toggleElementCrite
 import { validateSearchInput, type SearchValidationField } from '../../../shared/searchValidation';
 import { scheduleDebouncedRequest } from '../debouncedRequest';
 import { PeriodicTablePicker, RangeInputRow, SearchFieldRow } from './QuickSearchParts';
+import closeIcon from '../../../../icons/close ICON.png';
+import notEqualIcon from '../../../../icons/not-equal.png';
 
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
@@ -17,7 +19,6 @@ interface Props {
 
 interface FormState {
   elementSelections: ElementSelections;
-  mode: 'AND' | 'OR';
   aMin: string;
   aMax: string;
   bMin: string;
@@ -38,7 +39,6 @@ const emptyForm: FormState = {
     createEmptyElementSelection(),
     createEmptyElementSelection()
   ],
-  mode: 'AND',
   aMin: '',
   aMax: '',
   bMin: '',
@@ -59,7 +59,7 @@ function toFilter(form: FormState): SearchFilter {
     slot2: form.elementSelections[1].elements,
     slot3: form.elementSelections[2].elements,
     slot4: form.elementSelections[3].elements,
-    mode: form.mode,
+    mode: 'AND',
     elementSelections: form.elementSelections,
     aMin: num(form.aMin),
     aMax: num(form.aMax),
@@ -170,7 +170,10 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
   if (!open) return null;
 
   function slotOf(symbol: string): 1 | 2 | 3 | 4 | 0 {
-    return form.elementSelections[activeSlot - 1].elements.includes(symbol) ? activeSlot : 0;
+    const index = form.elementSelections.findIndex((selection) =>
+      selection.elements.includes(symbol)
+    );
+    return index === -1 ? 0 : ((index + 1) as 1 | 2 | 3 | 4);
   }
 
   function updateSelection(slot: 1 | 2 | 3 | 4, update: (selection: ElementSelection) => ElementSelection) {
@@ -182,12 +185,25 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
   }
 
   function toggleElement(symbol: string) {
-    updateSelection(activeSlot, (selection) => toggleElementCriterion(selection, symbol));
+    const targetSlot = activeSlot;
+    const existingSlot = slotOf(symbol);
+    updateSelection(existingSlot || targetSlot, (selection) =>
+      toggleElementCriterion(selection, symbol)
+    );
+    setActiveSlot(targetSlot === 4 ? 1 : ((targetSlot + 1) as 1 | 2 | 3 | 4));
   }
 
   function clearSlot(slot: 1 | 2 | 3 | 4) {
     setActiveSlot(slot);
     updateSelection(slot, createEmptyElementSelection);
+  }
+
+  function toggleNotEqual(slot: 1 | 2 | 3 | 4) {
+    setActiveSlot(slot);
+    updateSelection(slot, (selection) => ({
+      ...selection,
+      exclude: !selection.exclude
+    }));
   }
 
   function clearAll() {
@@ -269,9 +285,30 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
                 {([1, 3, 2, 4] as const).map((slot) => (
                   <SearchFieldRow
                     key={slot}
-                    label={`${slot}:`}
+                    label="AND:"
                     htmlFor={`quick-search-elements-${slot}`}
-                    action={<button type="button" className="quick-search-clear" onClick={() => clearSlot(slot)} aria-label={`Clear element group ${slot}`}>✕</button>}
+                    action={
+                      <>
+                        <button
+                          type="button"
+                          className={`quick-search-ne ${form.elementSelections[slot - 1].exclude ? 'quick-search-ne-active' : ''}`}
+                          onClick={() => toggleNotEqual(slot)}
+                          aria-label={`Not equal element group ${slot}`}
+                          aria-pressed={Boolean(form.elementSelections[slot - 1].exclude)}
+                          title="Exclude entries containing this element selection"
+                        >
+                          <img className="quick-search-ne-icon" src={notEqualIcon} alt="" />
+                        </button>
+                        <button
+                          type="button"
+                          className="quick-search-clear"
+                          onClick={() => clearSlot(slot)}
+                          aria-label={`Clear element group ${slot}`}
+                        >
+                          <img className="h-3 w-3 object-contain" src={closeIcon} alt="" />
+                        </button>
+                      </>
+                    }
                   >
                     <input
                       id={`quick-search-elements-${slot}`}
@@ -287,12 +324,6 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
                   </SearchFieldRow>
                 ))}
               </div>
-              <SearchFieldRow label={<span id="quick-search-combine-label">Combine elements:</span>}>
-                <div className="flex items-center gap-1" role="group" aria-labelledby="quick-search-combine-label">
-                  <button type="button" className={`btn-w32 px-3 ${form.mode === 'AND' ? 'btn-on' : ''}`} onClick={() => setForm((previous) => ({ ...previous, mode: 'AND' }))} aria-pressed={form.mode === 'AND'}>AND</button>
-                  <button type="button" className={`btn-w32 px-3 ${form.mode === 'OR' ? 'btn-on' : ''}`} onClick={() => setForm((previous) => ({ ...previous, mode: 'OR' }))} aria-pressed={form.mode === 'OR'}>OR</button>
-                </div>
-              </SearchFieldRow>
               <SearchFieldRow
                 label="Number of elements:"
                 htmlFor="quick-search-element-count"
@@ -310,7 +341,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
               </SearchFieldRow>
 
               <fieldset className="quick-search-range-group">
-                <legend>Cell lengths [nm]</legend>
+                <legend>Cell lengths [Å]</legend>
                 <div className="quick-search-ranges">
                   {(['a', 'b', 'c'] as const).map((axis) => (
                     <RangeInputRow

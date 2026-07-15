@@ -25,8 +25,21 @@ export const GROUP_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
 export const PERIOD_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
   1: ['H', 'He'], 2: ELEMENT_SYMBOLS.slice(2, 10), 3: ELEMENT_SYMBOLS.slice(10, 18),
   4: ELEMENT_SYMBOLS.slice(18, 36), 5: ELEMENT_SYMBOLS.slice(36, 54),
-  6: ELEMENT_SYMBOLS.slice(54, 86), 7: ELEMENT_SYMBOLS.slice(86, 118)
+  // The picker displays the f-block on separate selectable rows, so 6P and
+  // 7P contain only the elements visibly present in their main table rows.
+  6: [...ELEMENT_SYMBOLS.slice(54, 57), ...ELEMENT_SYMBOLS.slice(71, 86)],
+  7: [...ELEMENT_SYMBOLS.slice(86, 89), ...ELEMENT_SYMBOLS.slice(103, 118)],
+  // 9 and 10 are the picker grid rows for the displayed 4f and 5f series.
+  9: ELEMENT_SYMBOLS.slice(57, 71), 10: ELEMENT_SYMBOLS.slice(89, 103)
 };
+
+export const SELECTABLE_PERIODS = [1, 2, 3, 4, 5, 6, 7, 9, 10] as const;
+
+export function formatPeriodCriterion(period: number): string {
+  if (period === 9) return 'Period 4f';
+  if (period === 10) return 'Period 5f';
+  return `Period ${period}`;
+}
 
 export function resolveElementSelection(selection: ElementSelection): string[] {
   const resolved = new Set<string>(selection.elements);
@@ -40,11 +53,12 @@ export function createEmptyElementSelection(): ElementSelection {
 }
 
 export function formatElementSelection(selection: ElementSelection): string {
-  return [
+  const content = [
     ...selection.elements,
     ...selection.groups.map((group) => `Group ${group}`),
-    ...selection.periods.map((period) => `Period ${period}`)
+    ...selection.periods.map(formatPeriodCriterion)
   ].join(' OR ');
+  return selection.exclude && content ? `NOT(${content})` : content;
 }
 
 export function toggleElementCriterion(selection: ElementSelection, symbol: string): ElementSelection {

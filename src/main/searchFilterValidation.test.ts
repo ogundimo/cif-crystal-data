@@ -20,6 +20,17 @@ describe('validateSearchFilter', () => {
     );
   });
 
+  it('rejects a non-boolean not-equal flag', () => {
+    expect(() =>
+      validateSearchFilter({
+        ...validFilter,
+        elementSelections: [
+          { elements: ['Fe'], groups: [], periods: [], exclude: 'yes' }
+        ]
+      })
+    ).toThrow('elementSelections[0].exclude must be a boolean');
+  });
+
   it('rejects non-finite numeric ranges', () => {
     expect(() => validateSearchFilter({ ...validFilter, aMin: Number.NaN })).toThrow(
       'aMin must be a finite number'
@@ -33,6 +44,21 @@ describe('validateSearchFilter', () => {
         elementSelections: [{ elements: ['NotAnElement'], groups: [], periods: [] }]
       })
     ).toThrow('invalid element symbol');
+  });
+
+  it('accepts 4f and 5f period criteria and rejects the spacer row', () => {
+    expect(() =>
+      validateSearchFilter({
+        ...validFilter,
+        elementSelections: [{ elements: [], groups: [], periods: [9, 10] }]
+      })
+    ).not.toThrow();
+    expect(() =>
+      validateSearchFilter({
+        ...validFilter,
+        elementSelections: [{ elements: [], groups: [], periods: [8] }]
+      })
+    ).toThrow('invalid period');
   });
 
   it('caps the number of independently resolved element selections', () => {

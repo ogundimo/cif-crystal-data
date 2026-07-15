@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import type { ElementSelection } from '../../../shared/types';
-import { resolveElementSelection } from '../../../shared/periodicTableData';
+import { formatPeriodCriterion, resolveElementSelection } from '../../../shared/periodicTableData';
 import { CATEGORY_CLASS, GROUP_LABELS, PERIOD_LABELS, PERIODIC_TABLE } from '../periodicTable';
 
 interface SearchFieldRowProps {
@@ -107,17 +107,15 @@ export function PeriodicTablePicker({ selection, onChange, slotOf, onToggleEleme
             </button>
           ))}
           {Object.entries(PERIOD_LABELS).map(([row, label]) => (
-            Number(row) <= 7 ? (
-              <button
-                type="button"
-                key={`period-${row}`}
-                className={`quick-search-table-selector quick-search-period-selector ${selection.periods.includes(Number(row)) ? 'quick-search-table-selector-selected' : ''}`}
-                style={{ gridColumn: 1, gridRow: Number(row) + 1 }}
-                onClick={() => toggleNumber('periods', Number(row))}
-                aria-label={`Period ${row}`}
-                aria-pressed={selection.periods.includes(Number(row))}
-              >{label}</button>
-            ) : <div key={`period-${row}`} className="quick-search-period-label" style={{ gridColumn: 1, gridRow: Number(row) + 1 }}>{label}</div>
+            <button
+              type="button"
+              key={`period-${row}`}
+              className={`quick-search-table-selector quick-search-period-selector ${selection.periods.includes(Number(row)) ? 'quick-search-table-selector-selected' : ''}`}
+              style={{ gridColumn: 1, gridRow: Number(row) + 1 }}
+              onClick={() => toggleNumber('periods', Number(row))}
+              aria-label={formatPeriodCriterion(Number(row))}
+              aria-pressed={selection.periods.includes(Number(row))}
+            >{label}</button>
           ))}
           {PERIODIC_TABLE.map((element) => {
             const explicit = slotOf(element.symbol) !== 0;
@@ -142,12 +140,12 @@ export function PeriodicTablePicker({ selection, onChange, slotOf, onToggleEleme
           <div className="quick-search-criteria-line">
             <span>Groups/periods:</span>
             {selection.groups.map((group) => <button type="button" key={`g-${group}`} onClick={() => toggleNumber('groups', group)} aria-label={`Remove Group ${group}`}>Group {group} ×</button>)}
-            {selection.periods.map((period) => <button type="button" key={`p-${period}`} onClick={() => toggleNumber('periods', period)} aria-label={`Remove Period ${period}`}>Period {period} ×</button>)}
+            {selection.periods.map((period) => <button type="button" key={`p-${period}`} onClick={() => toggleNumber('periods', period)} aria-label={`Remove ${formatPeriodCriterion(period)}`}>{formatPeriodCriterion(period)} ×</button>)}
             {resolved.length === 0 && <em>None</em>}
           </div>
           <div className="quick-search-resolved-elements"><span>Group/period elements:</span> {resolved.join(', ') || 'None'}</div>
         </div>
-        <p className="quick-search-periodic-help">Selections are added to the active element box. Top buttons select groups; left buttons select periods.</p>
+        <p className="quick-search-periodic-help">Each element click advances to the next element box. Top buttons select groups; left buttons select periods.</p>
       </div>
     </div>
   );

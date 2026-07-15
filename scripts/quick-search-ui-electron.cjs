@@ -90,10 +90,16 @@ async function runScenario(window, scenario) {
   );
 }
 
-async function testActiveElementBoxFlow(window) {
+async function testCyclingElementBoxFlow(window) {
   await window.webContents.executeJavaScript(`
     (() => {
       document.querySelector('#quick-search-elements-3').click();
+    })()
+  `);
+  await pause(50);
+  await window.webContents.executeJavaScript(`
+    (() => {
+      document.querySelector('[aria-label="Not equal element group 3"]').click();
     })()
   `);
   await pause(50);
@@ -108,15 +114,39 @@ async function testActiveElementBoxFlow(window) {
     (() => ({
       box1: document.querySelector('#quick-search-elements-1').value,
       box3: document.querySelector('#quick-search-elements-3').value,
-      box3Active: document.querySelector('#quick-search-elements-3').getAttribute('aria-current'),
+      box4Active: document.querySelector('#quick-search-elements-4').getAttribute('aria-current'),
+      elementLabels: Array.from(document.querySelectorAll('.quick-search-element-groups label')).map((label) => label.textContent),
+      notEqualPressed: document.querySelector('[aria-label="Not equal element group 3"]').getAttribute('aria-pressed'),
+      combineControlsRemoved: document.querySelector('#quick-search-combine-label') === null,
       group16Pressed: document.querySelector('[aria-label="Group 16"]').getAttribute('aria-pressed')
     }))()
   `);
   assert.equal(result.box1, '', 'active-box flow unexpectedly changed element box 1');
-  assert.equal(result.box3, 'Fe OR Group 16', 'periodic-table selections did not target element box 3');
-  assert.equal(result.box3Active, 'true', 'element box 3 did not remain active');
-  assert.equal(result.group16Pressed, 'true', 'active box did not retain its group selection');
-  console.log('✓ active element-box selection flow');
+  assert.equal(result.box3, 'NOT(Fe OR Group 16)', 'not-equal selection was not shown in element box 3');
+  assert.equal(result.box4Active, 'true', 'element click did not advance to element box 4');
+  assert.deepEqual(result.elementLabels, ['AND:', 'AND:', 'AND:', 'AND:']);
+  assert.equal(result.notEqualPressed, 'true', 'not-equal control did not remain selected');
+  assert.equal(result.combineControlsRemoved, true, 'obsolete AND/OR controls are still rendered');
+  assert.equal(result.group16Pressed, 'false', 'periodic table did not switch to the next box');
+  console.log('✓ cycling element-box selection flow');
+}
+
+async function testAngstromCellLengths(window) {
+  const result = await window.webContents.executeJavaScript(`
+    (() => {
+      const grid = document.querySelector('[data-testid="data-grid-scroll"]');
+      const firstRow = grid.querySelector('tbody tr[data-entry-id]');
+      return {
+        headers: Array.from(grid.querySelectorAll('thead th')).slice(1, 4).map((cell) => cell.textContent.trim()),
+        values: Array.from(firstRow.querySelectorAll('td')).slice(1, 4).map((cell) => cell.textContent.trim()),
+        searchLegend: Array.from(document.querySelectorAll('legend')).find((legend) => legend.textContent.includes('Cell lengths'))?.textContent
+      };
+    })()
+  `);
+  assert.deepEqual(result.headers, ['a [Å]', 'b [Å]', 'c [Å]']);
+  assert.deepEqual(result.values, ['1.0000', '2.0000', '3.0000']);
+  assert.equal(result.searchLegend, 'Cell lengths [Å]');
+  console.log('✓ angstrom cell-length headers, values, and search units');
 }
 
 async function testLargeGridVirtualization(window) {
@@ -181,7 +211,7 @@ async function testImportProgressIndicator(window) {
     })()
   `);
   assert.equal(result.label, 'Import progress: 800 of 1000 files processed');
-  assert.match(result.text, /790 imported, 10 failed/);
+  assert.match(result.text, /90 imported, 700 unchanged, 10 failed/);
   assert.equal(result.value, 800);
   assert.equal(result.max, 1000);
   console.log('✓ import progress indicator counts and accessibility label');
@@ -229,7 +259,8 @@ async function run() {
     zoom: 1.25,
     expectedAxisRows: 2
   });
-  await testActiveElementBoxFlow(window);
+  await testCyclingElementBoxFlow(window);
+  await testAngstromCellLengths(window);
   await testLargeGridVirtualization(window);
   await testImportProgressIndicator(window);
 

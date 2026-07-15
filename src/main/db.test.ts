@@ -32,6 +32,24 @@ describe('periodic-table selection query', () => {
     expect(new Set(result.params).size).toBe(result.params.length);
   });
 
+  it('builds preview queries for the selectable 4f and 5f rows', () => {
+    const result = buildWhereClause({
+      slot1: [],
+      slot2: [],
+      mode: 'AND',
+      elementSelections: [
+        { elements: [], groups: [], periods: [9] },
+        { elements: [], groups: [], periods: [10] }
+      ]
+    });
+
+    expect(result.sql).toContain(' AND ');
+    expect(result.params).toEqual([
+      'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu',
+      'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr'
+    ]);
+  });
+
   it('combines independently resolved textboxes with the selected mode', () => {
     const result = buildWhereClause({
       slot1: ['Fe'],
@@ -45,6 +63,23 @@ describe('periodic-table selection query', () => {
     expect(result.sql.match(/element IN/g)).toHaveLength(2);
     expect(result.sql).toContain(' AND ');
     expect(result.params).toEqual(['Fe', 'Ru', 'Os', 'Hs', 'O', 'S', 'Se', 'Te', 'Po', 'Lv']);
+  });
+
+  it('combines element boxes with AND and negates boxes marked not equal', () => {
+    const result = buildWhereClause({
+      slot1: ['Fe'],
+      slot2: ['O'],
+      mode: 'OR',
+      elementSelections: [
+        { elements: ['Fe'], groups: [], periods: [], exclude: true },
+        { elements: ['O'], groups: [], periods: [] }
+      ]
+    });
+
+    expect(result.sql).toContain('id NOT IN');
+    expect(result.sql).toContain(' AND ');
+    expect(result.sql).not.toContain(' OR ');
+    expect(result.params).toEqual(['Fe', 'O']);
   });
 
   it('retains legacy individual-element filtering', () => {
@@ -62,6 +97,20 @@ describe('periodic-table selection query', () => {
 
     expect(result.sql.match(/ESCAPE/g)).toHaveLength(2);
     expect(result.params).toEqual(['%p\\_1\\%%', '%100\\%\\_complete%']);
+  });
+
+  it('converts angstrom search bounds to the database nanometre values', () => {
+    const result = buildWhereClause({
+      slot1: [],
+      slot2: [],
+      mode: 'AND',
+      aMin: 4,
+      aMax: 16.5,
+      bMin: 5,
+      cMax: 23.86
+    });
+
+    expect(result.params).toEqual([0.4, 1.65, 0.5, 2.386]);
   });
 
   it('clears entries inside a transaction and reports the deleted count', () => {

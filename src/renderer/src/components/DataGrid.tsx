@@ -17,8 +17,8 @@ const ROW_HEIGHT = 20;
 const HEADER_HEIGHT = 25;
 const ROW_OVERSCAN = 8;
 
-function formatCellLength(value: number | null | undefined): string {
-  return Number.isFinite(value) ? (value as number).toFixed(4) : '';
+function formatCellLengthAngstrom(value: number | null | undefined): string {
+  return Number.isFinite(value) ? ((value as number) * 10).toFixed(4) : '';
 }
 
 const columns = [
@@ -28,19 +28,19 @@ const columns = [
     cell: (info) => formatFormula(info.getValue())
   }),
   columnHelper.accessor('cell_a', {
-    header: 'a [nm]',
+    header: 'a [Å]',
     size: 75,
-    cell: (info) => formatCellLength(info.getValue())
+    cell: (info) => formatCellLengthAngstrom(info.getValue())
   }),
   columnHelper.accessor('cell_b', {
-    header: 'b [nm]',
+    header: 'b [Å]',
     size: 75,
-    cell: (info) => formatCellLength(info.getValue())
+    cell: (info) => formatCellLengthAngstrom(info.getValue())
   }),
   columnHelper.accessor('cell_c', {
-    header: 'c [nm]',
+    header: 'c [Å]',
     size: 75,
-    cell: (info) => formatCellLength(info.getValue())
+    cell: (info) => formatCellLengthAngstrom(info.getValue())
   }),
   columnHelper.accessor('sg_number', {
     header: 'SG number',

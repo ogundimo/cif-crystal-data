@@ -85,7 +85,7 @@ body {
   .quick-search-element-groups > :nth-child(3) { grid-area: two; }
   .quick-search-element-groups > :nth-child(4) { grid-area: four; }
   .quick-search-element-groups .quick-search-field-row {
-    @apply grid-cols-[18px_minmax(0,1fr)_20px];
+    @apply grid-cols-[32px_minmax(0,1fr)_44px];
   }
   .quick-search-element-field-active {
     @apply border-accent ring-1 ring-inset ring-accent/40;
@@ -101,7 +101,19 @@ body {
     @apply whitespace-nowrap font-normal;
   }
   .quick-search-field-action {
-    @apply flex h-6 items-center justify-center;
+    @apply flex h-6 items-center justify-center gap-1;
+  }
+  .quick-search-ne {
+    @apply flex h-5 w-5 items-center justify-center rounded-[2px] bg-transparent text-[#202020] hover:bg-[#e4e4e4];
+  }
+  .quick-search-ne-icon {
+    @apply block h-3.5 w-3.5 object-contain;
+  }
+  .quick-search-ne-active {
+    @apply bg-[#6f52c7] text-white;
+  }
+  .quick-search-ne-active .quick-search-ne-icon {
+    filter: invert(1);
   }
   .quick-search-field-message {
     @apply col-span-2 col-start-2 text-[10px] leading-tight text-red-700;
@@ -222,7 +234,7 @@ body {
     grid-template-areas: 'one' 'two' 'three' 'four';
   }
   .quick-search-element-groups .quick-search-field-row {
-    grid-template-columns: 18px minmax(0, 1fr) 20px;
+    grid-template-columns: 32px minmax(0, 1fr) 44px;
   }
   .quick-search-element-groups .quick-search-field-row > label {
     grid-column: auto;

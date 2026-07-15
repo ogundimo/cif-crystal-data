@@ -1,7 +1,8 @@
-import { ELEMENT_SYMBOLS } from '../shared/periodicTableData';
+import { ELEMENT_SYMBOLS, SELECTABLE_PERIODS } from '../shared/periodicTableData';
 import type { ElementSelection, SearchFilter } from '../shared/types';
 
 const ELEMENT_SET = new Set<string>(ELEMENT_SYMBOLS);
+const PERIOD_SET = new Set<number>(SELECTABLE_PERIODS);
 const MAX_ELEMENT_CRITERIA = ELEMENT_SYMBOLS.length;
 const MAX_TEXT_LENGTH = 200;
 
@@ -42,10 +43,22 @@ function validateBoundedIntegers(
 
 function validateSelection(value: unknown, field: string): ElementSelection {
   if (!isRecord(value)) fail(`${field} must be an object`);
+  if (value.exclude !== undefined && typeof value.exclude !== 'boolean') {
+    fail(`${field}.exclude must be a boolean`);
+  }
+  const periods = value.periods;
+  if (!Array.isArray(periods)) fail(`${field}.periods must be an array`);
+  if (periods.length > PERIOD_SET.size) fail(`${field}.periods contains too many values`);
+  for (const period of periods) {
+    if (typeof period !== 'number' || !Number.isInteger(period) || !PERIOD_SET.has(period)) {
+      fail(`${field}.periods contains an invalid period`);
+    }
+  }
   return {
     elements: validateElements(value.elements, `${field}.elements`),
     groups: validateBoundedIntegers(value.groups, `${field}.groups`, 1, 18),
-    periods: validateBoundedIntegers(value.periods, `${field}.periods`, 1, 7)
+    periods: periods as number[],
+    exclude: value.exclude as boolean | undefined
   };
 }
 
