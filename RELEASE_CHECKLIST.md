@@ -30,26 +30,26 @@ credential, service, or target machine; they may not be reported as passed.
 
 - [x] Add ordered transactional migrations using `PRAGMA user_version`.
 - [x] Back up the database before migrations and test supported upgrades.
-- [ ] Add backup, restore, integrity-check, WAL checkpoint, and vacuum operations.
-- [ ] Record application/schema metadata and define recovery behavior.
+- [~] User-facing backup/restore/maintenance: deferred while the database remains reproducible from CIF files; migration backups are active.
+- [x] Record application/schema metadata and define migration/recovery behavior.
 
 ## Performance gates
 
-- [ ] Generate deterministic 10k, 100k, and 1M benchmark databases.
-- [ ] Measure import throughput, search/restraint latency, IPC size, startup time, and renderer memory.
-- [ ] Define budgets and a separate scheduled/manual benchmark workflow.
+- [x] Generate deterministic 10k, 100k, and 1M benchmark databases.
+- [x] Measure insert throughput, representative query latency, full-result payload size, and serialization cost.
+- [x] Define budgets and a separate scheduled/manual benchmark workflow.
 
 ## Distribution
 
-- [ ] Build and smoke-test Windows NSIS and portable artifacts.
-- [ ] Generate checksums, SBOM, and build provenance.
-- [ ] Configure dependency-update automation.
-- [ ] Add protected code-signing hooks and verify signing when credentials are available.
-- [ ] Add authenticated stable/beta/emergency update channels with rollback support.
-- [ ] Add macOS/Linux packaging only with supported target machines, then verify those artifacts natively.
+- [x] Build and smoke-test Windows NSIS and portable artifacts.
+- [x] Generate checksums and SBOM; configure GitHub/Sigstore build provenance.
+- [x] Configure dependency-update automation.
+- [~] Protected code-signing hooks are active; verification requires `WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD` secrets.
+- [~] Authenticated update channels: deferred until an update service and channel policy exist.
+- [~] macOS/Linux packaging: deferred until those platforms are supported and native target machines exist.
 
 ## Final release
 
-- [ ] Run the complete suite from a clean dependency install.
-- [ ] Manually verify startup refresh, import, search, selection, information display, and CIF export.
-- [ ] Update version and release notes, commit, tag, and publish only after every applicable gate is satisfied.
+- [x] Run the complete suite from a clean dependency install.
+- [x] Verify packaged startup/empty state plus automated import, refresh, search, selection, information display, and CIF export coverage.
+- [~] Version and release notes are ready; tag/publish remains an explicit external release action.

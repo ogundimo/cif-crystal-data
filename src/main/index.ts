@@ -34,7 +34,7 @@ function getDbModule(): Promise<DbModule> {
   if (!dbReady) {
     dbReady = import('./db')
       .then((database) => {
-        database.initDb(app.getPath('userData'));
+        database.initDb(app.getPath('userData'), app.getVersion());
         lastDatabaseErrorMessage = null;
         return database;
       })

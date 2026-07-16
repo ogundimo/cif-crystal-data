@@ -22,6 +22,12 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      id-token: write
+      attestations: write
+
+    env:
+      CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+      CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
 
     steps:
       - name: Check out release tag
@@ -83,6 +89,22 @@ jobs:
       - name: Package Windows installers
         run: npm run package -- --publish never
 
+      - name: Verify Windows signatures
+        if: env.CSC_LINK != ''
+        shell: pwsh
+        run: |
+          $executables = @(Get-ChildItem release -File -Filter '*.exe')
+          foreach ($executable in $executables) {
+            $signature = Get-AuthenticodeSignature -LiteralPath $executable.FullName
+            if ($signature.Status -ne 'Valid') {
+              throw "Invalid signature on $($executable.Name): $($signature.StatusMessage)"
+            }
+          }
+
+      - name: Generate CycloneDX SBOM
+        shell: pwsh
+        run: npm sbom --sbom-format cyclonedx | Out-File -Encoding utf8 release/sbom.cdx.json
+
       - name: Generate checksums
         shell: pwsh
         run: |
@@ -105,9 +127,16 @@ jobs:
           path: |
             release/*.exe
             release/SHA256SUMS.txt
+            release/sbom.cdx.json
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
+
+      - name: Attest installers and SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: release/*.exe
+          sbom-path: release/sbom.cdx.json
 
       - name: Publish GitHub Release
         shell: pwsh
@@ -119,11 +148,11 @@ jobs:
         run: |
           $assets = @(
             Get-ChildItem release -File |
-              Where-Object { $_.Extension -eq '.exe' -or $_.Name -eq 'SHA256SUMS.txt' } |
+              Where-Object { $_.Extension -eq '.exe' -or $_.Name -in @('SHA256SUMS.txt', 'sbom.cdx.json') } |
               Sort-Object Name |
               ForEach-Object { $_.FullName }
           )
-          if ($assets.Count -lt 3) {
+          if ($assets.Count -lt 4) {
             throw "Release asset list is incomplete: $($assets -join ', ')"
           }
 

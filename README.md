@@ -48,8 +48,9 @@ dependency rebuild step.
 ## Publishing a GitHub release
 
 The `Release Windows application` GitHub Actions workflow publishes the NSIS installer,
-portable executable, and a `SHA256SUMS.txt` file. It runs the complete test suite before
-packaging and retains the same files as a workflow artifact for 14 days.
+portable executable, `SHA256SUMS.txt`, and a CycloneDX SBOM. It runs the complete test suite
+before packaging, creates a signed GitHub artifact attestation, and retains the same files as
+a workflow artifact for 14 days.
 
 To publish a release:
 
@@ -68,5 +69,7 @@ The workflow can also be run manually from the Actions tab for an existing tag. 
 do not create tags, and the workflow fails if the tag version differs from `package.json`.
 Tags containing a prerelease suffix, such as `v1.2.0-beta.1`, create GitHub prereleases.
 
-The generated Windows executables are currently unsigned, so Windows SmartScreen may warn
-users until a code-signing certificate is configured for `electron-builder`.
+The generated Windows executables are unsigned unless the protected
+`WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD` repository secrets are configured.
+The workflow verifies every configured signature and fails instead of publishing an invalid
+one. Unsigned builds may trigger a Windows SmartScreen warning.
