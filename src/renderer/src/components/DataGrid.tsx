@@ -62,12 +62,13 @@ const columns = [
 
 interface Props {
   rows: EntryRow[];
+  selectedId?: number | null;
+  onSelect?: (entry: EntryRow) => void;
 }
 
-export default function DataGrid({ rows }: Props) {
+export default function DataGrid({ rows, selectedId = null, onSelect }: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -121,14 +122,23 @@ export default function DataGrid({ rows }: Props) {
     <div
       ref={scrollContainerRef}
       data-testid="data-grid-scroll"
-      className="m-2 flex-1 overflow-auto rounded-md border border-stroke bg-white"
+      className="m-2 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-white"
       style={{ overflowAnchor: 'none' }}
       onScroll={measureViewport}
     >
-      <table
-        aria-rowcount={tableRows.length + 1}
-        className="w-full table-fixed border-separate border-spacing-0 text-xs"
-      >
+      {tableRows.length === 0 ? (
+        <div className="flex h-full min-h-[16rem] items-center justify-center text-center">
+          <div className="max-w-sm px-6 text-text-dim">
+            <div className="mb-2 text-3xl" aria-hidden="true">⌕</div>
+            <p className="font-semibold text-[#444]">No results displayed</p>
+            <p className="mt-1">Use Quick search to filter the loaded database.</p>
+          </div>
+        </div>
+      ) : (
+        <table
+          aria-rowcount={tableRows.length + 1}
+          className="w-full table-fixed border-separate border-spacing-0 text-xs"
+        >
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
@@ -170,7 +180,7 @@ export default function DataGrid({ rows }: Props) {
                 key={row.id}
                 aria-rowindex={rowIndex + 2}
                 data-entry-id={row.original.id}
-                onClick={() => setSelectedId(row.original.id)}
+                onClick={() => onSelect?.(row.original)}
                 style={{ height: ROW_HEIGHT }}
                 className={`cursor-default ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : ''} hover:bg-[#f0f6fc] ${
                   selectedId === row.original.id ? 'bg-accent-soft hover:bg-accent-soft' : ''
@@ -202,7 +212,8 @@ export default function DataGrid({ rows }: Props) {
             </tr>
           )}
         </tbody>
-      </table>
+        </table>
+      )}
     </div>
   );
 }

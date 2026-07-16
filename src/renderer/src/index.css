@@ -66,7 +66,7 @@ body {
     @apply min-h-0 overflow-auto p-3;
   }
   .quick-search-main-grid {
-    @apply grid grid-cols-[473px_minmax(0,1fr)] items-start gap-4;
+    @apply grid grid-cols-[492px_minmax(0,1fr)] items-start gap-4;
   }
   .quick-search-fields {
     @apply flex min-w-0 flex-col gap-1;
@@ -91,7 +91,7 @@ body {
     @apply border-accent ring-1 ring-inset ring-accent/40;
   }
   .quick-search-field-row {
-    @apply grid grid-cols-[128px_minmax(0,1fr)_20px] items-center gap-x-1.5 gap-y-0.5;
+    @apply grid grid-cols-[128px_minmax(0,1fr)_44px] items-center gap-x-1.5 gap-y-0.5;
   }
   .quick-search-field-row > .min-w-0 {
     @apply w-full;
@@ -114,6 +114,22 @@ body {
   }
   .quick-search-ne-active .quick-search-ne-icon {
     filter: invert(1);
+  }
+  .quick-search-negatable-input {
+    @apply relative;
+  }
+  .quick-search-negatable-input-active input {
+    @apply pl-10 pr-5;
+  }
+  .quick-search-not-prefix,
+  .quick-search-not-suffix {
+    @apply pointer-events-none absolute top-1/2 z-[1] -translate-y-1/2 text-[11px] text-[#444];
+  }
+  .quick-search-not-prefix {
+    @apply left-2;
+  }
+  .quick-search-not-suffix {
+    @apply right-2;
   }
   .quick-search-field-message {
     @apply col-span-2 col-start-2 text-[10px] leading-tight text-red-700;
@@ -143,12 +159,12 @@ body {
     @apply min-w-0 overflow-x-auto pb-1;
   }
   .quick-search-periodic-wrap {
-    @apply w-[461px];
+    @apply w-[480px];
   }
   .quick-search-periodic-grid {
     @apply grid;
-    grid-template-columns: 20px repeat(18, 24.5px);
-    grid-auto-rows: 23.5px;
+    grid-template-columns: 21px repeat(18, 25.5px);
+    grid-auto-rows: 24.5px;
   }
   .quick-search-period-label {
     @apply flex items-center justify-center text-[9px] font-medium leading-none text-[#444];
@@ -166,7 +182,7 @@ body {
     @apply border-[#5941a9] bg-[#6f52c7] text-white hover:border-[#493590] hover:bg-[#5d43ae];
   }
   .quick-search-element {
-    @apply relative -ml-px -mt-px flex select-none items-end justify-center border border-[#858585] pb-[2px] text-[12px] font-bold leading-none hover:z-20 hover:outline hover:outline-1 hover:outline-accent;
+    @apply relative -ml-px -mt-px flex select-none items-end justify-center border border-white/90 pb-[3px] text-[13px] font-extrabold leading-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.18)] hover:z-20 hover:outline hover:outline-2 hover:outline-accent;
   }
   .quick-search-element-selected {
     @apply z-10 border-accent bg-accent text-white;
@@ -175,7 +191,7 @@ body {
     @apply z-10 border-[#6f52c7] bg-[#e8e1fb] text-[#35236f];
   }
   .quick-search-atomic-number {
-    @apply absolute left-1/2 top-[2px] -translate-x-1/2 text-[7px] font-medium leading-none;
+    @apply absolute left-1/2 top-[2px] -translate-x-1/2 text-[8px] font-semibold leading-none;
   }
   .quick-search-periodic-help {
     @apply mt-1.5 text-[10px] leading-tight text-text-dim;
@@ -227,7 +243,7 @@ body {
     padding: 8px;
   }
   .quick-search-field-row {
-    grid-template-columns: minmax(0, 1fr) 20px;
+    grid-template-columns: minmax(0, 1fr) 44px;
   }
   .quick-search-element-groups {
     grid-template-columns: minmax(0, 1fr);

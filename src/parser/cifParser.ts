@@ -8,21 +8,85 @@ export interface ElementCount {
   count: number;
 }
 
+export interface ParsedAtomSite {
+  siteLabel: string | null;
+  typeSymbol: string | null;
+  symmetryMultiplicity: number | null;
+  wyckoffSymbol: string | null;
+  fractX: number | null;
+  fractY: number | null;
+  fractZ: number | null;
+  occupancy: number | null;
+}
+
 export interface CifEntry {
   formula: string;
   elements: ElementCount[];
   cell_a: number;
   cell_b: number;
   cell_c: number;
+  cellAlpha: number | null;
+  cellBeta: number | null;
+  cellGamma: number | null;
+  cellVolume: number | null;
   sg_number: number;
   space_group: string;
   reference: string;
   level: string;
+  sampleType: 'Sample crystal' | 'Powder';
+  crystalColour: string;
+  atomSites: ParsedAtomSite[];
 }
 
 interface RawCif {
   tags: Map<string, string>;
   hasAnisoLabel: boolean;
+  atomSites: ParsedAtomSite[];
+}
+
+function tokenizeLoopLine(line: string): string[] {
+  const tokens = line.match(/'(?:[^']*)'|"(?:[^"]*)"|\S+/g) ?? [];
+  const commentIndex = tokens.findIndex((token) => token.startsWith('#'));
+  return (commentIndex === -1 ? tokens : tokens.slice(0, commentIndex)).map(stripQuotes);
+}
+
+function nullableText(value: string | undefined): string | null {
+  return hasCifValue(value) ? stripQuotes(value) : null;
+}
+
+function nullableNumber(value: string | undefined): number | null {
+  if (!hasCifValue(value)) return null;
+  const number = stripUncertainty(stripQuotes(value));
+  return Number.isFinite(number) ? number : null;
+}
+
+function parseAtomSiteRows(headers: string[], values: string[]): ParsedAtomSite[] {
+  const normalized = headers.map((header) => header.toLowerCase());
+  if (!normalized.includes('_atom_site_label') && !normalized.includes('_atom_site_type_symbol')) {
+    return [];
+  }
+  const indexOf = (tag: string) => normalized.indexOf(tag.toLowerCase());
+  const valueAt = (row: string[], tag: string): string | undefined => {
+    const index = indexOf(tag);
+    return index === -1 ? undefined : row[index];
+  };
+  const rows: ParsedAtomSite[] = [];
+  for (let offset = 0; offset + headers.length <= values.length; offset += headers.length) {
+    const row = values.slice(offset, offset + headers.length);
+    const multiplicity = nullableNumber(valueAt(row, '_atom_site_symmetry_multiplicity'));
+    rows.push({
+      siteLabel: nullableText(valueAt(row, '_atom_site_label')),
+      typeSymbol: nullableText(valueAt(row, '_atom_site_type_symbol')),
+      symmetryMultiplicity:
+        multiplicity !== null && Number.isInteger(multiplicity) ? multiplicity : null,
+      wyckoffSymbol: nullableText(valueAt(row, '_atom_site_Wyckoff_symbol')),
+      fractX: nullableNumber(valueAt(row, '_atom_site_fract_x')),
+      fractY: nullableNumber(valueAt(row, '_atom_site_fract_y')),
+      fractZ: nullableNumber(valueAt(row, '_atom_site_fract_z')),
+      occupancy: nullableNumber(valueAt(row, '_atom_site_occupancy'))
+    });
+  }
+  return rows;
 }
 
 /**
@@ -37,6 +101,7 @@ function scanCif(text: string): RawCif {
   const lines = text.split(/\r\n|\n|\r/);
   const tags = new Map<string, string>();
   let hasAnisoLabel = false;
+  const atomSites: ParsedAtomSite[] = [];
   let i = 0;
 
   const skipTextBlock = (idx: number): number => {
@@ -72,7 +137,8 @@ function scanCif(text: string): RawCif {
       if (headers.some((h) => h.startsWith('_atom_site_aniso_label'))) {
         hasAnisoLabel = true;
       }
-      // Consume the loop's data rows.
+      const values: string[] = [];
+      // Consume and tokenize the loop's data rows.
       while (i < lines.length) {
         const t = lines[i].trim();
         if (t === '' || t === 'loop_' || t.startsWith('_') || t.startsWith('data_') || t.startsWith('#')) {
@@ -82,8 +148,10 @@ function scanCif(text: string): RawCif {
           i = skipTextBlock(i);
           continue;
         }
+        values.push(...tokenizeLoopLine(lines[i]));
         i++;
       }
+      atomSites.push(...parseAtomSiteRows(headers, values));
       continue;
     }
 
@@ -123,7 +191,7 @@ function scanCif(text: string): RawCif {
     i++;
   }
 
-  return { tags, hasAnisoLabel };
+  return { tags, hasAnisoLabel, atomSites };
 }
 
 function stripQuotes(value: string): string {
@@ -148,6 +216,28 @@ function hasCifValue(value: string | undefined): value is string {
 export function stripUncertainty(value: string): number {
   const cleaned = value.trim().replace(/\(\d+\)\s*$/, '');
   return Number(cleaned);
+}
+
+export function calculateUnitCellVolume(
+  a: number,
+  b: number,
+  c: number,
+  alpha: number,
+  beta: number,
+  gamma: number
+): number | null {
+  const radians = (degrees: number) => (degrees * Math.PI) / 180;
+  const cosAlpha = Math.cos(radians(alpha));
+  const cosBeta = Math.cos(radians(beta));
+  const cosGamma = Math.cos(radians(gamma));
+  const radicand =
+    1 + 2 * cosAlpha * cosBeta * cosGamma -
+    cosAlpha ** 2 - cosBeta ** 2 - cosGamma ** 2;
+  if (![a, b, c, alpha, beta, gamma].every(Number.isFinite) || a <= 0 || b <= 0 || c <= 0) {
+    return null;
+  }
+  if (radicand < -1e-12) return null;
+  return a * b * c * Math.sqrt(Math.max(0, radicand));
 }
 
 function getClean(tags: Map<string, string>, tag: string): string | null {
@@ -196,7 +286,7 @@ export function buildReference(tags: Map<string, string>): string {
 
 /** Parse full CIF file text into the fields this app persists. */
 export function parseCif(text: string): CifEntry {
-  const { tags, hasAnisoLabel } = scanCif(text);
+  const { tags, hasAnisoLabel, atomSites } = scanCif(text);
 
   const sumRaw = tags.get('_chemical_formula_sum');
   if (!hasCifValue(sumRaw)) {
@@ -218,6 +308,21 @@ export function parseCif(text: string): CifEntry {
   if (!Number.isFinite(cell_b)) throw new Error('Invalid _cell_length_b');
   if (!Number.isFinite(cell_c)) throw new Error('Invalid _cell_length_c');
 
+  const validAngle = (tag: string): number | null => {
+    const value = nullableNumber(tags.get(tag));
+    return value !== null && value > 0 && value < 180 ? value : null;
+  };
+  const cellAlpha = validAngle('_cell_angle_alpha');
+  const cellBeta = validAngle('_cell_angle_beta');
+  const cellGamma = validAngle('_cell_angle_gamma');
+  const providedVolume = nullableNumber(tags.get('_cell_volume'));
+  const cellVolume =
+    providedVolume !== null && providedVolume > 0
+      ? providedVolume
+      : cellAlpha !== null && cellBeta !== null && cellGamma !== null
+        ? calculateUnitCellVolume(cell_a * 10, cell_b * 10, cell_c * 10, cellAlpha, cellBeta, cellGamma)
+        : null;
+
   const sgRaw = tags.get('_space_group_IT_number');
   if (!hasCifValue(sgRaw)) {
     throw new Error('Missing _space_group_IT_number');
@@ -235,6 +340,25 @@ export function parseCif(text: string): CifEntry {
 
   const reference = buildReference(tags);
   const level = hasAnisoLabel ? LEVEL_FULL : LEVEL_CELL;
+  const sampleType = hasAnisoLabel ? 'Sample crystal' : 'Powder';
+  const crystalColour = getClean(tags, '_exptl_crystal_colour') ?? '';
 
-  return { formula, elements, cell_a, cell_b, cell_c, sg_number, space_group, reference, level };
+  return {
+    formula,
+    elements,
+    cell_a,
+    cell_b,
+    cell_c,
+    cellAlpha,
+    cellBeta,
+    cellGamma,
+    cellVolume,
+    sg_number,
+    space_group,
+    reference,
+    level,
+    sampleType,
+    crystalColour,
+    atomSites
+  };
 }

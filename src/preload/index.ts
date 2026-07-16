@@ -3,7 +3,10 @@ import type { CifApi, ImportProgress, SearchFilter } from '../shared/types';
 
 const api: CifApi = {
   getAllEntries: () => ipcRenderer.invoke('cif:getAllEntries'),
+  getEntryCount: () => ipcRenderer.invoke('cif:getEntryCount'),
+  getAtomSites: (entryId: number) => ipcRenderer.invoke('cif:getAtomSites', entryId),
   getImportFolder: () => ipcRenderer.invoke('cif:getImportFolder'),
+  exportCif: (entryId: number) => ipcRenderer.invoke('cif:exportCif', entryId),
   search: (filter: SearchFilter) => ipcRenderer.invoke('cif:search', filter),
   restraints: (filter: SearchFilter) => ipcRenderer.invoke('cif:restraints', filter),
   importCifFolder: () => ipcRenderer.invoke('cif:importCifFolder'),

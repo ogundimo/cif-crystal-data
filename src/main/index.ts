@@ -1,11 +1,12 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { copyFile, stat } from 'node:fs/promises';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchFilter } from '../shared/types';
 import { validateSearchFilter } from './searchFilterValidation';
 import { ImportWorkerError, runImportWorker } from './importRunner';
 import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
+import { buildCifExportFilename } from './exportCif';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
@@ -70,7 +71,43 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   ipcMain.handle('cif:getAllEntries', async () => (await getDbModule()).getAllEntries());
+  ipcMain.handle('cif:getEntryCount', async () => (await getDbModule()).getEntryCount());
+  ipcMain.handle('cif:getAtomSites', async (_event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    return (await getDbModule()).getAtomSites(entryId);
+  });
   ipcMain.handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
+  ipcMain.handle('cif:exportCif', async (event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    const source = (await getDbModule()).getCifExportSource(entryId);
+    if (!source) throw new Error('The selected compound is no longer in the database.');
+    if (!source.source_path) throw new Error('The original CIF file location is unavailable.');
+    try {
+      if (!(await stat(source.source_path)).isFile()) throw new Error('Path is not a file');
+    } catch {
+      throw new Error(`The original CIF file could not be found: ${source.source_path}`);
+    }
+
+    const fileName = buildCifExportFilename(source.formula, source.sg_number);
+    const options = {
+      title: 'Export CIF',
+      defaultPath: join(app.getPath('documents'), fileName),
+      filters: [{ name: 'Crystallographic Information File', extensions: ['cif'] }]
+    };
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const result = win
+      ? await dialog.showSaveDialog(win, options)
+      : await dialog.showSaveDialog(options);
+    if (result.canceled || !result.filePath) return { exported: false };
+    if (resolve(result.filePath) !== resolve(source.source_path)) {
+      await copyFile(source.source_path, result.filePath);
+    }
+    return { exported: true, fileName: basename(result.filePath) };
+  });
 
   ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>
     (await getDbModule()).searchEntries(validateSearchFilter(filter))

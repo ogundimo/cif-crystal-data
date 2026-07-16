@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import DataGrid from './components/DataGrid';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import ResultsWorkspace from './components/ResultsWorkspace';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
@@ -26,7 +26,9 @@ export default function App() {
 }
 
 function AppInner() {
+  const startupScanStarted = useRef(false);
   const [entries, setEntries] = useState<EntryRow[]>([]);
+  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [qsOpen, setQsOpen] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
@@ -34,9 +36,12 @@ function AppInner() {
   const [refreshing, setRefreshing] = useState(false);
   const [importFolder, setImportFolder] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [searchActive, setSearchActive] = useState(false);
   const [searchResetSignal, setSearchResetSignal] = useState(0);
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
+  const [databaseEntryCount, setDatabaseEntryCount] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
   const showApiError = useCallback((action: string, error: unknown) => {
@@ -44,24 +49,53 @@ function AppInner() {
     setApiError(`Could not ${action}.${detail}`);
   }, []);
 
-  const reload = useCallback(async () => {
+  const refreshDatabaseCount = useCallback(async () => {
     try {
-      setEntries(await window.cifApi.getAllEntries());
+      setDatabaseEntryCount(await window.cifApi.getEntryCount());
       setApiError(null);
     } catch (error) {
-      showApiError('load entries', error);
+      showApiError('load the database summary', error);
     }
   }, [showApiError]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  const clearAnswerSet = useCallback((resetSearchForm = false) => {
+    setEntries([]);
+    setSelectedEntryId(null);
+    setAnswerSetLabel(NO_CRITERIA_LABEL);
+    setSearchActive(false);
+    setExportMessage(null);
+    if (resetSearchForm) setSearchResetSignal((value) => value + 1);
+  }, []);
 
   useEffect(() => {
-    window.cifApi.getImportFolder().then(setImportFolder).catch((error) => {
-      showApiError('load the saved CIF folder', error);
-    });
-  }, [showApiError]);
+    refreshDatabaseCount();
+  }, [refreshDatabaseCount]);
+
+  useEffect(() => {
+    if (startupScanStarted.current) return;
+    startupScanStarted.current = true;
+
+    async function scanSavedFolder() {
+      try {
+        const folder = await window.cifApi.getImportFolder();
+        setImportFolder(folder);
+        if (!folder) return;
+
+        setRefreshing(true);
+        setImportProgress(null);
+        const result = await window.cifApi.refreshCifFolder();
+        if (result.importedCount > 0 || result.failures.length > 0) setImportResult(result);
+        await refreshDatabaseCount();
+      } catch (error) {
+        showApiError('scan the saved CIF folder at startup', error);
+      } finally {
+        setRefreshing(false);
+        setImportProgress(null);
+      }
+    }
+
+    void scanSavedFolder();
+  }, [refreshDatabaseCount, showApiError]);
 
   useEffect(() => window.cifApi.onImportProgress(setImportProgress), []);
 
@@ -74,7 +108,8 @@ function AppInner() {
       if (result) {
         setImportResult(result);
         setImportFolder(await window.cifApi.getImportFolder());
-        await reload();
+        clearAnswerSet(true);
+        await refreshDatabaseCount();
       }
     } catch (error) {
       showApiError('import CIF files', error);
@@ -91,7 +126,8 @@ function AppInner() {
     try {
       const result = await window.cifApi.refreshCifFolder();
       setImportResult(result);
-      await reload();
+      clearAnswerSet(true);
+      await refreshDatabaseCount();
     } catch (error) {
       showApiError('refresh CIF files', error);
     } finally {
@@ -100,17 +136,9 @@ function AppInner() {
     }
   }
 
-  async function handleResetSearch() {
+  function handleResetSearch() {
     setApiError(null);
-    try {
-      const allEntries = await window.cifApi.getAllEntries();
-      setEntries(allEntries);
-      setAnswerSetLabel(NO_CRITERIA_LABEL);
-      setSearchActive(false);
-      setSearchResetSignal((value) => value + 1);
-    } catch (error) {
-      showApiError('reset the search', error);
-    }
+    clearAnswerSet(true);
   }
 
   async function handleClearCifs() {
@@ -119,15 +147,28 @@ function AppInner() {
     try {
       const result = await window.cifApi.clearCifs();
       if (!result.cleared) return;
-      setEntries([]);
+      setDatabaseEntryCount(0);
       setImportResult(null);
-      setAnswerSetLabel(NO_CRITERIA_LABEL);
-      setSearchActive(false);
-      setSearchResetSignal((value) => value + 1);
+      clearAnswerSet(true);
     } catch (error) {
       showApiError('clear imported CIF data', error);
     } finally {
       setClearing(false);
+    }
+  }
+
+  async function handleExportCif() {
+    if (selectedEntryId === null) return;
+    setExporting(true);
+    setExportMessage(null);
+    setApiError(null);
+    try {
+      const result = await window.cifApi.exportCif(selectedEntryId);
+      if (result.exported) setExportMessage(`Exported ${result.fileName ?? 'CIF file'}`);
+    } catch (error) {
+      showApiError('export the selected CIF', error);
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -152,11 +193,16 @@ function AppInner() {
       Boolean(filter.elementCountQuery && filter.elementCountQuery.trim());
 
     setApiError(null);
+    if (!hasCriteria) {
+      clearAnswerSet();
+      return;
+    }
     try {
       const results = await window.cifApi.search(filter);
       setEntries(results);
-      setAnswerSetLabel(hasCriteria ? `A1 (${results.length} matching)` : NO_CRITERIA_LABEL);
-      setSearchActive(hasCriteria);
+      setSelectedEntryId(results[0]?.id ?? null);
+      setAnswerSetLabel(`A1 (${results.length} matching)`);
+      setSearchActive(true);
     } catch (error) {
       showApiError('search entries', error);
     }
@@ -174,6 +220,14 @@ function AppInner() {
           disabled={!searchActive}
         >
           <span aria-hidden="true">↺</span> Reset search
+        </button>
+        <button
+          className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
+          onClick={handleExportCif}
+          disabled={selectedEntryId === null || importing || refreshing || clearing || exporting}
+          title={selectedEntryId === null ? 'Select a Quick Search result first' : 'Export the selected original CIF file'}
+        >
+          <span aria-hidden="true">⇩</span> {exporting ? 'Exporting...' : 'Export CIF'}
         </button>
         <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing}>
           <span>&#128193;</span>{' '}
@@ -213,12 +267,32 @@ function AppInner() {
         </span>
       </div>
 
-      <DataGrid rows={entries} />
+      <ResultsWorkspace
+        rows={entries}
+        selectedId={selectedEntryId}
+        onSelect={(entry) => setSelectedEntryId(entry.id)}
+      />
 
       <div className="flex gap-2 border-t border-stroke px-2.5 py-1 text-text-dim">
-        <div className="flex-1 px-2 py-0.5">{entries.length} entries</div>
+        <div className="flex-1 px-2 py-0.5">
+          {searchActive
+            ? `${entries.length} search results`
+            : databaseEntryCount === null
+              ? 'Loading database...'
+              : `${databaseEntryCount} entries indexed`}
+        </div>
         <div className="px-2 py-0.5">db: cif-local.db</div>
-        <div className="px-2 py-0.5">{importing ? 'Importing...' : refreshing ? 'Refreshing...' : clearing ? 'Clearing...' : 'Ready'}</div>
+        <div className="px-2 py-0.5">
+          {importing
+            ? 'Importing...'
+            : refreshing
+              ? 'Refreshing...'
+              : clearing
+                ? 'Clearing...'
+                : exporting
+                  ? 'Exporting...'
+                  : exportMessage ?? 'Ready'}
+        </div>
       </div>
 
       <QuickSearchDialog

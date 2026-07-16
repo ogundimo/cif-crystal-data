@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import type { CifEntry } from '../parser/cifParser';
-import type { EntryRow, RestraintRow, SearchFilter } from '../shared/types';
+import type { AtomSiteRow, EntryRow, RestraintRow, SearchFilter } from '../shared/types';
 import { resolveElementSelection } from '../shared/periodicTableData';
 
 let db: Database.Database | null = null;
@@ -35,6 +35,9 @@ export function initDb(userDataPath: string): Database.Database {
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
+  const atomSitesTableExists = Boolean(
+    db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'atom_sites'").get()
+  );
   db.exec(`
     CREATE TABLE IF NOT EXISTS entries (
       id INTEGER PRIMARY KEY,
@@ -43,10 +46,16 @@ export function initDb(userDataPath: string): Database.Database {
       cell_a REAL,
       cell_b REAL,
       cell_c REAL,
+      cell_angle_alpha REAL,
+      cell_angle_beta REAL,
+      cell_angle_gamma REAL,
+      cell_volume REAL,
       sg_number INTEGER,
       space_group TEXT,
       reference TEXT,
-      level_struct_studies TEXT
+      level_struct_studies TEXT,
+      sample_type TEXT NOT NULL DEFAULT '',
+      crystal_colour TEXT NOT NULL DEFAULT ''
     );
     CREATE TABLE IF NOT EXISTS entry_elements (
       entry_id INTEGER REFERENCES entries(id) ON DELETE CASCADE,
@@ -66,7 +75,49 @@ export function initDb(userDataPath: string): Database.Database {
       source_size INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_imported_files_source_path ON imported_files(source_path);
+    CREATE TABLE IF NOT EXISTS atom_sites (
+      id INTEGER PRIMARY KEY,
+      entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+      site_order INTEGER NOT NULL,
+      type_symbol TEXT,
+      site_label TEXT,
+      symmetry_multiplicity INTEGER,
+      wyckoff_symbol TEXT,
+      fract_x REAL,
+      fract_y REAL,
+      fract_z REAL,
+      occupancy REAL,
+      UNIQUE(entry_id, site_order)
+    );
+    CREATE INDEX IF NOT EXISTS idx_atom_sites_entry_id ON atom_sites(entry_id);
   `);
+  const entryColumns = new Set(
+    (db.prepare('PRAGMA table_info(entries)').all() as { name: string }[]).map((column) => column.name)
+  );
+  let metadataColumnsAdded = false;
+  if (!entryColumns.has('sample_type')) {
+    db.exec("ALTER TABLE entries ADD COLUMN sample_type TEXT NOT NULL DEFAULT ''");
+    metadataColumnsAdded = true;
+  }
+  if (!entryColumns.has('crystal_colour')) {
+    db.exec("ALTER TABLE entries ADD COLUMN crystal_colour TEXT NOT NULL DEFAULT ''");
+    metadataColumnsAdded = true;
+  }
+  for (const column of [
+    'cell_angle_alpha',
+    'cell_angle_beta',
+    'cell_angle_gamma',
+    'cell_volume'
+  ]) {
+    if (!entryColumns.has(column)) {
+      db.exec(`ALTER TABLE entries ADD COLUMN ${column} REAL`);
+      metadataColumnsAdded = true;
+    }
+  }
+  if (!atomSitesTableExists || metadataColumnsAdded) {
+    // Force one incremental rescan so existing entries receive newly persisted CIF fields.
+    db.prepare('DELETE FROM imported_files').run();
+  }
   return db;
 }
 
@@ -79,17 +130,28 @@ export function getDb(): Database.Database {
 export function createEntryWriter(database: Database.Database = getDb()): EntryWriter {
   const selectEntry = database.prepare('SELECT id FROM entries WHERE source_filename = ?');
   const updateEntry = database.prepare(
-    `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, sg_number = ?,
-     space_group = ?, reference = ?, level_struct_studies = ? WHERE id = ?`
+    `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, cell_angle_alpha = ?,
+     cell_angle_beta = ?, cell_angle_gamma = ?, cell_volume = ?, sg_number = ?,
+     space_group = ?, reference = ?, level_struct_studies = ?, sample_type = ?,
+     crystal_colour = ? WHERE id = ?`
   );
   const deleteElements = database.prepare('DELETE FROM entry_elements WHERE entry_id = ?');
   const insertEntry = database.prepare(
     `INSERT INTO entries
-     (source_filename, formula, cell_a, cell_b, cell_c, sg_number, space_group, reference, level_struct_studies)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     (source_filename, formula, cell_a, cell_b, cell_c, cell_angle_alpha, cell_angle_beta,
+      cell_angle_gamma, cell_volume, sg_number, space_group, reference,
+      level_struct_studies, sample_type, crystal_colour)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertElement = database.prepare(
     'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
+  );
+  const deleteAtomSites = database.prepare('DELETE FROM atom_sites WHERE entry_id = ?');
+  const insertAtomSite = database.prepare(
+    `INSERT INTO atom_sites
+     (entry_id, site_order, type_symbol, site_label, symmetry_multiplicity, wyckoff_symbol,
+      fract_x, fract_y, fract_z, occupancy)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const selectFingerprint = database.prepare(
     `SELECT 1 FROM imported_files
@@ -113,13 +175,18 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
         entry.cell_a,
         entry.cell_b,
         entry.cell_c,
+        entry.cellAlpha,
+        entry.cellBeta,
+        entry.cellGamma,
+        entry.cellVolume,
         entry.sg_number,
         entry.space_group,
         entry.reference,
         entry.level,
+        entry.sampleType,
+        entry.crystalColour,
         entryId
       );
-      deleteElements.run(entryId);
     } else {
       const info = insertEntry.run(
         sourceFilename,
@@ -127,16 +194,38 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
         entry.cell_a,
         entry.cell_b,
         entry.cell_c,
+        entry.cellAlpha,
+        entry.cellBeta,
+        entry.cellGamma,
+        entry.cellVolume,
         entry.sg_number,
         entry.space_group,
         entry.reference,
-        entry.level
+        entry.level,
+        entry.sampleType,
+        entry.crystalColour
       );
       entryId = Number(info.lastInsertRowid);
     }
+    deleteElements.run(entryId);
+    deleteAtomSites.run(entryId);
     for (const el of entry.elements) {
       insertElement.run(entryId, el.element, el.count);
     }
+    entry.atomSites.forEach((site, index) => {
+      insertAtomSite.run(
+        entryId,
+        index,
+        site.typeSymbol,
+        site.siteLabel,
+        site.symmetryMultiplicity,
+        site.wyckoffSymbol,
+        site.fractX,
+        site.fractY,
+        site.fractZ,
+        site.occupancy
+      );
+    });
     if (
       item.sourcePath !== undefined &&
       item.sourceMtimeMs !== undefined &&
@@ -172,6 +261,38 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
 
 export function getAllEntries(): EntryRow[] {
   return getDb().prepare('SELECT * FROM entries ORDER BY id').all() as EntryRow[];
+}
+
+export function getEntryCount(database: Database.Database = getDb()): number {
+  const row = database.prepare('SELECT COUNT(*) AS count FROM entries').get() as { count: number };
+  return row.count;
+}
+
+export function getAtomSites(
+  entryId: number,
+  database: Database.Database = getDb()
+): AtomSiteRow[] {
+  return database
+    .prepare('SELECT * FROM atom_sites WHERE entry_id = ? ORDER BY site_order')
+    .all(entryId) as AtomSiteRow[];
+}
+
+export interface CifExportSource {
+  formula: string;
+  sg_number: number;
+  source_path: string | null;
+}
+
+export function getCifExportSource(
+  entryId: number,
+  database: Database.Database = getDb()
+): CifExportSource | null {
+  return (database.prepare(
+    `SELECT entries.formula, entries.sg_number, imported_files.source_path
+     FROM entries
+     LEFT JOIN imported_files ON imported_files.source_filename = entries.source_filename
+     WHERE entries.id = ?`
+  ).get(entryId) as CifExportSource | undefined) ?? null;
 }
 
 /** Delete all imported CIF data in one transaction. Cascades remove entry_elements rows. */
@@ -319,17 +440,17 @@ export function buildWhereClause(filter: SearchFilter): { sql: string; params: (
 
   const sg = parseSgQuery(filter.sgQuery);
   if (sg.sql !== '1=1') {
-    clauses.push(sg.sql);
+    clauses.push(filter.sgExclude ? `NOT (${sg.sql})` : sg.sql);
     params.push(...sg.params);
   }
 
   if (filter.spaceGroupQuery && filter.spaceGroupQuery.trim() !== '') {
-    clauses.push("LOWER(space_group) LIKE ? ESCAPE '\\'");
+    clauses.push(`LOWER(space_group) ${filter.spaceGroupExclude ? 'NOT LIKE' : 'LIKE'} ? ESCAPE '\\'`);
     params.push(`%${escapeLike(filter.spaceGroupQuery.trim().toLowerCase())}%`);
   }
 
   if (filter.referenceQuery && filter.referenceQuery.trim() !== '') {
-    clauses.push("LOWER(reference) LIKE ? ESCAPE '\\'");
+    clauses.push(`LOWER(reference) ${filter.referenceExclude ? 'NOT LIKE' : 'LIKE'} ? ESCAPE '\\'`);
     params.push(`%${escapeLike(filter.referenceQuery.trim().toLowerCase())}%`);
   }
 
@@ -340,7 +461,7 @@ export function buildWhereClause(filter: SearchFilter): { sql: string; params: (
 
   const ec = parseElementCountQuery(filter.elementCountQuery);
   if (ec.sql !== '1=1') {
-    clauses.push(ec.sql);
+    clauses.push(filter.elementCountExclude ? `NOT (${ec.sql})` : ec.sql);
     params.push(...ec.params);
   }
 
@@ -413,18 +534,18 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
   }
 
   if (filter.sgQuery && filter.sgQuery.trim() !== '') {
-    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', sgQuery: filter.sgQuery });
-    rows.push({ field: 'Space group number', content: filter.sgQuery, entries: n });
+    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', sgQuery: filter.sgQuery, sgExclude: filter.sgExclude });
+    rows.push({ field: 'Space group number', content: filter.sgExclude ? `NOT('${filter.sgQuery}')` : filter.sgQuery, entries: n });
   }
 
   if (filter.spaceGroupQuery && filter.spaceGroupQuery.trim() !== '') {
-    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', spaceGroupQuery: filter.spaceGroupQuery });
-    rows.push({ field: 'Space group', content: filter.spaceGroupQuery, entries: n });
+    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', spaceGroupQuery: filter.spaceGroupQuery, spaceGroupExclude: filter.spaceGroupExclude });
+    rows.push({ field: 'Space group', content: filter.spaceGroupExclude ? `NOT('${filter.spaceGroupQuery}')` : filter.spaceGroupQuery, entries: n });
   }
 
   if (filter.referenceQuery && filter.referenceQuery.trim() !== '') {
-    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', referenceQuery: filter.referenceQuery });
-    rows.push({ field: 'Reference', content: filter.referenceQuery, entries: n });
+    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', referenceQuery: filter.referenceQuery, referenceExclude: filter.referenceExclude });
+    rows.push({ field: 'Reference', content: filter.referenceExclude ? `NOT('${filter.referenceQuery}')` : filter.referenceQuery, entries: n });
   }
 
   if (filter.level && filter.level.trim() !== '') {
@@ -433,8 +554,8 @@ export function computeRestraints(filter: SearchFilter): RestraintRow[] {
   }
 
   if (filter.elementCountQuery && filter.elementCountQuery.trim() !== '') {
-    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', elementCountQuery: filter.elementCountQuery });
-    rows.push({ field: 'Number of elements', content: filter.elementCountQuery, entries: n });
+    const n = countForFilter({ slot1: [], slot2: [], mode: 'AND', elementCountQuery: filter.elementCountQuery, elementCountExclude: filter.elementCountExclude });
+    rows.push({ field: 'Number of elements', content: filter.elementCountExclude ? `NOT('${filter.elementCountQuery}')` : filter.elementCountQuery, entries: n });
   }
 
   if (rows.length > 0) {

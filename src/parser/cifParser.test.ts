@@ -8,6 +8,7 @@ import {
   formatFormula,
   stripUncertainty,
   buildReference,
+  calculateUnitCellVolume,
 } from './cifParser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -29,10 +30,41 @@ describe('parseCif against 540062.cif fixture', () => {
     expect(entry.level).toBe('Cell parameters determined and structure type assigned');
   });
 
+  it('classifies the sample from the anisotropic atom-site label', () => {
+    expect(entry.sampleType).toBe('Powder');
+  });
+
+  it('parses the experimental crystal colour', () => {
+    expect(entry.crystalColour).toBe('gray steel');
+  });
+
+  it('classifies a CIF with an anisotropic atom-site label as a sample crystal', () => {
+    const withAnisoLabel = `${fixtureText}\nloop_\n_atom_site_aniso_label\nSb1\n`;
+    expect(parseCif(withAnisoLabel).sampleType).toBe('Sample crystal');
+  });
+
+  it('leaves colour blank when the CIF colour is missing', () => {
+    const withoutColour = fixtureText.replace(
+      /(_exptl_crystal_colour\s+)'gray steel'/,
+      '$1?'
+    );
+    expect(parseCif(withoutColour).crystalColour).toBe('');
+  });
+
   it('parses cell lengths in nm', () => {
     expect(entry.cell_a).toBeCloseTo(1.65, 10);
     expect(entry.cell_b).toBeCloseTo(0.4, 10);
     expect(entry.cell_c).toBeCloseTo(2.386, 10);
+  });
+
+  it('parses cell angles and prefers the CIF-provided volume', () => {
+    expect([entry.cellAlpha, entry.cellBeta, entry.cellGamma]).toEqual([90, 90, 90]);
+    expect(entry.cellVolume).toBe(1574.8);
+  });
+
+  it('calculates volume from lengths and angles when _cell_volume is missing', () => {
+    const withoutVolume = fixtureText.replace(/(_cell_volume\s+)\S+/, '$1?');
+    expect(parseCif(withoutVolume).cellVolume).toBeCloseTo(1574.76, 8);
   });
 
   it('parses the space group number', () => {
@@ -41,6 +73,21 @@ describe('parseCif against 540062.cif fixture', () => {
 
   it('parses the space group symbol with spaces removed', () => {
     expect(entry.space_group).toBe('Pnma');
+  });
+
+  it('parses atom-site loop rows in their original order', () => {
+    expect(entry.atomSites).toHaveLength(16);
+    expect(entry.atomSites[0]).toEqual({
+      siteLabel: 'Sb1',
+      typeSymbol: 'Sb',
+      symmetryMultiplicity: 4,
+      wyckoffSymbol: 'c',
+      fractX: 0.0286,
+      fractY: 0.25,
+      fractZ: 0.394,
+      occupancy: 1
+    });
+    expect(entry.atomSites[15].siteLabel).toBe('S9');
   });
 });
 
@@ -59,6 +106,12 @@ describe('stripUncertainty', () => {
 
   it('does not accept a partially numeric malformed value', () => {
     expect(stripUncertainty('16.5junk')).toBeNaN();
+  });
+});
+
+describe('calculateUnitCellVolume', () => {
+  it('uses the general non-orthogonal unit-cell volume formula', () => {
+    expect(calculateUnitCellVolume(5, 6, 7, 80, 75, 70)).toBeCloseTo(189.771269, 5);
   });
 });
 

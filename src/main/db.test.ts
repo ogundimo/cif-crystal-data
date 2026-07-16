@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
-import { buildWhereClause, clearAllEntries, createEntryWriter } from './db';
+import { buildWhereClause, clearAllEntries, createEntryWriter, getEntryCount } from './db';
 import type { CifEntry } from '../parser/cifParser';
 
 const sampleEntry: CifEntry = {
@@ -12,10 +12,26 @@ const sampleEntry: CifEntry = {
   cell_a: 0.1,
   cell_b: 0.2,
   cell_c: 0.3,
+  cellAlpha: 90,
+  cellBeta: 90,
+  cellGamma: 90,
+  cellVolume: 6,
   sg_number: 1,
   space_group: 'P1',
   reference: 'Test reference',
-  level: 'Complete structure determined'
+  level: 'Complete structure determined',
+  sampleType: 'Sample crystal',
+  crystalColour: 'red',
+  atomSites: [{
+    siteLabel: 'Fe1',
+    typeSymbol: 'Fe',
+    symmetryMultiplicity: 4,
+    wyckoffSymbol: 'c',
+    fractX: 0.1,
+    fractY: 0.2,
+    fractZ: 0.3,
+    occupancy: 1
+  }]
 };
 
 describe('periodic-table selection query', () => {
@@ -99,6 +115,27 @@ describe('periodic-table selection query', () => {
     expect(result.params).toEqual(['%p\\_1\\%%', '%100\\%\\_complete%']);
   });
 
+  it('negates each non-cell-length textbox criterion independently', () => {
+    const result = buildWhereClause({
+      slot1: [],
+      slot2: [],
+      mode: 'AND',
+      sgQuery: '62',
+      sgExclude: true,
+      spaceGroupQuery: 'Pnma',
+      spaceGroupExclude: true,
+      referenceQuery: 'Journal',
+      referenceExclude: true,
+      elementCountQuery: '2-4',
+      elementCountExclude: true
+    });
+
+    expect(result.sql).toContain('NOT (sg_number = ?)');
+    expect(result.sql.match(/NOT LIKE/g)).toHaveLength(2);
+    expect(result.sql).toContain('NOT (id IN');
+    expect(result.params).toEqual([62, '%pnma%', '%journal%', 2, 4]);
+  });
+
   it('converts angstrom search bounds to the database nanometre values', () => {
     const result = buildWhereClause({
       slot1: [],
@@ -132,6 +169,19 @@ describe('periodic-table selection query', () => {
     expect(statements).toEqual(['DELETE FROM entries']);
   });
 
+  it('loads only the entry count for the startup database summary', () => {
+    let preparedSql = '';
+    const database = {
+      prepare: (sql: string) => {
+        preparedSql = sql;
+        return { get: () => ({ count: 42 }) };
+      }
+    } as unknown as Database.Database;
+
+    expect(getEntryCount(database)).toBe(42);
+    expect(preparedSql).toBe('SELECT COUNT(*) AS count FROM entries');
+  });
+
   it('reuses prepared statements and commits multiple writes as one batch', () => {
     const preparedSql: string[] = [];
     let transactionExecutions = 0;
@@ -152,7 +202,7 @@ describe('periodic-table selection query', () => {
     } as unknown as Database.Database;
 
     const writer = createEntryWriter(database);
-    expect(preparedSql).toHaveLength(7);
+    expect(preparedSql).toHaveLength(9);
     expect(
       writer.writeBatch([
         { sourceFilename: 'one.cif', entry: sampleEntry },
@@ -162,7 +212,7 @@ describe('periodic-table selection query', () => {
     expect(transactionExecutions).toBe(3); // one outer batch plus two per-entry savepoints
 
     expect(writer.writeBatch([{ sourceFilename: 'three.cif', entry: sampleEntry }])).toEqual([]);
-    expect(preparedSql).toHaveLength(7);
+    expect(preparedSql).toHaveLength(9);
     expect(transactionExecutions).toBe(5);
   });
 });

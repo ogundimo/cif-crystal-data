@@ -17,6 +17,16 @@ interface Props {
   resetSignal?: number;
 }
 
+function NegatableInput({ excluded, children }: { excluded: boolean; children: React.ReactNode }) {
+  return (
+    <div className={`quick-search-negatable-input ${excluded ? 'quick-search-negatable-input-active' : ''}`}>
+      {excluded && <span className="quick-search-not-prefix">NOT('</span>}
+      {children}
+      {excluded && <span className="quick-search-not-suffix">')</span>}
+    </div>
+  );
+}
+
 interface FormState {
   elementSelections: ElementSelections;
   aMin: string;
@@ -26,10 +36,14 @@ interface FormState {
   cMin: string;
   cMax: string;
   sgQuery: string;
+  sgExclude: boolean;
   spaceGroupQuery: string;
+  spaceGroupExclude: boolean;
   referenceQuery: string;
+  referenceExclude: boolean;
   level: string;
   elementCountQuery: string;
+  elementCountExclude: boolean;
 }
 
 const emptyForm: FormState = {
@@ -46,10 +60,14 @@ const emptyForm: FormState = {
   cMin: '',
   cMax: '',
   sgQuery: '',
+  sgExclude: false,
   spaceGroupQuery: '',
+  spaceGroupExclude: false,
   referenceQuery: '',
+  referenceExclude: false,
   level: '',
-  elementCountQuery: ''
+  elementCountQuery: '',
+  elementCountExclude: false
 };
 
 function toFilter(form: FormState): SearchFilter {
@@ -68,11 +86,36 @@ function toFilter(form: FormState): SearchFilter {
     cMin: num(form.cMin),
     cMax: num(form.cMax),
     sgQuery: form.sgQuery,
+    sgExclude: form.sgExclude,
     spaceGroupQuery: form.spaceGroupQuery,
+    spaceGroupExclude: form.spaceGroupExclude,
     referenceQuery: form.referenceQuery,
+    referenceExclude: form.referenceExclude,
     level: form.level,
-    elementCountQuery: form.elementCountQuery
+    elementCountQuery: form.elementCountQuery,
+    elementCountExclude: form.elementCountExclude
   };
+}
+
+function hasSearchCriteria(form: FormState): boolean {
+  return (
+    form.elementSelections.some(
+      (selection) => selection.elements.length || selection.groups.length || selection.periods.length
+    ) ||
+    [
+      form.aMin,
+      form.aMax,
+      form.bMin,
+      form.bMax,
+      form.cMin,
+      form.cMax,
+      form.sgQuery,
+      form.spaceGroupQuery,
+      form.referenceQuery,
+      form.level,
+      form.elementCountQuery
+    ].some((value) => value.trim().length > 0)
+  );
 }
 
 export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal }: Props) {
@@ -85,6 +128,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
   const [restraintsRetry, setRestraintsRetry] = useState(0);
   const validationErrors = useMemo(() => validateSearchInput(form), [form]);
   const isValid = Object.keys(validationErrors).length === 0;
+  const hasCriteria = hasSearchCriteria(form);
   const discardAndClose = useCallback(() => {
     setForm(appliedForm);
     onClose();
@@ -206,13 +250,74 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
     }));
   }
 
+  type NegatableField =
+    | 'elementCountQuery'
+    | 'sgQuery'
+    | 'spaceGroupQuery'
+    | 'referenceQuery';
+  type ExcludeField =
+    | 'elementCountExclude'
+    | 'sgExclude'
+    | 'spaceGroupExclude'
+    | 'referenceExclude';
+
+  const excludeFieldFor: Record<NegatableField, ExcludeField> = {
+    elementCountQuery: 'elementCountExclude',
+    sgQuery: 'sgExclude',
+    spaceGroupQuery: 'spaceGroupExclude',
+    referenceQuery: 'referenceExclude'
+  };
+
+  function toggleFieldNotEqual(field: NegatableField) {
+    const excludeField = excludeFieldFor[field];
+    setForm((previous) => ({
+      ...previous,
+      [excludeField]: !previous[excludeField]
+    }));
+  }
+
+  function clearField(field: NegatableField) {
+    const excludeField = excludeFieldFor[field];
+    setForm((previous) => ({
+      ...previous,
+      [field]: '',
+      [excludeField]: false
+    } as FormState));
+  }
+
+  function fieldActions(field: NegatableField, label: string) {
+    const excludeField = excludeFieldFor[field];
+    return (
+      <>
+        <button
+          type="button"
+          className={`quick-search-ne ${form[excludeField] ? 'quick-search-ne-active' : ''}`}
+          onClick={() => toggleFieldNotEqual(field)}
+          aria-label={`Not equal ${label}`}
+          aria-pressed={form[excludeField]}
+          title={`Exclude matches for ${label}`}
+        >
+          <img className="quick-search-ne-icon" src={notEqualIcon} alt="" />
+        </button>
+        <button
+          type="button"
+          className="quick-search-clear"
+          onClick={() => clearField(field)}
+          aria-label={`Clear ${label}`}
+        >
+          <img className="h-3 w-3 object-contain" src={closeIcon} alt="" />
+        </button>
+      </>
+    );
+  }
+
   function clearAll() {
     setForm(emptyForm);
     setActiveSlot(1);
   }
 
   function handleSearch() {
-    if (!isValid) return;
+    if (!isValid || !hasCriteria) return;
     setAppliedForm(form);
     onSearch(toFilter(form));
     onClose();
@@ -327,17 +432,81 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
               <SearchFieldRow
                 label="Number of elements:"
                 htmlFor="quick-search-element-count"
+                action={fieldActions('elementCountQuery', 'number of elements')}
                 message={validationErrors.elementCountQuery && <span id="element-count-error">{validationErrors.elementCountQuery}</span>}
               >
-                <input
-                  id="quick-search-element-count"
-                  className={inputClass('elementCountQuery')}
-                  placeholder="e.g. 3 or 2-4"
-                  value={form.elementCountQuery}
-                  onChange={(e) => setForm((p) => ({ ...p, elementCountQuery: e.target.value }))}
-                  aria-invalid={Boolean(validationErrors.elementCountQuery)}
-                  aria-describedby={validationErrors.elementCountQuery ? 'element-count-error' : undefined}
-                />
+                <NegatableInput excluded={form.elementCountExclude}>
+                  <input
+                    id="quick-search-element-count"
+                    className={inputClass('elementCountQuery')}
+                    placeholder="e.g. 3 or 2-4"
+                    value={form.elementCountQuery}
+                    onChange={(e) => setForm((p) => ({ ...p, elementCountQuery: e.target.value }))}
+                    aria-invalid={Boolean(validationErrors.elementCountQuery)}
+                    aria-describedby={validationErrors.elementCountQuery ? 'element-count-error' : undefined}
+                  />
+                </NegatableInput>
+              </SearchFieldRow>
+
+              <SearchFieldRow
+                label="Space group number:"
+                htmlFor="quick-search-space-group-number"
+                action={fieldActions('sgQuery', 'space group number')}
+                message={validationErrors.sgQuery && <span id="space-group-number-error">{validationErrors.sgQuery}</span>}
+              >
+                <NegatableInput excluded={form.sgExclude}>
+                  <input
+                    id="quick-search-space-group-number"
+                    className={inputClass('sgQuery')}
+                    placeholder="e.g. 62 or 60-70"
+                    value={form.sgQuery}
+                    onChange={(e) => setForm((p) => ({ ...p, sgQuery: e.target.value }))}
+                    aria-invalid={Boolean(validationErrors.sgQuery)}
+                    aria-describedby={validationErrors.sgQuery ? 'space-group-number-error' : undefined}
+                  />
+                </NegatableInput>
+              </SearchFieldRow>
+              <SearchFieldRow
+                label="Space group (H-M):"
+                htmlFor="quick-search-space-group-hm"
+                action={fieldActions('spaceGroupQuery', 'space group')}
+              >
+                <NegatableInput excluded={form.spaceGroupExclude}>
+                  <input
+                    id="quick-search-space-group-hm"
+                    className="input-w32"
+                    placeholder="e.g. Pnma"
+                    value={form.spaceGroupQuery}
+                    onChange={(e) => setForm((p) => ({ ...p, spaceGroupQuery: e.target.value }))}
+                  />
+                </NegatableInput>
+              </SearchFieldRow>
+              <SearchFieldRow
+                label="Reference:"
+                htmlFor="quick-search-reference"
+                action={fieldActions('referenceQuery', 'reference')}
+              >
+                <NegatableInput excluded={form.referenceExclude}>
+                  <input
+                    id="quick-search-reference"
+                    className="input-w32"
+                    placeholder="journal / year / volume..."
+                    value={form.referenceQuery}
+                    onChange={(e) => setForm((p) => ({ ...p, referenceQuery: e.target.value }))}
+                  />
+                </NegatableInput>
+              </SearchFieldRow>
+              <SearchFieldRow label="Level of struct. studies:" htmlFor="quick-search-study-level">
+                <select
+                  id="quick-search-study-level"
+                  className="input-w32"
+                  value={form.level}
+                  onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))}
+                >
+                  <option value="">(any)</option>
+                  <option value={LEVEL_FULL}>{LEVEL_FULL}</option>
+                  <option value={LEVEL_CELL}>{LEVEL_CELL}</option>
+                </select>
               </SearchFieldRow>
 
               <fieldset className="quick-search-range-group">
@@ -365,52 +534,6 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
                   )}
                 </div>
               </fieldset>
-
-              <SearchFieldRow
-                label="Space group number:"
-                htmlFor="quick-search-space-group-number"
-                message={validationErrors.sgQuery && <span id="space-group-number-error">{validationErrors.sgQuery}</span>}
-              >
-                <input
-                  id="quick-search-space-group-number"
-                  className={inputClass('sgQuery')}
-                  placeholder="e.g. 62 or 60-70"
-                  value={form.sgQuery}
-                  onChange={(e) => setForm((p) => ({ ...p, sgQuery: e.target.value }))}
-                  aria-invalid={Boolean(validationErrors.sgQuery)}
-                  aria-describedby={validationErrors.sgQuery ? 'space-group-number-error' : undefined}
-                />
-              </SearchFieldRow>
-              <SearchFieldRow label="Space group (H-M):" htmlFor="quick-search-space-group-hm">
-                <input
-                  id="quick-search-space-group-hm"
-                  className="input-w32"
-                  placeholder="e.g. Pnma"
-                  value={form.spaceGroupQuery}
-                  onChange={(e) => setForm((p) => ({ ...p, spaceGroupQuery: e.target.value }))}
-                />
-              </SearchFieldRow>
-              <SearchFieldRow label="Reference:" htmlFor="quick-search-reference">
-                <input
-                  id="quick-search-reference"
-                  className="input-w32"
-                  placeholder="journal / year / volume..."
-                  value={form.referenceQuery}
-                  onChange={(e) => setForm((p) => ({ ...p, referenceQuery: e.target.value }))}
-                />
-              </SearchFieldRow>
-              <SearchFieldRow label="Level of struct. studies:" htmlFor="quick-search-study-level">
-                <select
-                  id="quick-search-study-level"
-                  className="input-w32"
-                  value={form.level}
-                  onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))}
-                >
-                  <option value="">(any)</option>
-                  <option value={LEVEL_FULL}>{LEVEL_FULL}</option>
-                  <option value={LEVEL_CELL}>{LEVEL_CELL}</option>
-                </select>
-              </SearchFieldRow>
             </div>
           </div>
 
@@ -471,7 +594,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
         </div>
 
         <div className="quick-search-footer">
-          <button type="submit" className="btn-w32 btn-primary min-w-[74px] disabled:cursor-not-allowed disabled:opacity-50" disabled={!isValid}>
+          <button type="submit" className="btn-w32 btn-primary min-w-[74px] disabled:cursor-not-allowed disabled:opacity-50" disabled={!isValid || !hasCriteria}>
             Search!
           </button>
           <button type="button" className="btn-w32" onClick={discardAndClose}>

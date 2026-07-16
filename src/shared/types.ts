@@ -5,10 +5,30 @@ export interface EntryRow {
   cell_a: number;
   cell_b: number;
   cell_c: number;
+  cell_angle_alpha: number | null;
+  cell_angle_beta: number | null;
+  cell_angle_gamma: number | null;
+  cell_volume: number | null;
   sg_number: number;
   space_group: string;
   reference: string;
   level_struct_studies: string;
+  sample_type: string;
+  crystal_colour: string;
+}
+
+export interface AtomSiteRow {
+  id: number;
+  entry_id: number;
+  site_order: number;
+  type_symbol: string | null;
+  site_label: string | null;
+  symmetry_multiplicity: number | null;
+  wyckoff_symbol: string | null;
+  fract_x: number | null;
+  fract_y: number | null;
+  fract_z: number | null;
+  occupancy: number | null;
 }
 
 export const LEVEL_FULL = 'Complete structure determined';
@@ -71,10 +91,14 @@ export interface SearchFilter {
   cMin?: number;
   cMax?: number;
   sgQuery?: string;
+  sgExclude?: boolean;
   spaceGroupQuery?: string;
+  spaceGroupExclude?: boolean;
   referenceQuery?: string;
+  referenceExclude?: boolean;
   level?: string;
   elementCountQuery?: string;
+  elementCountExclude?: boolean;
 }
 
 export interface RestraintRow {
@@ -83,9 +107,17 @@ export interface RestraintRow {
   entries: number;
 }
 
+export interface ExportCifResult {
+  exported: boolean;
+  fileName?: string;
+}
+
 export interface CifApi {
   getAllEntries: () => Promise<EntryRow[]>;
+  getEntryCount: () => Promise<number>;
+  getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
   getImportFolder: () => Promise<string | null>;
+  exportCif: (entryId: number) => Promise<ExportCifResult>;
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;
   importCifFolder: () => Promise<ImportResult | null>;

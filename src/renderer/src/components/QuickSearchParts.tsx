@@ -1,7 +1,14 @@
 import React, { useMemo } from 'react';
 import type { ElementSelection } from '../../../shared/types';
 import { formatPeriodCriterion, resolveElementSelection } from '../../../shared/periodicTableData';
-import { CATEGORY_CLASS, GROUP_LABELS, PERIOD_LABELS, PERIODIC_TABLE } from '../periodicTable';
+import {
+  ALKALINE_EARTH_CLASS,
+  ALKALINE_EARTH_SYMBOLS,
+  CATEGORY_CLASS,
+  GROUP_LABELS,
+  PERIOD_LABELS,
+  PERIODIC_TABLE
+} from '../periodicTable';
 
 interface SearchFieldRowProps {
   label: React.ReactNode;
@@ -124,7 +131,13 @@ export function PeriodicTablePicker({ selection, onChange, slotOf, onToggleEleme
               <button
                 key={element.symbol}
                 type="button"
-                className={`quick-search-element ${explicit ? 'quick-search-element-selected' : included ? 'quick-search-element-included' : CATEGORY_CLASS[element.category]}`}
+                className={`quick-search-element ${explicit
+                  ? 'quick-search-element-selected'
+                  : included
+                    ? 'quick-search-element-included'
+                    : ALKALINE_EARTH_SYMBOLS.has(element.symbol)
+                      ? ALKALINE_EARTH_CLASS
+                      : CATEGORY_CLASS[element.category]}`}
                 style={{ gridColumn: element.col + 1, gridRow: element.row + 1 }}
                 onClick={() => onToggleElement(element.symbol)}
                 aria-label={`${element.symbol}, atomic number ${element.z}${included && !explicit ? ', included by group or period' : ''}`}

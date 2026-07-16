@@ -31,6 +31,13 @@ describe('validateSearchFilter', () => {
     ).toThrow('elementSelections[0].exclude must be a boolean');
   });
 
+  it('validates textbox not-equal flags as booleans', () => {
+    expect(() => validateSearchFilter({ ...validFilter, referenceExclude: true })).not.toThrow();
+    expect(() => validateSearchFilter({ ...validFilter, sgExclude: 'yes' })).toThrow(
+      'sgExclude must be a boolean'
+    );
+  });
+
   it('rejects non-finite numeric ranges', () => {
     expect(() => validateSearchFilter({ ...validFilter, aMin: Number.NaN })).toThrow(
       'aMin must be a finite number'

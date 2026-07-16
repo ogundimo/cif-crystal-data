@@ -107,5 +107,17 @@ export function validateSearchFilter(value: unknown): SearchFilter {
     }
   }
 
+  for (const field of [
+    'sgExclude',
+    'spaceGroupExclude',
+    'referenceExclude',
+    'elementCountExclude'
+  ] as const) {
+    const candidate = value[field];
+    if (candidate !== undefined && typeof candidate !== 'boolean') {
+      fail(`${field} must be a boolean`);
+    }
+  }
+
   return value as unknown as SearchFilter;
 }
