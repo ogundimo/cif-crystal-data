@@ -1,8 +1,10 @@
 import Database from 'better-sqlite3';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import type { CifEntry } from '../parser/cifParser';
 import type { AtomSiteRow, EntryRow, RestraintRow, SearchFilter } from '../shared/types';
 import { resolveElementSelection } from '../shared/periodicTableData';
+import { migrateDatabase } from './migrations';
 
 let db: Database.Database | null = null;
 
@@ -32,92 +34,11 @@ export interface EntryWriter {
 
 export function initDb(userDataPath: string): Database.Database {
   const dbPath = join(userDataPath, 'cif-local.db');
+  const databaseExisted = existsSync(dbPath);
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
-  const atomSitesTableExists = Boolean(
-    db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'atom_sites'").get()
-  );
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS entries (
-      id INTEGER PRIMARY KEY,
-      source_filename TEXT UNIQUE,
-      formula TEXT,
-      cell_a REAL,
-      cell_b REAL,
-      cell_c REAL,
-      cell_angle_alpha REAL,
-      cell_angle_beta REAL,
-      cell_angle_gamma REAL,
-      cell_volume REAL,
-      sg_number INTEGER,
-      space_group TEXT,
-      reference TEXT,
-      level_struct_studies TEXT,
-      sample_type TEXT NOT NULL DEFAULT '',
-      crystal_colour TEXT NOT NULL DEFAULT ''
-    );
-    CREATE TABLE IF NOT EXISTS entry_elements (
-      entry_id INTEGER REFERENCES entries(id) ON DELETE CASCADE,
-      element TEXT,
-      count REAL
-    );
-    CREATE INDEX IF NOT EXISTS idx_entry_elements_element ON entry_elements(element);
-    CREATE INDEX IF NOT EXISTS idx_entry_elements_entry_id ON entry_elements(entry_id);
-    CREATE TABLE IF NOT EXISTS app_settings (
-      key TEXT PRIMARY KEY,
-      value TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS imported_files (
-      source_filename TEXT PRIMARY KEY REFERENCES entries(source_filename) ON DELETE CASCADE,
-      source_path TEXT NOT NULL,
-      source_mtime_ms REAL NOT NULL,
-      source_size INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_imported_files_source_path ON imported_files(source_path);
-    CREATE TABLE IF NOT EXISTS atom_sites (
-      id INTEGER PRIMARY KEY,
-      entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
-      site_order INTEGER NOT NULL,
-      type_symbol TEXT,
-      site_label TEXT,
-      symmetry_multiplicity INTEGER,
-      wyckoff_symbol TEXT,
-      fract_x REAL,
-      fract_y REAL,
-      fract_z REAL,
-      occupancy REAL,
-      UNIQUE(entry_id, site_order)
-    );
-    CREATE INDEX IF NOT EXISTS idx_atom_sites_entry_id ON atom_sites(entry_id);
-  `);
-  const entryColumns = new Set(
-    (db.prepare('PRAGMA table_info(entries)').all() as { name: string }[]).map((column) => column.name)
-  );
-  let metadataColumnsAdded = false;
-  if (!entryColumns.has('sample_type')) {
-    db.exec("ALTER TABLE entries ADD COLUMN sample_type TEXT NOT NULL DEFAULT ''");
-    metadataColumnsAdded = true;
-  }
-  if (!entryColumns.has('crystal_colour')) {
-    db.exec("ALTER TABLE entries ADD COLUMN crystal_colour TEXT NOT NULL DEFAULT ''");
-    metadataColumnsAdded = true;
-  }
-  for (const column of [
-    'cell_angle_alpha',
-    'cell_angle_beta',
-    'cell_angle_gamma',
-    'cell_volume'
-  ]) {
-    if (!entryColumns.has(column)) {
-      db.exec(`ALTER TABLE entries ADD COLUMN ${column} REAL`);
-      metadataColumnsAdded = true;
-    }
-  }
-  if (!atomSitesTableExists || metadataColumnsAdded) {
-    // Force one incremental rescan so existing entries receive newly persisted CIF fields.
-    db.prepare('DELETE FROM imported_files').run();
-  }
+  migrateDatabase(db, dbPath, databaseExisted);
   return db;
 }
 

@@ -43,6 +43,62 @@ async function run() {
   writeFileSync(join(rootDir, '540062.cif'), fixtureText);
   const workerUrl = pathToFileURL(join(chunksDirectory, workerFilename));
 
+  const legacyUserDataPath = mkdtempSync(join(tmpdir(), 'cif-legacy-migration-'));
+  try {
+    const legacyInput = join(legacyUserDataPath, 'input');
+    mkdirSync(legacyInput);
+    writeFileSync(join(legacyInput, '540062.cif'), fixtureText);
+    const legacyDatabasePath = join(legacyUserDataPath, 'cif-local.db');
+    let legacyDatabase = new Database(legacyDatabasePath);
+    try {
+      legacyDatabase.exec(`
+        CREATE TABLE entries (
+          id INTEGER PRIMARY KEY,
+          source_filename TEXT UNIQUE,
+          formula TEXT,
+          cell_a REAL,
+          cell_b REAL,
+          cell_c REAL,
+          sg_number INTEGER,
+          space_group TEXT,
+          reference TEXT,
+          level_struct_studies TEXT
+        );
+        CREATE TABLE entry_elements (entry_id INTEGER, element TEXT, count REAL);
+        CREATE TABLE app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+        CREATE TABLE imported_files (
+          source_filename TEXT PRIMARY KEY,
+          source_path TEXT NOT NULL,
+          source_mtime_ms REAL NOT NULL,
+          source_size INTEGER NOT NULL
+        );
+        INSERT INTO entries VALUES (1, '540062.cif', 'Stale', 1, 1, 1, 1, 'P1', '', 'Cell');
+        INSERT INTO imported_files VALUES ('540062.cif', 'stale-path', 1, 1);
+        PRAGMA user_version = 1;
+      `);
+    } finally {
+      legacyDatabase.close();
+    }
+
+    const migrationImport = await runWorker(workerUrl, legacyInput, legacyUserDataPath);
+    assert.equal(migrationImport.result.importedCount, 1);
+    legacyDatabase = new Database(legacyDatabasePath);
+    try {
+      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 2);
+      assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Eu3S9Sb4');
+      assert.equal(legacyDatabase.prepare('SELECT COUNT(*) AS count FROM atom_sites').get().count, 16);
+      assert.equal(legacyDatabase.prepare('SELECT cell_volume FROM entries').get().cell_volume, 1574.8);
+      assert.ok(
+        readdirSync(legacyUserDataPath).some((name) => name.startsWith('cif-local.pre-migration-v1-')),
+        'legacy migration did not create a backup'
+      );
+    } finally {
+      legacyDatabase.close();
+    }
+  } finally {
+    rmSync(legacyUserDataPath, { recursive: true, force: true });
+  }
+
   try {
     const firstImport = await runWorker(workerUrl, rootDir, userDataPath);
     assert.deepEqual(firstImport.result, { importedCount: 1, skippedCount: 0, failures: [], total: 1 });
@@ -134,6 +190,7 @@ async function run() {
     }
 
     console.log('✓ production import worker emitted typed progress updates');
+    console.log('✓ legacy schema backup, migration, and metadata backfill passed');
     console.log('✓ SQLite insert, update, element replacement, and cascade deletion passed');
     console.log('✓ batch savepoint isolated one failed CIF while committing its sibling');
   } finally {
