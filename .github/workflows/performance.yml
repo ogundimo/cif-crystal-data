@@ -1,0 +1,30 @@
+name: Database performance baseline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  database-benchmark:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run deterministic 10k, 100k, and 1M benchmark
+        shell: pwsh
+        run: npm run benchmark:database | Tee-Object -FilePath database-performance.txt
+      - uses: actions/upload-artifact@v6
+        with:
+          name: database-performance-${{ github.sha }}
+          path: database-performance.txt
+          if-no-files-found: error
+          retention-days: 30

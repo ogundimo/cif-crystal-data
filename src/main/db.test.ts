@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
-import { buildWhereClause, clearAllEntries, createEntryWriter, getEntryCount } from './db';
+import { buildWhereClause, clearAllEntries, createEntryWriter, getEntryCount, searchEntriesPage } from './db';
 import type { CifEntry } from '../parser/cifParser';
 
 const sampleEntry: CifEntry = {
@@ -180,6 +180,36 @@ describe('periodic-table selection query', () => {
 
     expect(getEntryCount(database)).toBe(42);
     expect(preparedSql).toBe('SELECT COUNT(*) AS count FROM entries');
+  });
+
+  it('pages and sorts search results in SQLite with a bounded page size', () => {
+    const preparedSql: string[] = [];
+    let allParameters: unknown[] = [];
+    const database = {
+      prepare: (sql: string) => {
+        preparedSql.push(sql);
+        return sql.includes('COUNT(*)')
+          ? { get: () => ({ count: 2500 }) }
+          : {
+              all: (...parameters: unknown[]) => {
+                allParameters = parameters;
+                return [{ id: 501 }];
+              }
+            };
+      }
+    } as unknown as Database.Database;
+
+    const result = searchEntriesPage({
+      filter: { slot1: [], slot2: [], mode: 'AND' },
+      offset: 500,
+      limit: 50_000,
+      sortColumn: 'formula',
+      sortDirection: 'desc'
+    }, database);
+
+    expect(result).toEqual({ rows: [{ id: 501 }], total: 2500 });
+    expect(preparedSql[1]).toContain('ORDER BY formula DESC, id ASC LIMIT ? OFFSET ?');
+    expect(allParameters).toEqual([1000, 500]);
   });
 
   it('reuses prepared statements and commits multiple writes as one batch', () => {

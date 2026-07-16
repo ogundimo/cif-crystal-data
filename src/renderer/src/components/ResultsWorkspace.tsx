@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import type { EntryRow } from '../../../shared/types';
+import type { EntryRow, SearchSortColumn } from '../../../shared/types';
 import CompoundInfoPanel from './CompoundInfoPanel';
 import DataGrid from './DataGrid';
 
@@ -7,12 +7,16 @@ interface Props {
   rows: EntryRow[];
   selectedId: number | null;
   onSelect: (entry: EntryRow) => void;
+  totalRows?: number;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
+  onSortChange?: (column: SearchSortColumn, direction: 'asc' | 'desc') => void;
 }
 
 const MIN_PANEL_HEIGHT = 112;
 const MIN_RESULTS_HEIGHT = 128;
 
-export default function ResultsWorkspace({ rows, selectedId, onSelect }: Props) {
+export default function ResultsWorkspace({ rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange }: Props) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ y: number; height: number } | null>(null);
   const [panelHeight, setPanelHeight] = useState<number | null>(null);
@@ -47,7 +51,15 @@ export default function ResultsWorkspace({ rows, selectedId, onSelect }: Props) 
       }}
     >
       <div className="flex min-h-0 overflow-hidden">
-        <DataGrid rows={rows} selectedId={selectedEntry.id} onSelect={onSelect} />
+        <DataGrid
+          rows={rows}
+          selectedId={selectedEntry.id}
+          onSelect={onSelect}
+          totalRows={totalRows}
+          loadingMore={loadingMore}
+          onLoadMore={onLoadMore}
+          onSortChange={onSortChange}
+        />
       </div>
       <div
         role="separator"

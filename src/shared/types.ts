@@ -101,6 +101,29 @@ export interface SearchFilter {
   elementCountExclude?: boolean;
 }
 
+export type SearchSortColumn =
+  | 'formula'
+  | 'cell_a'
+  | 'cell_b'
+  | 'cell_c'
+  | 'sg_number'
+  | 'space_group'
+  | 'reference'
+  | 'level_struct_studies';
+
+export interface SearchPageRequest {
+  filter: SearchFilter;
+  offset: number;
+  limit: number;
+  sortColumn?: SearchSortColumn;
+  sortDirection?: 'asc' | 'desc';
+}
+
+export interface SearchPageResult {
+  rows: EntryRow[];
+  total: number;
+}
+
 export interface RestraintRow {
   field: string;
   content: string;
@@ -119,6 +142,7 @@ export interface CifApi {
   getImportFolder: () => Promise<string | null>;
   exportCif: (entryId: number) => Promise<ExportCifResult>;
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
+  searchPage: (request: SearchPageRequest) => Promise<SearchPageResult>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;
   importCifFolder: () => Promise<ImportResult | null>;
   refreshCifFolder: () => Promise<ImportResult>;

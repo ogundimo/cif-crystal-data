@@ -3,9 +3,10 @@ import ResultsWorkspace from './components/ResultsWorkspace';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
-import type { EntryRow, ImportProgress, ImportResult, SearchFilter } from '../../shared/types';
+import type { EntryRow, ImportProgress, ImportResult, SearchFilter, SearchSortColumn } from '../../shared/types';
 
 const NO_CRITERIA_LABEL = 'A0 (No selection criteria)';
+const SEARCH_PAGE_SIZE = 500;
 
 export default function App() {
   if (typeof window.cifApi === 'undefined') {
@@ -43,6 +44,11 @@ function AppInner() {
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
   const [databaseEntryCount, setDatabaseEntryCount] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [searchTotal, setSearchTotal] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const searchRequestId = useRef(0);
+  const activeFilter = useRef<SearchFilter | null>(null);
+  const activeSort = useRef<{ column?: SearchSortColumn; direction?: 'asc' | 'desc' }>({});
 
   const showApiError = useCallback((action: string, error: unknown) => {
     const detail = error instanceof Error && error.message ? ` ${error.message}` : '';
@@ -63,6 +69,9 @@ function AppInner() {
     setSelectedEntryId(null);
     setAnswerSetLabel(NO_CRITERIA_LABEL);
     setSearchActive(false);
+    setSearchTotal(0);
+    activeFilter.current = null;
+    searchRequestId.current += 1;
     setExportMessage(null);
     if (resetSearchForm) setSearchResetSignal((value) => value + 1);
   }, []);
@@ -198,15 +207,68 @@ function AppInner() {
       return;
     }
     try {
-      const results = await window.cifApi.search(filter);
-      setEntries(results);
-      setSelectedEntryId(results[0]?.id ?? null);
-      setAnswerSetLabel(`A1 (${results.length} matching)`);
+      activeFilter.current = filter;
+      activeSort.current = {};
+      const requestId = ++searchRequestId.current;
+      const result = await window.cifApi.searchPage({ filter, offset: 0, limit: SEARCH_PAGE_SIZE });
+      if (requestId !== searchRequestId.current) return;
+      setEntries(result.rows);
+      setSearchTotal(result.total);
+      setSelectedEntryId(result.rows[0]?.id ?? null);
+      setAnswerSetLabel(`A1 (${result.total} matching)`);
       setSearchActive(true);
     } catch (error) {
       showApiError('search entries', error);
     }
   }
+
+  const loadMoreResults = useCallback(async () => {
+    const filter = activeFilter.current;
+    if (!filter || loadingMore || entries.length >= searchTotal) return;
+    const requestId = searchRequestId.current;
+    setLoadingMore(true);
+    try {
+      const result = await window.cifApi.searchPage({
+        filter,
+        offset: entries.length,
+        limit: SEARCH_PAGE_SIZE,
+        sortColumn: activeSort.current.column,
+        sortDirection: activeSort.current.direction
+      });
+      if (requestId !== searchRequestId.current) return;
+      setEntries((current) => [...current, ...result.rows]);
+      setSearchTotal(result.total);
+    } catch (error) {
+      showApiError('load more search results', error);
+    } finally {
+      if (requestId === searchRequestId.current) setLoadingMore(false);
+    }
+  }, [entries.length, loadingMore, searchTotal, showApiError]);
+
+  const sortSearchResults = useCallback(async (column: SearchSortColumn, direction: 'asc' | 'desc') => {
+    const filter = activeFilter.current;
+    if (!filter) return;
+    activeSort.current = { column, direction };
+    const requestId = ++searchRequestId.current;
+    setLoadingMore(true);
+    try {
+      const result = await window.cifApi.searchPage({
+        filter,
+        offset: 0,
+        limit: SEARCH_PAGE_SIZE,
+        sortColumn: column,
+        sortDirection: direction
+      });
+      if (requestId !== searchRequestId.current) return;
+      setEntries(result.rows);
+      setSearchTotal(result.total);
+      setSelectedEntryId(result.rows[0]?.id ?? null);
+    } catch (error) {
+      showApiError('sort search results', error);
+    } finally {
+      if (requestId === searchRequestId.current) setLoadingMore(false);
+    }
+  }, [showApiError]);
 
   return (
     <div className="mx-auto flex h-screen max-w-full flex-col overflow-hidden bg-mica">
@@ -271,12 +333,16 @@ function AppInner() {
         rows={entries}
         selectedId={selectedEntryId}
         onSelect={(entry) => setSelectedEntryId(entry.id)}
+        totalRows={searchTotal || entries.length}
+        loadingMore={loadingMore}
+        onLoadMore={loadMoreResults}
+        onSortChange={sortSearchResults}
       />
 
       <div className="flex gap-2 border-t border-stroke px-2.5 py-1 text-text-dim">
         <div className="flex-1 px-2 py-0.5">
           {searchActive
-            ? `${entries.length} search results`
+            ? `${entries.length} of ${searchTotal} search results loaded`
             : databaseEntryCount === null
               ? 'Loading database...'
               : `${databaseEntryCount} entries indexed`}

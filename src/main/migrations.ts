@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import type Database from 'better-sqlite3';
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 function hasColumn(database: Database.Database, table: string, column: string): boolean {
   return (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
@@ -75,9 +75,20 @@ function migration2(database: Database.Database): void {
   `);
 }
 
+function migration3(database: Database.Database): void {
+  database.exec(`
+    CREATE INDEX IF NOT EXISTS idx_entries_sg_number ON entries(sg_number);
+    CREATE INDEX IF NOT EXISTS idx_entries_cell_a ON entries(cell_a);
+    CREATE INDEX IF NOT EXISTS idx_entries_cell_b ON entries(cell_b);
+    CREATE INDEX IF NOT EXISTS idx_entries_cell_c ON entries(cell_c);
+    ANALYZE;
+  `);
+}
+
 const migrations: Record<number, (database: Database.Database) => void> = {
   1: migration1,
-  2: migration2
+  2: migration2,
+  3: migration3
 };
 
 function createMigrationBackup(

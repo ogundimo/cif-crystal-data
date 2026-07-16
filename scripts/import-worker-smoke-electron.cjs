@@ -84,7 +84,7 @@ async function run() {
     assert.equal(migrationImport.result.importedCount, 1);
     legacyDatabase = new Database(legacyDatabasePath);
     try {
-      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 2);
+      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 3);
       assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Eu3S9Sb4');
       assert.equal(legacyDatabase.prepare('SELECT COUNT(*) AS count FROM atom_sites').get().count, 16);
       assert.equal(legacyDatabase.prepare('SELECT cell_volume FROM entries').get().cell_volume, 1574.8);

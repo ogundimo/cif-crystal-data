@@ -44,6 +44,7 @@ window.cifApi = {
   getImportFolder: async () => null,
   exportCif: async () => ({ exported: false }),
   search: async () => [],
+  searchPage: async () => ({ rows: [], total: 0 }),
   restraints: async () => [],
   importCifFolder: async () => null,
   refreshCifFolder: async () => ({ importedCount: 0, skippedCount: 0, failures: [], total: 0 }),

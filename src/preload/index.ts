@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { CifApi, ImportProgress, SearchFilter } from '../shared/types';
+import type { CifApi, ImportProgress, SearchFilter, SearchPageRequest } from '../shared/types';
 
 const api: CifApi = {
   getAllEntries: () => ipcRenderer.invoke('cif:getAllEntries'),
@@ -8,6 +8,7 @@ const api: CifApi = {
   getImportFolder: () => ipcRenderer.invoke('cif:getImportFolder'),
   exportCif: (entryId: number) => ipcRenderer.invoke('cif:exportCif', entryId),
   search: (filter: SearchFilter) => ipcRenderer.invoke('cif:search', filter),
+  searchPage: (request: SearchPageRequest) => ipcRenderer.invoke('cif:searchPage', request),
   restraints: (filter: SearchFilter) => ipcRenderer.invoke('cif:restraints', filter),
   importCifFolder: () => ipcRenderer.invoke('cif:importCifFolder'),
   refreshCifFolder: () => ipcRenderer.invoke('cif:refreshCifFolder'),

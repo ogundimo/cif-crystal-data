@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import { copyFile, stat } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { SearchFilter } from '../shared/types';
+import type { SearchFilter, SearchPageRequest, SearchSortColumn } from '../shared/types';
 import { validateSearchFilter } from './searchFilterValidation';
 import { ImportWorkerError, runImportWorker } from './importRunner';
 import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
@@ -112,6 +112,28 @@ app.whenReady().then(() => {
   ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>
     (await getDbModule()).searchEntries(validateSearchFilter(filter))
   );
+
+  ipcMain.handle('cif:searchPage', async (_e, request: SearchPageRequest) => {
+    if (!request || typeof request !== 'object') throw new TypeError('Invalid search page request');
+    const offset = Number(request.offset);
+    const limit = Number(request.limit);
+    if (!Number.isInteger(offset) || offset < 0) throw new TypeError('Invalid search offset');
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1_000) throw new TypeError('Invalid search limit');
+    const allowedSortColumns = new Set<SearchSortColumn>([
+      'formula', 'cell_a', 'cell_b', 'cell_c', 'sg_number', 'space_group', 'reference',
+      'level_struct_studies'
+    ]);
+    if (request.sortColumn !== undefined && !allowedSortColumns.has(request.sortColumn)) {
+      throw new TypeError('Invalid search sort column');
+    }
+    if (request.sortDirection !== undefined && request.sortDirection !== 'asc' && request.sortDirection !== 'desc') {
+      throw new TypeError('Invalid search sort direction');
+    }
+    return (await getDbModule()).searchEntriesPage({
+      ...request,
+      filter: validateSearchFilter(request.filter)
+    });
+  });
 
   ipcMain.handle('cif:restraints', async (_e, filter: SearchFilter) =>
     (await getDbModule()).computeRestraints(validateSearchFilter(filter))

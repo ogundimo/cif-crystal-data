@@ -2,13 +2,12 @@ import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from '
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
   type ColumnSizingState
 } from '@tanstack/react-table';
-import type { EntryRow } from '../../../shared/types';
+import type { EntryRow, SearchSortColumn } from '../../../shared/types';
 import { formatFormula } from '../formatFormula';
 import { calculateVirtualRowWindow } from '../virtualRows';
 
@@ -64,9 +63,21 @@ interface Props {
   rows: EntryRow[];
   selectedId?: number | null;
   onSelect?: (entry: EntryRow) => void;
+  totalRows?: number;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
+  onSortChange?: (column: SearchSortColumn, direction: 'asc' | 'desc') => void;
 }
 
-export default function DataGrid({ rows, selectedId = null, onSelect }: Props) {
+export default function DataGrid({
+  rows,
+  selectedId = null,
+  onSelect,
+  totalRows = rows.length,
+  loadingMore = false,
+  onLoadMore,
+  onSortChange
+}: Props) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 });
@@ -76,11 +87,16 @@ export default function DataGrid({ rows, selectedId = null, onSelect }: Props) {
     data: rows,
     columns,
     state: { sorting, columnSizing },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(next);
+      const first = next[0];
+      if (first) onSortChange?.(first.id as SearchSortColumn, first.desc ? 'desc' : 'asc');
+    },
     onColumnSizingChange: setColumnSizing,
     columnResizeMode: 'onChange',
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel()
+    manualSorting: Boolean(onSortChange)
   });
 
   const tableRows = table.getRowModel().rows;
@@ -107,7 +123,15 @@ export default function DataGrid({ rows, selectedId = null, onSelect }: Props) {
         ? previous
         : next;
     });
-  }, []);
+    if (
+      onLoadMore &&
+      !loadingMore &&
+      rows.length < totalRows &&
+      container.scrollTop + container.clientHeight >= container.scrollHeight - ROW_HEIGHT * 20
+    ) {
+      onLoadMore();
+    }
+  }, [loadingMore, onLoadMore, rows.length, totalRows]);
 
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
@@ -136,7 +160,7 @@ export default function DataGrid({ rows, selectedId = null, onSelect }: Props) {
         </div>
       ) : (
         <table
-          aria-rowcount={tableRows.length + 1}
+          aria-rowcount={totalRows + 1}
           className="w-full table-fixed border-separate border-spacing-0 text-xs"
         >
         <thead>
@@ -213,6 +237,11 @@ export default function DataGrid({ rows, selectedId = null, onSelect }: Props) {
           )}
         </tbody>
         </table>
+      )}
+      {loadingMore && (
+        <div className="sticky bottom-0 border-t border-stroke bg-white/95 px-3 py-1 text-center text-text-dim">
+          Loading more results…
+        </div>
       )}
     </div>
   );
