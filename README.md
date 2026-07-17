@@ -49,8 +49,9 @@ dependency rebuild step.
 
 The `Release Windows application` GitHub Actions workflow publishes the NSIS installer,
 portable executable, `SHA256SUMS.txt`, and a CycloneDX SBOM. It runs the complete test suite
-before packaging, creates a signed GitHub artifact attestation, and retains the same files as
-a workflow artifact for 14 days.
+before packaging, creates a signed GitHub artifact attestation when the repository is public,
+and retains the same files as a workflow artifact for 14 days. GitHub does not offer artifact
+attestations for user-owned private repositories.
 
 To publish a release:
 

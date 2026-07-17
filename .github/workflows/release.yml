@@ -135,6 +135,7 @@ jobs:
           compression-level: 0
 
       - name: Attest installers and SBOM
+        if: github.event.repository.visibility == 'public'
         uses: actions/attest@v4
         with:
           subject-path: release/*.exe
