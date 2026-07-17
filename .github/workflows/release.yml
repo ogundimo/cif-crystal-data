@@ -71,7 +71,9 @@ jobs:
           if ($packageVersion -ne $Matches.version) {
             throw "Tag version '$($Matches.version)' does not match package.json version '$packageVersion'."
           }
-          $lockVersion = (Get-Content package-lock.json -Raw | ConvertFrom-Json).version
+          # package-lock.json has a valid empty-string key under "packages" for the root package.
+          # PowerShell object mode rejects that key, so parse as a hashtable instead.
+          $lockVersion = (Get-Content package-lock.json -Raw | ConvertFrom-Json -AsHashtable)['version']
           if ($lockVersion -ne $packageVersion) {
             throw "package-lock.json version '$lockVersion' does not match package.json version '$packageVersion'."
           }
