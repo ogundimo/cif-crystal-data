@@ -3,6 +3,8 @@
 A local desktop database for crystallographic data extracted from CIF files, built with
 Electron, React, TypeScript, Tailwind CSS, and better-sqlite3.
 
+Released under the [MIT License](LICENSE).
+
 ## Dev mode
 
 Development requires Node.js 22.12 or newer.

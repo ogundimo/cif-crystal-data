@@ -37,17 +37,17 @@ async function run() {
 
   const userDataPath = mkdtempSync(join(tmpdir(), 'cif-import-worker-'));
   const fixtureDirectory = join(root, 'src', 'parser', '__fixtures__');
-  const fixtureText = readFileSync(join(fixtureDirectory, '540062.cif'), 'utf8');
+  const fixtureText = readFileSync(join(fixtureDirectory, 'synthetic-test.cif'), 'utf8');
   const rootDir = join(userDataPath, 'input');
   mkdirSync(rootDir);
-  writeFileSync(join(rootDir, '540062.cif'), fixtureText);
+  writeFileSync(join(rootDir, 'synthetic-test.cif'), fixtureText);
   const workerUrl = pathToFileURL(join(chunksDirectory, workerFilename));
 
   const legacyUserDataPath = mkdtempSync(join(tmpdir(), 'cif-legacy-migration-'));
   try {
     const legacyInput = join(legacyUserDataPath, 'input');
     mkdirSync(legacyInput);
-    writeFileSync(join(legacyInput, '540062.cif'), fixtureText);
+    writeFileSync(join(legacyInput, 'synthetic-test.cif'), fixtureText);
     const legacyDatabasePath = join(legacyUserDataPath, 'cif-local.db');
     let legacyDatabase = new Database(legacyDatabasePath);
     try {
@@ -72,8 +72,8 @@ async function run() {
           source_mtime_ms REAL NOT NULL,
           source_size INTEGER NOT NULL
         );
-        INSERT INTO entries VALUES (1, '540062.cif', 'Stale', 1, 1, 1, 1, 'P1', '', 'Cell');
-        INSERT INTO imported_files VALUES ('540062.cif', 'stale-path', 1, 1);
+        INSERT INTO entries VALUES (1, 'synthetic-test.cif', 'Stale', 1, 1, 1, 1, 'P1', '', 'Cell');
+        INSERT INTO imported_files VALUES ('synthetic-test.cif', 'stale-path', 1, 1);
         PRAGMA user_version = 1;
       `);
     } finally {
@@ -89,9 +89,9 @@ async function run() {
         legacyDatabase.prepare("SELECT value FROM app_settings WHERE key = 'schema_version'").get().value,
         '3'
       );
-      assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Eu3S9Sb4');
-      assert.equal(legacyDatabase.prepare('SELECT COUNT(*) AS count FROM atom_sites').get().count, 16);
-      assert.equal(legacyDatabase.prepare('SELECT cell_volume FROM entries').get().cell_volume, 1574.8);
+      assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Cl1Na1');
+      assert.equal(legacyDatabase.prepare('SELECT COUNT(*) AS count FROM atom_sites').get().count, 2);
+      assert.equal(legacyDatabase.prepare('SELECT cell_volume FROM entries').get().cell_volume, 210);
       assert.ok(
         readdirSync(legacyUserDataPath).some((name) => name.startsWith('cif-local.pre-migration-v1-')),
         'legacy migration did not create a backup'
@@ -121,7 +121,7 @@ async function run() {
     let database = new Database(databasePath);
     try {
       const row = database.prepare('SELECT formula, sg_number FROM entries').get();
-      assert.deepEqual(row, { formula: 'Eu3S9Sb4', sg_number: 62 });
+      assert.deepEqual(row, { formula: 'Cl1Na1', sg_number: 1 });
       const entryId = database.prepare('SELECT id FROM entries').get().id;
       database.prepare("UPDATE entries SET formula = 'Stale' WHERE id = ?").run(entryId);
       database
@@ -131,18 +131,18 @@ async function run() {
       database.close();
     }
 
-    writeFileSync(join(rootDir, '540062.cif'), `${fixtureText}\n# modified for refresh test\n`);
+    writeFileSync(join(rootDir, 'synthetic-test.cif'), `${fixtureText}\n# modified for refresh test\n`);
     const updateImport = await runWorker(workerUrl, rootDir, userDataPath);
     assert.deepEqual(updateImport.result, { importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     database = new Database(databasePath);
     try {
       assert.equal(database.prepare('SELECT COUNT(*) AS count FROM entries').get().count, 1);
-      assert.equal(database.prepare('SELECT formula FROM entries').get().formula, 'Eu3S9Sb4');
+      assert.equal(database.prepare('SELECT formula FROM entries').get().formula, 'Cl1Na1');
       const elements = database
         .prepare('SELECT element FROM entry_elements ORDER BY element')
         .all()
         .map((row) => row.element);
-      assert.deepEqual(elements, ['Eu', 'S', 'Sb']);
+      assert.deepEqual(elements, ['Cl', 'Na']);
 
       const unchangedImport = await runWorker(workerUrl, rootDir, userDataPath);
       assert.deepEqual(unchangedImport.result, {
@@ -157,11 +157,11 @@ async function run() {
       assert.equal(database.prepare('SELECT COUNT(*) AS count FROM entry_elements').get().count, 0);
 
       database.exec(`
-        CREATE TRIGGER fail_eu_element
+        CREATE TRIGGER fail_na_element
         BEFORE INSERT ON entry_elements
-        WHEN NEW.element = 'Eu'
+        WHEN NEW.element = 'Na'
         BEGIN
-          SELECT RAISE(FAIL, 'intentional Eu write failure');
+          SELECT RAISE(FAIL, 'intentional Na write failure');
         END;
       `);
     } finally {
@@ -170,15 +170,15 @@ async function run() {
 
     const mixedInput = join(userDataPath, 'mixed-input');
     mkdirSync(mixedInput);
-    writeFileSync(join(mixedInput, 'eu.cif'), fixtureText);
-    writeFileSync(join(mixedInput, 'fe.cif'), fixtureText.replace("'Eu3 S9 Sb4'", "'Fe1 O1'"));
+    writeFileSync(join(mixedInput, 'na.cif'), fixtureText);
+    writeFileSync(join(mixedInput, 'fe.cif'), fixtureText.replace("'Na1 Cl1'", "'Fe1 O1'"));
 
     const mixedImport = await runWorker(workerUrl, mixedInput, userDataPath);
     assert.equal(mixedImport.result.importedCount, 1);
     assert.equal(mixedImport.result.total, 2);
     assert.equal(mixedImport.result.failures.length, 1);
-    assert.equal(mixedImport.result.failures[0].filename, 'eu.cif');
-    assert.match(mixedImport.result.failures[0].reason, /intentional Eu write failure/);
+    assert.equal(mixedImport.result.failures[0].filename, 'na.cif');
+    assert.match(mixedImport.result.failures[0].reason, /intentional Na write failure/);
 
     database = new Database(databasePath);
     try {

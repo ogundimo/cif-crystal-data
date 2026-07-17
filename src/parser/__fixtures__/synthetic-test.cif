@@ -1,0 +1,50 @@
+# Synthetic CIF fixture authored for CIF Crystal Data tests.
+# The values are fictional and are not sourced from a crystallographic database.
+
+data_synthetic_test
+_audit_creation_date                     2026-07-17
+_audit_creation_method                   'CIF Crystal Data synthetic test fixture'
+
+_chemical_formula_structural             'Na Cl'
+_chemical_formula_sum                    'Na1 Cl1'
+
+_journal_name_full                       'Synthetic Test Journal'
+_journal_year                            2026
+_journal_volume                          1
+_journal_page_first                      1
+_journal_page_last                       2
+
+_cell_length_a                           5
+_cell_length_b                           6
+_cell_length_c                           7
+_cell_angle_alpha                        90
+_cell_angle_beta                         90
+_cell_angle_gamma                        90
+_cell_volume                             210
+_cell_formula_units_Z                    1
+_space_group_IT_number                   1
+_space_group_name_H-M_alt                'P 1'
+
+loop_
+ _space_group_symop_id
+ _space_group_symop_operation_xyz
+ 1 'x, y, z'
+
+loop_
+ _atom_type_symbol
+ Na
+ Cl
+
+loop_
+ _atom_site_label
+ _atom_site_type_symbol
+ _atom_site_symmetry_multiplicity
+ _atom_site_Wyckoff_symbol
+ _atom_site_fract_x
+ _atom_site_fract_y
+ _atom_site_fract_z
+ _atom_site_occupancy
+ Na1 Na 1 a 0 0 0 1
+ Cl1 Cl 1 a 0.5 0.5 0.5 1
+
+_exptl_crystal_colour                    blue

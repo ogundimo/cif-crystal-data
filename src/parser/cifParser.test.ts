@@ -12,18 +12,18 @@ import {
 } from './cifParser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const fixturePath = join(__dirname, '__fixtures__', '540062.cif');
+const fixturePath = join(__dirname, '__fixtures__', 'synthetic-test.cif');
 const fixtureText = readFileSync(fixturePath, 'utf-8');
 
-describe('parseCif against 540062.cif fixture', () => {
+describe('parseCif against the synthetic CIF fixture', () => {
   const entry = parseCif(fixtureText);
 
   it('parses the formula', () => {
-    expect(entry.formula).toBe('Eu3S9Sb4');
+    expect(entry.formula).toBe('Cl1Na1');
   });
 
   it('builds the reference string', () => {
-    expect(entry.reference).toBe('Inorg. Mater., 1986, 22, 23-27');
+    expect(entry.reference).toBe('Synthetic Test Journal, 2026, 1, 1-2');
   });
 
   it('determines level of structural studies', () => {
@@ -35,7 +35,7 @@ describe('parseCif against 540062.cif fixture', () => {
   });
 
   it('parses the experimental crystal colour', () => {
-    expect(entry.crystalColour).toBe('gray steel');
+    expect(entry.crystalColour).toBe('blue');
   });
 
   it('classifies a CIF with an anisotropic atom-site label as a sample crystal', () => {
@@ -45,49 +45,49 @@ describe('parseCif against 540062.cif fixture', () => {
 
   it('leaves colour blank when the CIF colour is missing', () => {
     const withoutColour = fixtureText.replace(
-      /(_exptl_crystal_colour\s+)'gray steel'/,
+      /(_exptl_crystal_colour\s+)blue/,
       '$1?'
     );
     expect(parseCif(withoutColour).crystalColour).toBe('');
   });
 
   it('parses cell lengths in nm', () => {
-    expect(entry.cell_a).toBeCloseTo(1.65, 10);
-    expect(entry.cell_b).toBeCloseTo(0.4, 10);
-    expect(entry.cell_c).toBeCloseTo(2.386, 10);
+    expect(entry.cell_a).toBeCloseTo(0.5, 10);
+    expect(entry.cell_b).toBeCloseTo(0.6, 10);
+    expect(entry.cell_c).toBeCloseTo(0.7, 10);
   });
 
   it('parses cell angles and prefers the CIF-provided volume', () => {
     expect([entry.cellAlpha, entry.cellBeta, entry.cellGamma]).toEqual([90, 90, 90]);
-    expect(entry.cellVolume).toBe(1574.8);
+    expect(entry.cellVolume).toBe(210);
   });
 
   it('calculates volume from lengths and angles when _cell_volume is missing', () => {
     const withoutVolume = fixtureText.replace(/(_cell_volume\s+)\S+/, '$1?');
-    expect(parseCif(withoutVolume).cellVolume).toBeCloseTo(1574.76, 8);
+    expect(parseCif(withoutVolume).cellVolume).toBeCloseTo(210, 8);
   });
 
   it('parses the space group number', () => {
-    expect(entry.sg_number).toBe(62);
+    expect(entry.sg_number).toBe(1);
   });
 
   it('parses the space group symbol with spaces removed', () => {
-    expect(entry.space_group).toBe('Pnma');
+    expect(entry.space_group).toBe('P1');
   });
 
   it('parses atom-site loop rows in their original order', () => {
-    expect(entry.atomSites).toHaveLength(16);
+    expect(entry.atomSites).toHaveLength(2);
     expect(entry.atomSites[0]).toEqual({
-      siteLabel: 'Sb1',
-      typeSymbol: 'Sb',
-      symmetryMultiplicity: 4,
-      wyckoffSymbol: 'c',
-      fractX: 0.0286,
-      fractY: 0.25,
-      fractZ: 0.394,
+      siteLabel: 'Na1',
+      typeSymbol: 'Na',
+      symmetryMultiplicity: 1,
+      wyckoffSymbol: 'a',
+      fractX: 0,
+      fractY: 0,
+      fractZ: 0,
       occupancy: 1
     });
-    expect(entry.atomSites[15].siteLabel).toBe('S9');
+    expect(entry.atomSites[1].siteLabel).toBe('Cl1');
   });
 });
 

@@ -26,8 +26,8 @@ describe('importCifFolder batching', () => {
 
     expect(result).toEqual({ importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     expect(written).toHaveLength(1);
-    expect(written[0].sourceFilename).toBe('540062.cif');
-    expect(written[0].entry.formula).toBe('Eu3S9Sb4');
+    expect(written[0].sourceFilename).toBe('synthetic-test.cif');
+    expect(written[0].entry.formula).toBe('Cl1Na1');
     expect(progress).toEqual([
       { processed: 0, total: 1, importedCount: 0, skippedCount: 0, failureCount: 0 },
       { processed: 1, total: 1, importedCount: 1, skippedCount: 0, failureCount: 0 }
@@ -59,7 +59,7 @@ describe('importCifFolder batching', () => {
     expect(importCifFolder(fixtureDirectory, writer, (update) => progress.push(update))).toEqual({
       importedCount: 0,
       skippedCount: 0,
-      failures: [{ filename: '540062.cif', reason: 'database write failed' }],
+      failures: [{ filename: 'synthetic-test.cif', reason: 'database write failed' }],
       total: 1
     });
     expect(progress.at(-1)).toEqual({
