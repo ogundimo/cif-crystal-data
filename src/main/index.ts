@@ -78,6 +78,12 @@ app.whenReady().then(() => {
     }
     return (await getDbModule()).getAtomSites(entryId);
   });
+  ipcMain.handle('cif:getPublAuthors', async (_event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    return (await getDbModule()).getPublAuthors(entryId);
+  });
   ipcMain.handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
   ipcMain.handle('cif:exportCif', async (event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {

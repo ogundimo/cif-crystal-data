@@ -252,10 +252,29 @@ async function testCompoundInformationSelection(window) {
   assert.equal(initial.panelOverflowY, 'scroll', 'information panel does not own its vertical scrollbar');
   assert.equal(initial.hasSeparator, true, 'resizable results separator is missing');
   await pause(50);
-  const selectedSite = await window.webContents.executeJavaScript(`
-    document.querySelector('[data-testid="atom-sites-table"] tbody tr:first-child td:nth-child(2)')?.textContent.trim()
+  const selected = await window.webContents.executeJavaScript(`
+    (() => {
+      const panel = document.querySelector('[data-testid="compound-info-panel"]');
+      return {
+        site: document.querySelector('[data-testid="atom-sites-table"] tbody tr:first-child td:nth-child(2)')?.textContent.trim(),
+        publication: Array.from(panel.querySelectorAll('[data-testid="publication-table"] tr')).map((row) => ({
+          label: row.querySelector('th').textContent.trim(),
+          value: row.querySelector('td').textContent.trim()
+        })),
+        authors: Array.from(panel.querySelectorAll('[data-testid="publication-authors"] li')).map((item) => item.textContent.trim())
+      };
+    })()
   `);
-  assert.equal(selectedSite, 'Sb2', 'information panel did not follow the selected row');
+  assert.equal(selected.site, 'Sb2', 'information panel did not follow the selected row');
+  assert.deepEqual(selected.publication.slice(0, 2), [
+    { label: 'Title', value: 'Synthetic structure report 2' },
+    { label: 'Language', value: 'English' }
+  ]);
+  assert.equal(selected.publication[2]?.label, 'Authors');
+  assert.deepEqual(selected.authors, [
+    'Doe, J. — Department of Chemistry, Example University, Springfield',
+    'Roe, A.'
+  ]);
   console.log('✓ compound information follows result selection');
 }
 
