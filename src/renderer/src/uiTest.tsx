@@ -43,6 +43,10 @@ window.cifApi = {
     fract_z: 0.394,
     occupancy: 1
   }],
+  getPublAuthors: async (entryId) => [
+    { id: entryId, entry_id: entryId, author_order: 0, name: 'Doe, J.', address: 'Department of Chemistry, Example University, Springfield' },
+    { id: entryId + 1, entry_id: entryId, author_order: 1, name: 'Roe, A.', address: null }
+  ],
   getImportFolder: async () => null,
   exportCif: async () => ({ exported: false }),
   search: async () => [],

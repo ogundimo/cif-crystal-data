@@ -149,6 +149,7 @@ export interface CifApi {
   getAllEntries: () => Promise<EntryRow[]>;
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
+  getPublAuthors: (entryId: number) => Promise<PublAuthorRow[]>;
   getImportFolder: () => Promise<string | null>;
   exportCif: (entryId: number) => Promise<ExportCifResult>;
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
