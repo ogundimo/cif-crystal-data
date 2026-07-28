@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import type Database from 'better-sqlite3';
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 function hasColumn(database: Database.Database, table: string, column: string): boolean {
   return (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
@@ -85,10 +85,31 @@ function migration3(database: Database.Database): void {
   `);
 }
 
+function migration4(database: Database.Database): void {
+  for (const column of ['publ_title', 'journal_language']) {
+    if (!hasColumn(database, 'entries', column)) {
+      database.exec(`ALTER TABLE entries ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`);
+    }
+  }
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS publ_authors (
+      id INTEGER PRIMARY KEY,
+      entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+      author_order INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      address TEXT,
+      UNIQUE(entry_id, author_order)
+    );
+    CREATE INDEX IF NOT EXISTS idx_publ_authors_entry_id ON publ_authors(entry_id);
+    DELETE FROM imported_files;
+  `);
+}
+
 const migrations: Record<number, (database: Database.Database) => void> = {
   1: migration1,
   2: migration2,
-  3: migration3
+  3: migration3,
+  4: migration4
 };
 
 function createMigrationBackup(

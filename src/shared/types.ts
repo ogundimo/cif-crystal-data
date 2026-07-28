@@ -15,6 +15,16 @@ export interface EntryRow {
   level_struct_studies: string;
   sample_type: string;
   crystal_colour: string;
+  publ_title: string;
+  journal_language: string;
+}
+
+export interface PublAuthorRow {
+  id: number;
+  entry_id: number;
+  author_order: number;
+  name: string;
+  address: string | null;
 }
 
 export interface AtomSiteRow {
