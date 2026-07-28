@@ -35,17 +35,17 @@ export const PERIODIC_TABLE: ElementDef[] = [
 ];
 
 export const CATEGORY_CLASS: Record<string, string> = {
-  alk: 'bg-[#e5a0a6] text-[#211113]',
-  tm: 'bg-[#9ebce0] text-[#101820]',
-  metaloid: 'bg-[#f0cf35] text-[#1b1704]',
-  nm: 'bg-[#a9c982] text-[#10170b]',
-  ng: 'bg-[#dda9c5] text-[#21131b]',
-  lan: 'bg-[#5797cc] text-[#0d1822]',
-  act: 'bg-[#91c8aa] text-[#102018]'
+  alk: 'bg-[#f4a0aa] text-[#211113]',
+  tm: 'bg-[#82c4f4] text-[#101820]',
+  metaloid: 'bg-[#ffe04b] text-[#1b1704]',
+  nm: 'bg-[#a9dc72] text-[#10170b]',
+  ng: 'bg-[#f0a6d2] text-[#21131b]',
+  lan: 'bg-[#54ace8] text-[#0d1822]',
+  act: 'bg-[#79d5a4] text-[#102018]'
 };
 
 export const ALKALINE_EARTH_SYMBOLS = new Set(['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra']);
-export const ALKALINE_EARTH_CLASS = 'bg-[#dfa329] text-[#1c1608]';
+export const ALKALINE_EARTH_CLASS = 'bg-[#f4b52f] text-[#1c1608]';
 
 /** Grid cells that must render as an empty gap (no border/background) inside the periodic table's
  *  bounding rectangle: the main-group gap in periods 1-3 (cols 3-12) and the lanthanide/actinide

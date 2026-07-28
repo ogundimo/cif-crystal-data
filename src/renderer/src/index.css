@@ -182,7 +182,7 @@ body {
     @apply border-[#5941a9] bg-[#6f52c7] text-white hover:border-[#493590] hover:bg-[#5d43ae];
   }
   .quick-search-element {
-    @apply relative -ml-px -mt-px flex select-none items-end justify-center border border-white/90 pb-[3px] text-[13px] font-extrabold leading-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.18)] hover:z-20 hover:outline hover:outline-2 hover:outline-accent;
+    @apply relative -ml-px -mt-px flex select-none items-end justify-center border border-white/90 pb-[1px] text-[13px] font-extrabold leading-none shadow-[inset_0_0_0_1px_rgba(0,0,0,0.18)] hover:z-20 hover:outline hover:outline-2 hover:outline-accent;
   }
   .quick-search-element-selected {
     @apply z-10 border-accent bg-accent text-white;
@@ -191,7 +191,7 @@ body {
     @apply z-10 border-[#6f52c7] bg-[#e8e1fb] text-[#35236f];
   }
   .quick-search-atomic-number {
-    @apply absolute left-1/2 top-[2px] -translate-x-1/2 text-[8px] font-semibold leading-none;
+    @apply absolute left-1/2 top-[1px] -translate-x-1/2 text-[8px] font-semibold leading-none;
   }
   .quick-search-periodic-help {
     @apply mt-1.5 text-[10px] leading-tight text-text-dim;
