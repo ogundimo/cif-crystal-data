@@ -22,7 +22,9 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
   reference: `Reference ${index + 1}`,
   level_struct_studies: 'Complete structure determined',
   sample_type: index === 0 ? 'Sample crystal' : 'Powder',
-  crystal_colour: index === 0 ? 'gray steel' : ''
+  crystal_colour: index === 0 ? 'gray steel' : '',
+  publ_title: `Synthetic structure report ${index + 1}`,
+  journal_language: 'English'
 }));
 
 window.cifApi = {

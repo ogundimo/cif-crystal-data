@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { CifEntry } from '../parser/cifParser';
-import type { AtomSiteRow, EntryRow, RestraintRow, SearchFilter, SearchPageRequest, SearchPageResult, SearchSortColumn } from '../shared/types';
+import type { AtomSiteRow, EntryRow, PublAuthorRow, RestraintRow, SearchFilter, SearchPageRequest, SearchPageResult, SearchSortColumn } from '../shared/types';
 import { resolveElementSelection } from '../shared/periodicTableData';
 import { migrateDatabase } from './migrations';
 
@@ -64,20 +64,24 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
     `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, cell_angle_alpha = ?,
      cell_angle_beta = ?, cell_angle_gamma = ?, cell_volume = ?, sg_number = ?,
      space_group = ?, reference = ?, level_struct_studies = ?, sample_type = ?,
-     crystal_colour = ? WHERE id = ?`
+     crystal_colour = ?, publ_title = ?, journal_language = ? WHERE id = ?`
   );
   const deleteElements = database.prepare('DELETE FROM entry_elements WHERE entry_id = ?');
   const insertEntry = database.prepare(
     `INSERT INTO entries
      (source_filename, formula, cell_a, cell_b, cell_c, cell_angle_alpha, cell_angle_beta,
       cell_angle_gamma, cell_volume, sg_number, space_group, reference,
-      level_struct_studies, sample_type, crystal_colour)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      level_struct_studies, sample_type, crystal_colour, publ_title, journal_language)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const insertElement = database.prepare(
     'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
   );
   const deleteAtomSites = database.prepare('DELETE FROM atom_sites WHERE entry_id = ?');
+  const deletePublAuthors = database.prepare('DELETE FROM publ_authors WHERE entry_id = ?');
+  const insertPublAuthor = database.prepare(
+    'INSERT INTO publ_authors (entry_id, author_order, name, address) VALUES (?, ?, ?, ?)'
+  );
   const insertAtomSite = database.prepare(
     `INSERT INTO atom_sites
      (entry_id, site_order, type_symbol, site_label, symmetry_multiplicity, wyckoff_symbol,
@@ -116,6 +120,8 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
         entry.level,
         entry.sampleType,
         entry.crystalColour,
+        entry.publTitle,
+        entry.journalLanguage,
         entryId
       );
     } else {
@@ -134,12 +140,15 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
         entry.reference,
         entry.level,
         entry.sampleType,
-        entry.crystalColour
+        entry.crystalColour,
+        entry.publTitle,
+        entry.journalLanguage
       );
       entryId = Number(info.lastInsertRowid);
     }
     deleteElements.run(entryId);
     deleteAtomSites.run(entryId);
+    deletePublAuthors.run(entryId);
     for (const el of entry.elements) {
       insertElement.run(entryId, el.element, el.count);
     }
@@ -156,6 +165,9 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
         site.fractZ,
         site.occupancy
       );
+    });
+    entry.publAuthors.forEach((author, index) => {
+      insertPublAuthor.run(entryId, index, author.name, author.address);
     });
     if (
       item.sourcePath !== undefined &&
@@ -206,6 +218,15 @@ export function getAtomSites(
   return database
     .prepare('SELECT * FROM atom_sites WHERE entry_id = ? ORDER BY site_order')
     .all(entryId) as AtomSiteRow[];
+}
+
+export function getPublAuthors(
+  entryId: number,
+  database: Database.Database = getDb()
+): PublAuthorRow[] {
+  return database
+    .prepare('SELECT * FROM publ_authors WHERE entry_id = ? ORDER BY author_order')
+    .all(entryId) as PublAuthorRow[];
 }
 
 export interface CifExportSource {
