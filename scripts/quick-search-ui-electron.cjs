@@ -221,6 +221,7 @@ async function testCompoundInformationSelection(window) {
         values,
         metadata,
         cellParameters,
+        formula: grid.querySelector('tbody tr[data-entry-id] td:first-child')?.textContent.trim(),
         coordinateHeadingStyles,
         wyckoffText: wyckoffCell?.textContent.trim(),
         wyckoffLetterStyle: wyckoffCell?.querySelector('span') ? getComputedStyle(wyckoffCell.querySelector('span')).fontStyle : null,
@@ -242,6 +243,7 @@ async function testCompoundInformationSelection(window) {
     headings: ['α [°]', 'β [°]', 'γ [°]'],
     values: ['90', '90', '90']
   });
+  assert.equal(initial.formula, 'FeO', 'formula displays a subscript when stoichiometry is exactly one');
   assert.deepEqual(initial.coordinateHeadingStyles, ['italic', 'italic', 'italic']);
   assert.equal(initial.wyckoffText, '4c');
   assert.equal(initial.wyckoffLetterStyle, 'italic');
