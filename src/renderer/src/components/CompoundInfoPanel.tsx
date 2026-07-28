@@ -39,9 +39,6 @@ export default function CompoundInfoPanel({ entry }: Props) {
     }
   ];
   const cellParameters = [
-    { label: 'a [Å]', value: (entry.cell_a * 10).toFixed(4) },
-    { label: 'b [Å]', value: (entry.cell_b * 10).toFixed(4) },
-    { label: 'c [Å]', value: (entry.cell_c * 10).toFixed(4) },
     { label: 'α [°]', value: displayNumber(entry.cell_angle_alpha) },
     { label: 'β [°]', value: displayNumber(entry.cell_angle_beta) },
     { label: 'γ [°]', value: displayNumber(entry.cell_angle_gamma) }
@@ -66,7 +63,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
             ))}
           </tbody>
         </table>
-        <table data-testid="cell-parameters-table" className="mt-1.5 w-full min-w-[30rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
+        <table data-testid="cell-parameters-table" className="mt-1.5 w-full min-w-[15rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
           <thead>
             <tr>
               {cellParameters.map((field) => (
@@ -95,8 +92,8 @@ export default function CompoundInfoPanel({ entry }: Props) {
               {['Elements', 'Site', 'Wyck.', 'x', 'y', 'z', 'Occ.'].map((heading) => (
                 <th
                   key={heading}
-                  className="sticky top-0 z-[1] border-b border-r border-[#b9c7d5] bg-[#d7e3ee] px-2 py-1 text-left font-semibold text-[#26384a]"
                 >
+                  className={`sticky top-0 z-[1] border-b border-r border-[#b9c7d5] bg-[#d7e3ee] px-2 py-1 text-left font-semibold text-[#26384a] ${['x', 'y', 'z'].includes(heading) ? 'italic' : ''}`}
                   {heading}
                 </th>
               ))}
@@ -115,8 +112,8 @@ export default function CompoundInfoPanel({ entry }: Props) {
                   <td className="border-b border-r border-[#eeeeee] px-2 py-1">{site.type_symbol}</td>
                   <td className="border-b border-r border-[#eeeeee] px-2 py-1">{site.site_label}</td>
                   <td className="border-b border-r border-[#eeeeee] px-2 py-1">
-                    {site.symmetry_multiplicity ?? ''}{site.wyckoff_symbol ?? ''}
                   </td>
+                    {site.symmetry_multiplicity ?? ''}<span className="italic">{site.wyckoff_symbol ?? ''}</span>
                   <td className="border-b border-r border-[#eeeeee] px-2 py-1">{displayNumber(site.fract_x)}</td>
                   <td className="border-b border-r border-[#eeeeee] px-2 py-1">{displayNumber(site.fract_y)}</td>
                   <td className="border-b border-r border-[#eeeeee] px-2 py-1">{displayNumber(site.fract_z)}</td>
