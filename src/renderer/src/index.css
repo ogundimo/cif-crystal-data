@@ -107,13 +107,13 @@ body {
     @apply flex h-5 w-5 items-center justify-center rounded-[2px] bg-transparent text-[#202020] hover:bg-[#e4e4e4];
   }
   .quick-search-ne-icon {
-    @apply block h-3.5 w-3.5 object-contain;
+    @apply flex h-4 w-4 items-center justify-center font-sans text-[18px] font-semibold leading-none;
   }
   .quick-search-ne-active {
     @apply bg-[#6f52c7] text-white;
   }
   .quick-search-ne-active .quick-search-ne-icon {
-    filter: invert(1);
+    @apply text-white;
   }
   .quick-search-negatable-input {
     @apply relative;
