@@ -211,12 +211,20 @@ async function testCompoundInformationSelection(window) {
         headings: Array.from(panel.querySelectorAll('[data-testid="cell-parameters-table"] thead th')).map((cell) => cell.textContent.trim()),
         values: Array.from(panel.querySelectorAll('[data-testid="cell-parameters-table"] tbody td')).map((cell) => cell.textContent.trim())
       };
+      const coordinateHeadingStyles = Array.from(panel.querySelectorAll('[data-testid="atom-sites-table"] thead th'))
+        .slice(3, 6)
+        .map((cell) => getComputedStyle(cell).fontStyle);
+      const wyckoffCell = panel.querySelector('[data-testid="atom-sites-table"] tbody tr:first-child td:nth-child(3)');
       rows[1]?.click();
       return {
         headings,
         values,
         metadata,
         cellParameters,
+        coordinateHeadingStyles,
+        wyckoffText: wyckoffCell?.textContent.trim(),
+        wyckoffLetterStyle: wyckoffCell?.querySelector('span') ? getComputedStyle(wyckoffCell.querySelector('span')).fontStyle : null,
+        wyckoffNumberOutsideItalicSpan: wyckoffCell?.firstChild?.textContent,
         gridOverflowY: getComputedStyle(grid).overflowY,
         panelOverflowY: getComputedStyle(panel).overflowY,
         hasSeparator: Boolean(separator)
@@ -231,9 +239,13 @@ async function testCompoundInformationSelection(window) {
     { label: 'Unit-cell volume [Å³]', value: '6' }
   ]);
   assert.deepEqual(initial.cellParameters, {
-    headings: ['a [Å]', 'b [Å]', 'c [Å]', 'α [°]', 'β [°]', 'γ [°]'],
-    values: ['1.0000', '2.0000', '3.0000', '90', '90', '90']
+    headings: ['α [°]', 'β [°]', 'γ [°]'],
+    values: ['90', '90', '90']
   });
+  assert.deepEqual(initial.coordinateHeadingStyles, ['italic', 'italic', 'italic']);
+  assert.equal(initial.wyckoffText, '4c');
+  assert.equal(initial.wyckoffLetterStyle, 'italic');
+  assert.equal(initial.wyckoffNumberOutsideItalicSpan, '4');
   assert.equal(initial.gridOverflowY, 'scroll', 'results grid does not own its vertical scrollbar');
   assert.equal(initial.panelOverflowY, 'scroll', 'information panel does not own its vertical scrollbar');
   assert.equal(initial.hasSeparator, true, 'resizable results separator is missing');
