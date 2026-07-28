@@ -5,7 +5,6 @@ import { validateSearchInput, type SearchValidationField } from '../../../shared
 import { scheduleDebouncedRequest } from '../debouncedRequest';
 import { PeriodicTablePicker, RangeInputRow, SearchFieldRow } from './QuickSearchParts';
 import closeIcon from '../../../../icons/close ICON.png';
-import notEqualIcon from '../../../../icons/not-equal.png';
 
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
@@ -297,7 +296,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
           aria-pressed={form[excludeField]}
           title={`Exclude matches for ${label}`}
         >
-          <img className="quick-search-ne-icon" src={notEqualIcon} alt="" />
+          <span className="quick-search-ne-icon" aria-hidden="true">≠</span>
         </button>
         <button
           type="button"
@@ -402,7 +401,7 @@ export default function QuickSearchDialog({ open, onClose, onSearch, resetSignal
                           aria-pressed={Boolean(form.elementSelections[slot - 1].exclude)}
                           title="Exclude entries containing this element selection"
                         >
-                          <img className="quick-search-ne-icon" src={notEqualIcon} alt="" />
+                          <span className="quick-search-ne-icon" aria-hidden="true">≠</span>
                         </button>
                         <button
                           type="button"

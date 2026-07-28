@@ -116,6 +116,7 @@ async function testCyclingElementBoxFlow(window) {
       box3: document.querySelector('#quick-search-elements-3').value,
       box4Active: document.querySelector('#quick-search-elements-4').getAttribute('aria-current'),
       elementLabels: Array.from(document.querySelectorAll('.quick-search-element-groups label')).map((label) => label.textContent),
+      notEqualSymbol: document.querySelector('[aria-label="Not equal element group 3"] .quick-search-ne-icon')?.textContent,
       notEqualPressed: document.querySelector('[aria-label="Not equal element group 3"]').getAttribute('aria-pressed'),
       notEqualButtonCount: document.querySelectorAll('[aria-label^="Not equal element group "]').length,
       removeButtonCount: document.querySelectorAll('[aria-label^="Clear element group "]').length,
@@ -127,6 +128,7 @@ async function testCyclingElementBoxFlow(window) {
   assert.equal(result.box3, 'NOT(Fe OR Group 16)', 'not-equal selection was not shown in element box 3');
   assert.equal(result.box4Active, 'true', 'element click did not advance to element box 4');
   assert.deepEqual(result.elementLabels, ['AND:', 'AND:', 'AND:', 'AND:']);
+  assert.equal(result.notEqualSymbol, '≠', 'not-equal control does not display the native symbol');
   assert.equal(result.notEqualPressed, 'true', 'not-equal control did not remain selected');
   assert.equal(result.notEqualButtonCount, 4, 'not every element textbox has an NE button');
   assert.equal(result.removeButtonCount, 4, 'not every element textbox has a Remove button');
