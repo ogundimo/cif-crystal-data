@@ -19,6 +19,11 @@ export interface ParsedAtomSite {
   occupancy: number | null;
 }
 
+export interface ParsedPublAuthor {
+  name: string;
+  address: string | null;
+}
+
 export interface CifEntry {
   formula: string;
   elements: ElementCount[];
@@ -35,6 +40,9 @@ export interface CifEntry {
   level: string;
   sampleType: 'Sample crystal' | 'Powder';
   crystalColour: string;
+  publTitle: string;
+  journalLanguage: string;
+  publAuthors: ParsedPublAuthor[];
   atomSites: ParsedAtomSite[];
 }
 
@@ -42,6 +50,7 @@ interface RawCif {
   tags: Map<string, string>;
   hasAnisoLabel: boolean;
   atomSites: ParsedAtomSite[];
+  publAuthors: ParsedPublAuthor[];
 }
 
 function tokenizeLoopLine(line: string): string[] {
@@ -89,6 +98,31 @@ function parseAtomSiteRows(headers: string[], values: string[]): ParsedAtomSite[
   return rows;
 }
 
+function parsePublAuthorRows(headers: string[], values: string[]): ParsedPublAuthor[] {
+  const normalized = headers.map((header) => header.toLowerCase());
+  const nameIndex = normalized.indexOf('_publ_author_name');
+  if (nameIndex === -1) return [];
+  const addressIndex = normalized.indexOf('_publ_author_address');
+  const rows: ParsedPublAuthor[] = [];
+  for (let offset = 0; offset + headers.length <= values.length; offset += headers.length) {
+    const row = values.slice(offset, offset + headers.length);
+    const name = nullableText(row[nameIndex]);
+    if (name === null) continue;
+    rows.push({
+      name,
+      address: addressIndex === -1 ? null : normalizeAddress(nullableText(row[addressIndex]))
+    });
+  }
+  return rows;
+}
+
+/** Collapse the whitespace of a multi-line address block into one readable line. */
+function normalizeAddress(address: string | null): string | null {
+  if (address === null) return null;
+  const collapsed = address.replace(/\s+/g, ' ').trim();
+  return collapsed === '' ? null : collapsed;
+}
+
 /**
  * Low-level scan of a CIF file's text into a flat tag->value map, plus a flag
  * for whether any loop_ block declares an _atom_site_aniso_label column.
@@ -102,15 +136,22 @@ function scanCif(text: string): RawCif {
   const tags = new Map<string, string>();
   let hasAnisoLabel = false;
   const atomSites: ParsedAtomSite[] = [];
+  const publAuthors: ParsedPublAuthor[] = [];
   let i = 0;
 
-  const skipTextBlock = (idx: number): number => {
-    // idx points at the opening ';' line (already confirmed). Consume until
-    // (and including) the line starting with the closing ';'.
+  // idx points at the opening ';' line (already confirmed). Reads until (and
+  // including) the line starting with the closing ';'.
+  const readTextBlock = (idx: number): { text: string; next: number } => {
+    const contentLines: string[] = [];
     let j = idx + 1;
-    while (j < lines.length && !lines[j].startsWith(';')) j++;
-    return j + 1;
+    while (j < lines.length && !lines[j].startsWith(';')) {
+      contentLines.push(lines[j]);
+      j++;
+    }
+    return { text: contentLines.join(' ').trim(), next: j + 1 };
   };
+
+  const skipTextBlock = (idx: number): number => readTextBlock(idx).next;
 
   while (i < lines.length) {
     const raw = lines[i];
@@ -145,13 +186,17 @@ function scanCif(text: string): RawCif {
           break;
         }
         if (lines[i].startsWith(';')) {
-          i = skipTextBlock(i);
+          // A ';' block is one column value, so keep it as a single token.
+          const block = readTextBlock(i);
+          values.push(block.text);
+          i = block.next;
           continue;
         }
         values.push(...tokenizeLoopLine(lines[i]));
         i++;
       }
       atomSites.push(...parseAtomSiteRows(headers, values));
+      publAuthors.push(...parsePublAuthorRows(headers, values));
       continue;
     }
 
@@ -169,15 +214,9 @@ function scanCif(text: string): RawCif {
       i++;
       if (rest === '') {
         if (i < lines.length && lines[i].startsWith(';')) {
-          const start = i;
-          const contentLines: string[] = [];
-          let j = start + 1;
-          while (j < lines.length && !lines[j].startsWith(';')) {
-            contentLines.push(lines[j]);
-            j++;
-          }
-          rest = contentLines.join(' ').trim();
-          i = j + 1;
+          const block = readTextBlock(i);
+          rest = block.text;
+          i = block.next;
         } else if (i < lines.length) {
           rest = lines[i].trim();
           i++;
@@ -191,7 +230,7 @@ function scanCif(text: string): RawCif {
     i++;
   }
 
-  return { tags, hasAnisoLabel, atomSites };
+  return { tags, hasAnisoLabel, atomSites, publAuthors };
 }
 
 function stripQuotes(value: string): string {
@@ -286,7 +325,7 @@ export function buildReference(tags: Map<string, string>): string {
 
 /** Parse full CIF file text into the fields this app persists. */
 export function parseCif(text: string): CifEntry {
-  const { tags, hasAnisoLabel, atomSites } = scanCif(text);
+  const { tags, hasAnisoLabel, atomSites, publAuthors } = scanCif(text);
 
   const sumRaw = tags.get('_chemical_formula_sum');
   if (!hasCifValue(sumRaw)) {
@@ -342,6 +381,15 @@ export function parseCif(text: string): CifEntry {
   const level = hasAnisoLabel ? LEVEL_FULL : LEVEL_CELL;
   const sampleType = hasAnisoLabel ? 'Sample crystal' : 'Powder';
   const crystalColour = getClean(tags, '_exptl_crystal_colour') ?? '';
+  const publTitle = getClean(tags, '_publ_section_title') ?? '';
+  const journalLanguage = getClean(tags, '_journal_language') ?? '';
+  // A single-author paper may state the tags as scalars instead of a loop.
+  const scalarAuthorName = getClean(tags, '_publ_author_name');
+  const authors = publAuthors.length > 0
+    ? publAuthors
+    : scalarAuthorName !== null
+      ? [{ name: scalarAuthorName, address: normalizeAddress(getClean(tags, '_publ_author_address')) }]
+      : [];
 
   return {
     formula,
@@ -359,6 +407,9 @@ export function parseCif(text: string): CifEntry {
     level,
     sampleType,
     crystalColour,
+    publTitle,
+    journalLanguage,
+    publAuthors: authors,
     atomSites
   };
 }

@@ -75,6 +75,38 @@ describe('parseCif against the synthetic CIF fixture', () => {
     expect(entry.space_group).toBe('P1');
   });
 
+  it('parses the publication title and journal language', () => {
+    expect(entry.publTitle).toBe('A synthetic structure report used for testing');
+    expect(entry.journalLanguage).toBe('English');
+  });
+
+  it('parses author names with their addresses, including multi-line address blocks', () => {
+    expect(entry.publAuthors).toEqual([
+      { name: 'Doe, J.', address: 'Department of Chemistry Example University Springfield' },
+      { name: 'Roe, A.', address: 'Institute of Synthetic Crystallography, Shelbyville' }
+    ]);
+  });
+
+  it('reads authors stated as scalar tags rather than a loop', () => {
+    const scalarAuthors = fixtureText.replace(
+      /loop_\r?\n _publ_author_name\r?\n[\s\S]*?Shelbyville'\r?\n/,
+      "_publ_author_name 'Solo, H.'\n_publ_author_address 'Lone Institute'\n"
+    );
+    expect(parseCif(scalarAuthors).publAuthors).toEqual([
+      { name: 'Solo, H.', address: 'Lone Institute' }
+    ]);
+  });
+
+  it('returns no authors when the CIF omits them', () => {
+    const withoutAuthors = fixtureText.replace(
+      /loop_\r?\n _publ_author_name\r?\n[\s\S]*?Shelbyville'\r?\n/,
+      ''
+    );
+    const parsed = parseCif(withoutAuthors);
+    expect(parsed.publAuthors).toEqual([]);
+    expect(parsed.atomSites).toHaveLength(2);
+  });
+
   it('parses atom-site loop rows in their original order', () => {
     expect(entry.atomSites).toHaveLength(2);
     expect(entry.atomSites[0]).toEqual({

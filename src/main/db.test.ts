@@ -22,6 +22,9 @@ const sampleEntry: CifEntry = {
   level: 'Complete structure determined',
   sampleType: 'Sample crystal',
   crystalColour: 'red',
+  publTitle: 'Test publication title',
+  journalLanguage: 'English',
+  publAuthors: [{ name: 'Doe, J.', address: 'Example University' }],
   atomSites: [{
     siteLabel: 'Fe1',
     typeSymbol: 'Fe',

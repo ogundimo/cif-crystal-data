@@ -8,6 +8,11 @@ _audit_creation_method                   'CIF Crystal Data synthetic test fixtur
 _chemical_formula_structural             'Na Cl'
 _chemical_formula_sum                    'Na1 Cl1'
 
+_publ_section_title
+;
+A synthetic structure report used for testing
+;
+_journal_language                        English
 _journal_name_full                       'Synthetic Test Journal'
 _journal_year                            2026
 _journal_volume                          1
@@ -24,6 +29,17 @@ _cell_volume                             210
 _cell_formula_units_Z                    1
 _space_group_IT_number                   1
 _space_group_name_H-M_alt                'P 1'
+
+loop_
+ _publ_author_name
+ _publ_author_address
+ 'Doe, J.'
+;
+Department of Chemistry
+Example University
+Springfield
+;
+ 'Roe, A.' 'Institute of Synthetic Crystallography, Shelbyville'
 
 loop_
  _space_group_symop_id
