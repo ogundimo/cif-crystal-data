@@ -6,6 +6,7 @@ const api: CifApi = {
   getEntryCount: () => ipcRenderer.invoke('cif:getEntryCount'),
   getAtomSites: (entryId: number) => ipcRenderer.invoke('cif:getAtomSites', entryId),
   getPublAuthors: (entryId: number) => ipcRenderer.invoke('cif:getPublAuthors', entryId),
+  getViewerSource: (entryId: number) => ipcRenderer.invoke('cif:getViewerSource', entryId),
   getImportFolder: () => ipcRenderer.invoke('cif:getImportFolder'),
   exportCif: (entryId: number) => ipcRenderer.invoke('cif:exportCif', entryId),
   search: (filter: SearchFilter) => ipcRenderer.invoke('cif:search', filter),

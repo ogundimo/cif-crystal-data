@@ -87,6 +87,14 @@ describe('parseCif against the synthetic CIF fixture', () => {
     ]);
   });
 
+  it('keeps an apostrophe inside a quoted author surname', () => {
+    const withApostrophe = fixtureText.replace("'Doe, J.'", "'Finkel'shtein L.D.'");
+    expect(parseCif(withApostrophe).publAuthors[0]).toEqual({
+      name: "Finkel'shtein L.D.",
+      address: 'Department of Chemistry Example University Springfield'
+    });
+  });
+
   it('reads authors stated as scalar tags rather than a loop', () => {
     const scalarAuthors = fixtureText.replace(
       /loop_\r?\n _publ_author_name\r?\n[\s\S]*?Shelbyville'\r?\n/,

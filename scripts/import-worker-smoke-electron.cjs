@@ -84,10 +84,10 @@ async function run() {
     assert.equal(migrationImport.result.importedCount, 1);
     legacyDatabase = new Database(legacyDatabasePath);
     try {
-      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 3);
+      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 4);
       assert.equal(
         legacyDatabase.prepare("SELECT value FROM app_settings WHERE key = 'schema_version'").get().value,
-        '3'
+        '4'
       );
       assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Cl1Na1');
       assert.equal(legacyDatabase.prepare('SELECT COUNT(*) AS count FROM atom_sites').get().count, 2);

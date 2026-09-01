@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { copyFile, stat } from 'node:fs/promises';
+import { copyFile, readFile, stat } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { SearchFilter, SearchPageRequest, SearchSortColumn } from '../shared/types';
@@ -83,6 +83,27 @@ app.whenReady().then(() => {
       throw new TypeError('Invalid entry id');
     }
     return (await getDbModule()).getPublAuthors(entryId);
+  });
+  ipcMain.handle('cif:getViewerSource', async (_event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    const source = (await getDbModule()).getCifViewerSourceRecord(entryId);
+    if (!source) throw new Error('The selected compound is no longer in the database.');
+    if (!source.source_path) throw new Error('The original CIF file location is unavailable.');
+    try {
+      if (!(await stat(source.source_path)).isFile()) throw new Error('Path is not a file');
+      return {
+        fileName: source.source_filename,
+        text: await readFile(source.source_path, 'utf8')
+      };
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Path is not a file') {
+        throw new Error(`The original CIF file could not be found: ${source.source_path}`);
+      }
+      if (error instanceof Error && error.message.startsWith('The original CIF')) throw error;
+      throw new Error(`The original CIF file could not be read: ${source.source_path}`);
+    }
   });
   ipcMain.handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
   ipcMain.handle('cif:exportCif', async (event, entryId: unknown) => {
