@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:ui": "node scripts/run-quick-search-ui-tests.mjs",
+    "test:viewer": "npm run build && node scripts/run-jsmol-viewer-test.mjs",
     "test:worker": "npm run build && electron scripts/import-worker-smoke-electron.cjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
@@ -22,7 +23,7 @@
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "13.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
@@ -32,7 +33,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.20",
-    "electron": "^39.8.10",
+    "electron": "^44.1.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "postcss": "^8.4.45",
@@ -44,9 +45,11 @@
   "build": {
     "appId": "com.cif.crystaldata",
     "productName": "CIF Crystal Data",
+    "npmRebuild": false,
     "files": [
       "dist-electron/**/*",
-      "dist/**/*"
+      "dist/**/*",
+      "third_party/**/*"
     ],
     "win": {
       "target": [

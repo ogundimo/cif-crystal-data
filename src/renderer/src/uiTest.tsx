@@ -4,6 +4,7 @@ import QuickSearchDialog from './components/QuickSearchDialog';
 import ResultsWorkspace from './components/ResultsWorkspace';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
 import type { EntryRow } from '../../shared/types';
+import syntheticCif from '../../parser/__fixtures__/synthetic-test.cif?raw';
 import './index.css';
 
 const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
@@ -47,6 +48,7 @@ window.cifApi = {
     { id: entryId, entry_id: entryId, author_order: 0, name: 'Doe, J.', address: 'Department of Chemistry, Example University, Springfield' },
     { id: entryId + 1, entry_id: entryId, author_order: 1, name: 'Roe, A.', address: null }
   ],
+  getViewerSource: async (entryId) => ({ fileName: `${entryId}.cif`, text: syntheticCif }),
   getImportFolder: async () => null,
   exportCif: async () => ({ exported: false }),
   search: async () => [],

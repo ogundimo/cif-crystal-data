@@ -235,6 +235,23 @@ export interface CifExportSource {
   source_path: string | null;
 }
 
+export interface CifViewerSourceRecord {
+  source_filename: string;
+  source_path: string | null;
+}
+
+export function getCifViewerSourceRecord(
+  entryId: number,
+  database: Database.Database = getDb()
+): CifViewerSourceRecord | null {
+  return (database.prepare(
+    `SELECT entries.source_filename, imported_files.source_path
+     FROM entries
+     LEFT JOIN imported_files ON imported_files.source_filename = entries.source_filename
+     WHERE entries.id = ?`
+  ).get(entryId) as CifViewerSourceRecord | undefined) ?? null;
+}
+
 export function getCifExportSource(
   entryId: number,
   database: Database.Database = getDb()

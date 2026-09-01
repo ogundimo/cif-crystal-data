@@ -54,9 +54,42 @@ interface RawCif {
 }
 
 function tokenizeLoopLine(line: string): string[] {
-  const tokens = line.match(/'(?:[^']*)'|"(?:[^"]*)"|\S+/g) ?? [];
-  const commentIndex = tokens.findIndex((token) => token.startsWith('#'));
-  return (commentIndex === -1 ? tokens : tokens.slice(0, commentIndex)).map(stripQuotes);
+  const tokens: string[] = [];
+  const isWhitespace = (character: string): boolean => /\s/.test(character);
+  let index = 0;
+
+  while (index < line.length) {
+    while (index < line.length && isWhitespace(line[index])) index++;
+    if (index >= line.length || line[index] === '#') break;
+
+    const openingQuote = line[index];
+    if (openingQuote === "'" || openingQuote === '"') {
+      index++;
+      let value = '';
+      while (index < line.length) {
+        const character = line[index];
+        // In CIF, a matching quote closes a value only at a token boundary.
+        // An apostrophe followed by another word character is literal text.
+        if (
+          character === openingQuote &&
+          (index + 1 === line.length || isWhitespace(line[index + 1]))
+        ) {
+          index++;
+          break;
+        }
+        value += character;
+        index++;
+      }
+      tokens.push(value);
+      continue;
+    }
+
+    const start = index;
+    while (index < line.length && !isWhitespace(line[index])) index++;
+    tokens.push(line.slice(start, index));
+  }
+
+  return tokens;
 }
 
 function nullableText(value: string | undefined): string | null {

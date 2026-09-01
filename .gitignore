@@ -3,6 +3,7 @@ dist/
 dist-electron/
 release/
 out/
+.dist/
 *.db
 *.log
 .DS_Store

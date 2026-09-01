@@ -199,6 +199,8 @@ async function testCompoundInformationSelection(window) {
     (() => {
       const panel = document.querySelector('[data-testid="compound-info-panel"]');
       const separator = document.querySelector('[role="separator"][aria-orientation="horizontal"]');
+      const columnSeparator = document.querySelector('[role="separator"][aria-label="Resize compound information and visual panels"]');
+      const viewerSeparator = document.querySelector('[role="separator"][aria-label="Resize crystal viewer and lower visual panel"]');
       const grid = document.querySelector('[data-testid="data-grid-scroll"]');
       const rows = document.querySelectorAll('[data-testid="data-grid-scroll"] tbody tr[data-entry-id]');
       const headings = Array.from(panel.querySelectorAll('[data-testid="atom-sites-table"] thead th')).map((cell) => cell.textContent.trim());
@@ -228,7 +230,9 @@ async function testCompoundInformationSelection(window) {
         wyckoffNumberOutsideItalicSpan: wyckoffCell?.firstChild?.textContent,
         gridOverflowY: getComputedStyle(grid).overflowY,
         panelOverflowY: getComputedStyle(panel).overflowY,
-        hasSeparator: Boolean(separator)
+        hasSeparator: Boolean(separator),
+        hasColumnSeparator: Boolean(columnSeparator),
+        hasViewerSeparator: Boolean(viewerSeparator)
       };
     })()
   `);
@@ -251,17 +255,66 @@ async function testCompoundInformationSelection(window) {
   assert.equal(initial.gridOverflowY, 'scroll', 'results grid does not own its vertical scrollbar');
   assert.equal(initial.panelOverflowY, 'scroll', 'information panel does not own its vertical scrollbar');
   assert.equal(initial.hasSeparator, true, 'resizable results separator is missing');
+  assert.equal(initial.hasColumnSeparator, true, 'resizable information/viewer separator is missing');
+  assert.equal(initial.hasViewerSeparator, true, 'resizable viewer/lower-panel separator is missing');
+  const resizeBefore = await window.webContents.executeJavaScript(`
+    (() => {
+      const info = document.querySelector('[data-testid="compound-info-panel"]').getBoundingClientRect();
+      const viewer = document.querySelector('[aria-label="Crystal structure viewer"]').getBoundingClientRect();
+      const column = document.querySelector('[aria-label="Resize compound information and visual panels"]').getBoundingClientRect();
+      const row = document.querySelector('[aria-label="Resize crystal viewer and lower visual panel"]').getBoundingClientRect();
+      return {
+        infoWidth: info.width,
+        viewerHeight: viewer.height,
+        column: { x: Math.round(column.x + column.width / 2), y: Math.round(column.y + column.height / 2) },
+        row: { x: Math.round(row.x + row.width / 2), y: Math.round(row.y + row.height / 2) }
+      };
+    })()
+  `);
+  await window.webContents.executeJavaScript(`
+    (() => {
+      const separator = document.querySelector('[aria-label="Resize compound information and visual panels"]');
+      separator.setPointerCapture = () => undefined;
+      separator.hasPointerCapture = () => false;
+      separator.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x}, clientY: ${resizeBefore.column.y} }));
+      separator.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x + 30}, clientY: ${resizeBefore.column.y} }));
+      separator.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x + 30}, clientY: ${resizeBefore.column.y} }));
+    })()
+  `);
+  await pause(50);
+  await window.webContents.executeJavaScript(`
+    (() => {
+      const separator = document.querySelector('[aria-label="Resize crystal viewer and lower visual panel"]');
+      separator.setPointerCapture = () => undefined;
+      separator.hasPointerCapture = () => false;
+      separator.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 2, clientX: ${resizeBefore.row.x}, clientY: ${resizeBefore.row.y} }));
+      separator.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 2, clientX: ${resizeBefore.row.x}, clientY: ${resizeBefore.row.y + 20} }));
+      separator.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 2, clientX: ${resizeBefore.row.x}, clientY: ${resizeBefore.row.y + 20} }));
+    })()
+  `);
+  await pause(100);
+  const resizeAfter = await window.webContents.executeJavaScript(`({
+    infoWidth: document.querySelector('[data-testid="compound-info-panel"]').getBoundingClientRect().width,
+    viewerHeight: document.querySelector('[aria-label="Crystal structure viewer"]').getBoundingClientRect().height
+  })`);
+  assert.ok(resizeAfter.infoWidth > resizeBefore.infoWidth + 20, 'information/viewer divider did not resize its columns');
+  assert.ok(resizeAfter.viewerHeight > resizeBefore.viewerHeight + 10, 'viewer/lower-panel divider did not resize its rows');
   await pause(50);
   const selected = await window.webContents.executeJavaScript(`
     (() => {
       const panel = document.querySelector('[data-testid="compound-info-panel"]');
+      const publicationRows = panel.querySelector('[data-testid="publication-table"] > tbody').children;
       return {
         site: document.querySelector('[data-testid="atom-sites-table"] tbody tr:first-child td:nth-child(2)')?.textContent.trim(),
-        publication: Array.from(panel.querySelectorAll('[data-testid="publication-table"] tr')).map((row) => ({
+        publication: Array.from(publicationRows).map((row) => ({
           label: row.querySelector('th').textContent.trim(),
           value: row.querySelector('td').textContent.trim()
         })),
-        authors: Array.from(panel.querySelectorAll('[data-testid="publication-authors"] li')).map((item) => item.textContent.trim())
+        authorHeadings: Array.from(panel.querySelectorAll('[data-testid="publication-authors"] thead th'))
+          .map((cell) => cell.textContent.trim()),
+        authors: Array.from(panel.querySelectorAll('[data-testid="publication-authors"] tbody tr')).map((row) =>
+          Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent.trim())
+        )
       };
     })()
   `);
@@ -271,9 +324,10 @@ async function testCompoundInformationSelection(window) {
     { label: 'Language', value: 'English' }
   ]);
   assert.equal(selected.publication[2]?.label, 'Authors');
+  assert.deepEqual(selected.authorHeadings, ['Name', 'Organization / City']);
   assert.deepEqual(selected.authors, [
-    'Doe, J. — Department of Chemistry, Example University, Springfield',
-    'Roe, A.'
+    ['Doe, J.', 'Department of Chemistry, Example University, Springfield'],
+    ['Roe, A.', '']
   ]);
   console.log('✓ compound information follows result selection');
 }
@@ -388,6 +442,9 @@ async function run() {
     zoom: 1.25,
     expectedAxisRows: 2
   });
+  window.webContents.setZoomFactor(1);
+  window.setContentSize(1200, 800);
+  await pause(100);
   await testCyclingElementBoxFlow(window);
   await testTextboxActions(window);
   await testAngstromCellLengths(window);

@@ -41,6 +41,24 @@ npm run package   # builds + runs electron-builder for Windows
 `npm run package` produces a `release/win-unpacked` folder (runnable directly) plus an NSIS
 installer and a portable executable, targeting Windows x64.
 
+## Local crystal viewer
+
+The compound details workspace includes a reusable JSmol 16.4.15 HTML5 viewer.
+The pinned runtime is packaged under `dist/vendor/jsmol`; it does not use a CDN,
+PHP relay, remote rendering service, tracking endpoint, or database-loading URL.
+
+The Electron security boundary remains unchanged: context isolation is enabled
+and Node integration is disabled. The preload bridge exposes only
+`getViewerSource(entryId)`, which validates the database entry in the main
+process and returns the original CIF text plus its filename. Renderer and JSmol
+code receive neither source paths nor general filesystem access. JSmol requires
+`unsafe-eval` in the renderer CSP for its Java-to-JavaScript class runtime; the
+policy continues to disallow remote scripts, inline scripts, and object content.
+The generated one-line applet bootstrap handler is removed and invoked from the
+trusted runtime adapter so `script-src 'unsafe-inline'` is not required.
+
+Third-party licence text and notices are packaged from `third_party/`.
+
 ### Native module (better-sqlite3)
 
 better-sqlite3 is a native Node addon and must be built against Electron's ABI, not the

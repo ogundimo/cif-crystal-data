@@ -145,11 +145,18 @@ export interface ExportCifResult {
   fileName?: string;
 }
 
+export interface CifViewerSource {
+  fileName: string;
+  /** Original UTF-8 CIF text read from the imported source file without rewriting. */
+  text: string;
+}
+
 export interface CifApi {
   getAllEntries: () => Promise<EntryRow[]>;
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
   getPublAuthors: (entryId: number) => Promise<PublAuthorRow[]>;
+  getViewerSource: (entryId: number) => Promise<CifViewerSource>;
   getImportFolder: () => Promise<string | null>;
   exportCif: (entryId: number) => Promise<ExportCifResult>;
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
