@@ -18,7 +18,8 @@ describe('packaged JSmol resources', () => {
     const scriptPath = join(runtimeRoot, 'JSmol.min.js');
     expect(existsSync(scriptPath)).toBe(true);
     expect(filesBelow(join(runtimeRoot, 'j2s'))).toHaveLength(1720);
-    expect(createHash('sha256').update(readFileSync(scriptPath)).digest('hex'))
+    const normalizedScript = readFileSync(scriptPath, 'utf8').replace(/\r\n/g, '\n');
+    expect(createHash('sha256').update(normalizedScript).digest('hex'))
       .toBe('9e38944b4e5d19926d3359fb4e188ed9c7fa6f0e10b8cc099539fa0aa93fe377');
   });
 
