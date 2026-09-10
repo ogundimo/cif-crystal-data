@@ -13,6 +13,15 @@ if (!testUrl) throw new Error('CIF_UI_TEST_URL is required.');
 
 const pause = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+async function waitForRenderer(window, expression, description) {
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    if (await window.webContents.executeJavaScript(expression)) return;
+    await pause(50);
+  }
+  throw new Error('Timed out waiting for ' + description);
+}
+
 async function measure(window) {
   return window.webContents.executeJavaScript(`
     (() => {
@@ -515,6 +524,9 @@ async function run() {
     }
   });
 
+  window.webContents.on('console-message', (details) => {
+    if (details.level === 'error') console.error('Renderer:', details.message);
+  });
   await window.loadURL(testUrl);
   await runScenario(window, {
     name: 'minimum application viewport',
@@ -604,10 +616,10 @@ async function run() {
     'third header click must reset the database ordering');
   console.log('✓ interrupted pagination recovers and clearing sorting resets the database order');
 
-  await window.webContents.executeJavaScript("document.querySelector('[data-testid=data-grid-scroll]').scrollTop = 0");
-  await pause(150);
+  await window.webContents.executeJavaScript("(() => { const scroller = document.querySelector('[data-testid=data-grid-scroll]'); scroller.scrollTop = 0; scroller.dispatchEvent(new Event('scroll', { bubbles: true })); })()");
+  await waitForRenderer(window, "document.querySelector('tr[data-entry-id]')?.dataset.entryId === '1'", 'the first virtual row after scrolling to the top');
   await window.webContents.executeJavaScript("document.querySelector('tr[data-entry-id]').click()");
-  await pause(100);
+  await waitForRenderer(window, "!!document.querySelector('tr[aria-selected=true]')", 'the clicked row to be selected');
   const firstSelected = await window.webContents.executeJavaScript("document.querySelector('tr[aria-selected=true]').dataset.entryId");
   await window.webContents.executeJavaScript("document.querySelector('[data-testid=data-grid-scroll]').focus()");
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'DOWN' });
