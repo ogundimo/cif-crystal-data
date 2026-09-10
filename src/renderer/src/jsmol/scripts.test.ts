@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCrystalLoadScript,
   cellParametersScript,
+  clearPolyhedraScript,
+  clearMeasurementsScript,
   CRYSTAL_AXES_SCALE,
   CRYSTAL_OVERVIEW_ZOOM,
   fitResetScript,
@@ -11,7 +13,11 @@ import {
   MAX_STRUCTURE_ZOOM,
   MIN_STRUCTURE_ZOOM,
   projectedStructureZoom,
+  projectedViewFit,
+  projectedViewScript,
+  polyhedraPickingScript,
   representationScript,
+  supercellLattice,
   UNIT_CELL_LATTICE
 } from './scripts';
 
@@ -51,8 +57,16 @@ describe('JSmol crystallographic scripts', () => {
   });
 
   it('increases the original crystallographic axis spacing by five percent', () => {
-    expect(initialAppearanceScript(1, 'atoms', true, false))
-      .toContain(`set axesScale ${CRYSTAL_AXES_SCALE}`);
+    const script = initialAppearanceScript(1, 'atoms', true, false);
+    expect(script).toContain(`set axesScale ${CRYSTAL_AXES_SCALE}`);
+    expect(script).toContain('axes unitcell');
+    expect(script).toContain('axes on');
+  });
+
+  it('loads selectable 2×2×2 and 3×3×3 packed unit-cell blocks', () => {
+    expect(supercellLattice(1)).toBe(UNIT_CELL_LATTICE);
+    expect(buildCrystalLoadScript(representativeCif, 1, 2)).toContain('{2 2 2} PACKED');
+    expect(buildCrystalLoadScript(representativeCif, 1, 3)).toContain('{3 3 3} PACKED');
   });
 
   it('hides cell parameters in compact mode and can restore them full-screen', () => {
@@ -88,5 +102,44 @@ describe('JSmol crystallographic scripts', () => {
     expect(projectedStructureZoom([{ coord: [0, 0, 0] }, { coord: [0.01, 0.01, 0] }], orientation, 1000, 800)).toBe(MAX_STRUCTURE_ZOOM);
     expect(projectedStructureZoom([{ coord: [0, 0, 0] }, { coord: [5000, 5000, 0] }], orientation, 1000, 800)).toBe(MIN_STRUCTURE_ZOOM);
     expect(projectedStructureZoom(null, orientation, 1000, 800)).toBe(CRYSTAL_OVERVIEW_ZOOM);
+  });
+
+  it('clears completed and in-progress interactive measurements', () => {
+    const script = clearMeasurementsScript();
+    expect(script).toContain('measure delete');
+    expect(script).toContain('set pickingstyle MEASURE OFF');
+    expect(script).toContain('set picking OFF');
+    expect(script).toContain('select none');
+  });
+
+  it('binds fullscreen atom double-clicks to a radius-based coordination polyhedron', () => {
+    const script = polyhedraPickingScript(true);
+    expect(script).toContain('LEFT+double+click');
+    expect(script).toContain('connect 15% 125% _ATOM {*} CREATE');
+    expect(script).toContain('polyhedra BONDS _ATOM TO {*} COLLAPSED EDGES');
+    expect(polyhedraPickingScript(false)).toBe('unbind');
+  });
+
+  it('clears polyhedra and restores the selected representation connections', () => {
+    const script = clearPolyhedraScript('ball-stick');
+    expect(script).toContain('polyhedra {*} DELETE');
+    expect(script).toContain('connect 15% 110%');
+  });
+
+  it('fits and shifts the structure away from a horizontal legend', () => {
+    const orientation = { rotationMatrix: [[1, 0, 0], [0, 1, 0], [0, 0, 1]], modelRadius: 10 };
+    const atoms = [{ coord: [-5, -5, 0] }, { coord: [5, 5, 0] }];
+    const unobstructed = projectedViewFit(atoms, orientation, 800, 400);
+    const fitted = projectedViewFit(atoms, orientation, 800, 400, { top: 80 });
+    expect(fitted.zoom).toBeLessThan(unobstructed.zoom);
+    expect(fitted.translateXPercent).toBe(0);
+    expect(fitted.translateYPercent).toBe(10);
+    expect(projectedViewScript(fitted)).toContain('translate y 10');
+  });
+
+  it('fits and shifts the structure away from a vertical legend', () => {
+    const fitted = projectedViewFit(null, null, 800, 400, { right: 160 });
+    expect(fitted.translateXPercent).toBe(-10);
+    expect(fitted.translateYPercent).toBe(0);
   });
 });

@@ -1,28 +1,33 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import type { EntryRow, SearchSortColumn } from '../../../shared/types';
+import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import CompoundInfoPanel from './CompoundInfoPanel';
-import DataGrid from './DataGrid';
+import DataGrid, { type EmptyResultsMessage } from './DataGrid';
 
 interface Props {
+  emptyMessage?: EmptyResultsMessage;
   rows: EntryRow[];
   selectedId: number | null;
   onSelect: (entry: EntryRow) => void;
   totalRows?: number;
   loadingMore?: boolean;
   onLoadMore?: () => void;
-  onSortChange?: (column: SearchSortColumn, direction: 'asc' | 'desc') => void;
+  onSortChange?: (column?: SearchSortColumn, direction?: 'asc' | 'desc') => void;
+  sortColumn?: SearchSortColumn;
+  sortDirection?: 'asc' | 'desc';
 }
 
 const MIN_PANEL_HEIGHT = 112;
 const MIN_RESULTS_HEIGHT = 128;
 
-export default function ResultsWorkspace({ rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange }: Props) {
+export default function ResultsWorkspace({ emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ y: number; height: number } | null>(null);
-  const [panelHeight, setPanelHeight] = useState<number | null>(null);
+  const [panelHeight, setPanelHeight] = usePanelSize('details-height', workspaceRef, MIN_PANEL_HEIGHT, MIN_RESULTS_HEIGHT + 6, 'height');
+  const panePercentage = usePanePercentage(workspaceRef, '#compound-pane', 'height');
   const selectedEntry = rows.find((entry) => entry.id === selectedId) ?? rows[0];
 
-  if (rows.length === 0) return <DataGrid rows={rows} />;
+  if (rows.length === 0) return <DataGrid rows={rows} emptyMessage={emptyMessage} />;
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (!dragStart.current || !workspaceRef.current) return;
@@ -36,7 +41,7 @@ export default function ResultsWorkspace({ rows, selectedId, onSelect, totalRows
 
   function finishResize(event: React.PointerEvent<HTMLDivElement>) {
     dragStart.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
   return (
@@ -59,12 +64,32 @@ export default function ResultsWorkspace({ rows, selectedId, onSelect, totalRows
           loadingMore={loadingMore}
           onLoadMore={onLoadMore}
           onSortChange={onSortChange}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
         />
       </div>
       <div
-        role="separator"
+        role="separator" data-resize-handle="true"
         aria-label="Resize results and compound information"
         aria-orientation="horizontal"
+        aria-controls="compound-pane"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={panePercentage}
+        tabIndex={0}
+        title="Drag or use Up/Down arrows to resize · Enter or double-click to reset"
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') { event.preventDefault(); setPanelHeight(null); return; }
+          if (!['ArrowUp', 'ArrowDown'].includes(event.key) || !workspaceRef.current) return;
+          event.preventDefault();
+          const height = workspaceRef.current.clientHeight;
+          const current = panelHeight ?? (height - 6) * 0.6;
+          setPanelHeight(Math.min(Math.max(MIN_PANEL_HEIGHT, height - MIN_RESULTS_HEIGHT - 6), Math.max(MIN_PANEL_HEIGHT, current + (event.key === 'ArrowUp' ? 16 : -16))));
+        }}
+        onDoubleClick={() => {
+          dragStart.current = null;
+          setPanelHeight(null);
+        }}
         className="mx-2 cursor-row-resize border-y border-[#d6d6d6] bg-[#eeeeee] hover:bg-[#dddddd]"
         onPointerDown={(event) => {
           const currentHeight =

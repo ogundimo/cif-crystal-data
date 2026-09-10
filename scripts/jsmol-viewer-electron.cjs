@@ -154,6 +154,54 @@ async function run() {
   const spacefillHash = await captureViewer(window, 'spacefill');
   assert.equal(new Set([atomsHash, ballStickHash, spacefillHash]).size, 3, 'The three representations were not visually distinct');
 
+  const atomCount = () => window.webContents.executeJavaScript(`
+    (() => {
+      const applet = Object.values(window.Jmol._applets)[0];
+      const atoms = window.Jmol.getPropertyAsArray(applet, 'atomInfo', '(visible)');
+      return Array.isArray(atoms) ? atoms.length : 0;
+    })()
+  `);
+  const oneCellAtoms = await atomCount();
+  await clickByText(window, '2³');
+  await waitFor(window, `!document.querySelector('[aria-label="Crystal structure viewer"]')?.textContent.includes('Preparing')`);
+  const twoCellAtoms = await atomCount();
+  assert.ok(twoCellAtoms > oneCellAtoms, '2×2×2 did not load more atoms than 1×1×1');
+  await clickByText(window, '3³');
+  await waitFor(window, `!document.querySelector('[aria-label="Crystal structure viewer"]')?.textContent.includes('Preparing')`);
+  const threeCellAtoms = await atomCount();
+  assert.ok(threeCellAtoms > twoCellAtoms, '3×3×3 did not load more atoms than 2×2×2');
+  await clickByText(window, '1³');
+  await waitFor(window, `!document.querySelector('[aria-label="Crystal structure viewer"]')?.textContent.includes('Preparing')`);
+
+  const polyhedraModeActive = await window.webContents.executeJavaScript(`
+    Array.from(document.querySelectorAll('[aria-label="Crystal structure viewer"] button.btn-on'))
+      .some((button) => button.textContent.trim() === 'Polyhedra')
+  `);
+  assert.equal(polyhedraModeActive, true, 'Fullscreen polyhedra picking mode was not enabled');
+  const polyhedraBindingActive = await window.webContents.executeJavaScript(`
+    (() => {
+      const applet = Object.values(window.Jmol._applets)[0];
+      const mouseInfo = window.Jmol.getPropertyAsArray(applet, 'mouseInfo');
+      return JSON.stringify(mouseInfo).toLowerCase().includes('polyhedra');
+    })()
+  `);
+  assert.equal(polyhedraBindingActive, true, 'JSmol did not install the atom double-click polyhedra binding');
+  await window.webContents.executeJavaScript(`
+    (() => {
+      const applet = Object.values(window.Jmol._applets)[0];
+      window.Jmol.script(applet, 'polyhedra {*} DELETE;connect 15% 125% {atomIndex=0} {*} CREATE;polyhedra BONDS {atomIndex=0} TO {*} COLLAPSED EDGES;select {atomIndex=0};color polyhedra translucent 0.45 [x66B5D8];select none');
+    })()
+  `);
+  await pause(1_000);
+  const hasPolyhedron = await window.webContents.executeJavaScript(`
+    (() => {
+      const applet = Object.values(window.Jmol._applets)[0];
+      return JSON.stringify(window.Jmol.getPropertyAsArray(applet, 'shapeInfo')).toLowerCase().includes('polyhedra');
+    })()
+  `);
+  assert.equal(hasPolyhedron, true, 'JSmol did not create a polyhedron around the selected atom');
+  await clickByText(window, 'Clear polyhedra');
+
   for (const control of ['Cells', 'Labels', 'Fit / reset', 'a', 'b', 'c']) await clickByText(window, control);
   await window.webContents.executeJavaScript(`
     (() => {
@@ -182,6 +230,8 @@ async function run() {
   console.log('✓ live JSmol CIF load and structural evidence');
   console.log('✓ Atoms, Ball + stick, and Space fill produced distinct canvas captures');
   console.log('✓ cells, labels, fit/reset, and a/b/c controls executed');
+  console.log('✓ 1³, 2³, and 3³ controls loaded progressively larger unit-cell blocks');
+  console.log('✓ radius-based coordination polyhedron creation and clearing executed');
   console.log('✓ full-window viewer controls returned to the results page');
   console.log('✓ JSmol canvas resized with both viewer layout transitions');
   console.log('✓ rapid selections resolved to the newest CIF only');

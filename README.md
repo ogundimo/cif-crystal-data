@@ -11,10 +11,11 @@ Development requires Node.js 22.12 or newer.
 
 ```
 npm install
-npm run dev
+npm start
 ```
 
-This starts the Electron app with a live-reloading renderer.
+This starts the Electron app with a live-reloading renderer. `npm run dev` is an alias
+for the same development command.
 
 ## Importing CIF files
 
@@ -29,10 +30,25 @@ The selected folder is remembered. Click **Refresh CIFs** to scan that folder ag
 choosing it again. The refresh compares each file's path, modification time, and size, so
 unchanged files are skipped while new or modified CIFs are parsed and upserted.
 
+The import preserves the inputs used by the simulated powder-diffraction view: unit-cell
+lengths in ångströms, formula units per cell, radiation type and wavelength, symmetry
+operations, atom positions and occupancies, and available displacement parameters. The PXRD
+panel supports a per-pattern wavelength, configurable peak broadening, reflection hover labels,
+and two-column `.xy` export with an optional header. Files containing multiple `data_` blocks
+are indexed as separate structures while retaining their shared physical source file.
+
+The parser is regression-tested against the current PCD, ICSD, and CCDC/CSD corpus. It
+accepts CCDC moiety formulas when a sum formula is absent, resolves the corpus's symbol-only
+space groups, and stores CCDC deposition numbers, CSD refcodes, ICSD identifiers, and DOI
+metadata for source-aware publication links. DOI links are preferred; when a DOI is absent,
+clicking the link performs a conservative, session-cached Crossref lookup. A DOI is used only
+when returned metadata agrees across the available title and citation fields. Ambiguous matches
+are never stored and retain the exact-title Scholar or Access Structures fallback.
+
 ## Building the packaged app
 
 ```
-npm test          # Vitest unit tests (parser)
+npm test          # Vitest unit and regression tests
 npm run typecheck # TypeScript, no emit
 npm run build     # builds main/preload/renderer bundles
 npm run package   # builds + runs electron-builder for Windows
@@ -46,6 +62,8 @@ installer and a portable executable, targeting Windows x64.
 The compound details workspace includes a reusable JSmol 16.4.15 HTML5 viewer.
 The pinned runtime is packaged under `dist/vendor/jsmol`; it does not use a CDN,
 PHP relay, remote rendering service, tracking endpoint, or database-loading URL.
+Fullscreen controls provide packed 1×1×1, 2×2×2, and 3×3×3 unit-cell blocks and an
+atom double-click mode for displaying radius-based coordination polyhedra.
 
 The Electron security boundary remains unchanged: context isolation is enabled
 and Node integration is disabled. The preload bridge exposes only
@@ -61,9 +79,15 @@ Third-party licence text and notices are packaged from `third_party/`.
 
 ### Native module (better-sqlite3)
 
-better-sqlite3 is a native Node addon and must be built against Electron's ABI, not the
-system Node's. The `postinstall` script and packaging both use `electron-builder`'s native
-dependency rebuild step.
+The pinned better-sqlite3 13 release uses Node-API and ships prebuilt native binaries,
+including Windows x64. These binaries work in both Node.js and Electron without an
+Electron-specific rebuild. Installation intentionally has no native rebuild hook, and
+packaging keeps `npmRebuild: false`.
+
+If an older checkout fails during `electron-builder install-app-deps` with a missing
+Visual Studio error, update to this package configuration and rerun `npm install`.
+The supported Windows x64 setup does not require Visual Studio or moving the project
+to a path without spaces.
 
 ## Publishing a GitHub release
 
@@ -94,3 +118,24 @@ The generated Windows executables are unsigned unless the protected
 `WINDOWS_CERTIFICATE` and `WINDOWS_CERTIFICATE_PASSWORD` repository secrets are configured.
 The workflow verifies every configured signature and fails instead of publishing an invalid
 one. Unsigned builds may trigger a Windows SmartScreen warning.
+
+## Workspace preferences and keyboard controls
+
+Panel sizes and results-table column widths are saved locally and restored on reopening.
+Panel sizes are constrained to fit the available window. Focus a divider with Tab and use
+its arrow keys to resize; Enter or double-click restores its default split. Focus the
+results table and use Up/Down to select rows; Home/End navigate the currently loaded rows.
+The About dialog supports Escape, contained Tab navigation, and return of focus to its opener.
+
+## Packaged workflow verification
+
+After packaging, run the isolated real-data smoke test with explicit paths:
+
+```powershell
+node scripts/packaged-smoke.mjs "release/win-unpacked/CIF Crystal Data.exe" "path/to/CIF-folder"
+```
+
+The test uses a temporary database/profile, reads the supplied CIFs, searches and exports,
+checks detail/PXRD rendering, and restarts the packaged executable to check database persistence.
+Its report and any available screenshot are saved in the printed temporary profile directory.
+It does not install the NSIS package or modify the normal application database.

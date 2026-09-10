@@ -1,12 +1,19 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { copyFile, readFile, stat } from 'node:fs/promises';
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { SearchFilter, SearchPageRequest, SearchSortColumn } from '../shared/types';
+import type {
+  PublicationLookupRequest,
+  SearchFilter,
+  SearchPageRequest,
+  SearchSortColumn
+} from '../shared/types';
 import { validateSearchFilter } from './searchFilterValidation';
 import { ImportWorkerError, runImportWorker } from './importRunner';
 import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
-import { buildCifExportFilename } from './exportCif';
+import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
+import { splitCifDataBlocks } from '../parser/cifParser';
+import { resolvePublication } from './publicationResolver';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
@@ -14,6 +21,14 @@ type DbModule = typeof import('./db');
 let dbReady: Promise<DbModule> | null = null;
 let dataMutationInFlight: 'import' | 'refresh' | 'clear' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
+
+async function readCifDataBlock(sourcePath: string, blockIndex: number): Promise<string> {
+  const text = await readFile(sourcePath, 'utf8');
+  const blocks = splitCifDataBlocks(text);
+  const block = blocks[blockIndex];
+  if (!block) throw new Error(`CIF data block ${blockIndex + 1} is no longer available.`);
+  return block.text;
+}
 
 function databaseInitializationError(error: unknown): Error {
   const databasePath = join(app.getPath('userData'), 'cif-local.db');
@@ -78,6 +93,16 @@ app.whenReady().then(() => {
     }
     return (await getDbModule()).getAtomSites(entryId);
   });
+  ipcMain.handle('cif:getDiffractionInput', async (_event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    const database = await getDbModule();
+    return {
+      atomSites: database.getAtomSites(entryId),
+      symmetryOperations: database.getSymmetryOperations(entryId)
+    };
+  });
   ipcMain.handle('cif:getPublAuthors', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
@@ -95,7 +120,7 @@ app.whenReady().then(() => {
       if (!(await stat(source.source_path)).isFile()) throw new Error('Path is not a file');
       return {
         fileName: source.source_filename,
-        text: await readFile(source.source_path, 'utf8')
+        text: await readCifDataBlock(source.source_path, source.data_block_index)
       };
     } catch (error) {
       if (error instanceof Error && error.message === 'Path is not a file') {
@@ -130,10 +155,64 @@ app.whenReady().then(() => {
       ? await dialog.showSaveDialog(win, options)
       : await dialog.showSaveDialog(options);
     if (result.canceled || !result.filePath) return { exported: false };
-    if (resolve(result.filePath) !== resolve(source.source_path)) {
-      await copyFile(source.source_path, result.filePath);
+    if (resolve(result.filePath) === resolve(source.source_path)) {
+      throw new Error('Choose a different destination so the imported source file is not overwritten.');
     }
+    const contents = await readCifDataBlock(source.source_path, source.data_block_index);
+    await writeFile(result.filePath, contents, 'utf8');
     return { exported: true, fileName: basename(result.filePath) };
+  });
+
+  ipcMain.handle('cif:exportPxrd', async (event, entryId: unknown, contents: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    if (typeof contents !== 'string' || contents.length === 0 || contents.length > 10_000_000) {
+      throw new TypeError('Invalid PXRD export contents');
+    }
+    const source = (await getDbModule()).getCifExportSource(entryId);
+    if (!source) throw new Error('The selected compound is no longer in the database.');
+    const fileName = buildPxrdExportFilename(source.formula, source.sg_number);
+    const options = {
+      title: 'Export PXRD pattern',
+      defaultPath: join(app.getPath('documents'), fileName),
+      filters: [{ name: 'XY diffraction pattern', extensions: ['xy'] }]
+    };
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
+    if (result.canceled || !result.filePath) return { exported: false };
+    await writeFile(result.filePath, contents, 'utf8');
+    return { exported: true, fileName: basename(result.filePath) };
+  });
+
+  ipcMain.handle('cif:openExternal', async (_event, url: unknown) => {
+    if (typeof url !== 'string') throw new TypeError('Invalid external URL');
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') throw new TypeError('Only HTTPS links are allowed');
+    await shell.openExternal(parsed.toString());
+  });
+
+  ipcMain.handle('cif:resolvePublication', async (_event, request: unknown) => {
+    if (!request || typeof request !== 'object') throw new TypeError('Invalid publication lookup');
+    const candidate = request as Partial<PublicationLookupRequest>;
+    if (typeof candidate.title !== 'string' || candidate.title.length > 1_000) {
+      throw new TypeError('Invalid publication title');
+    }
+    if (typeof candidate.reference !== 'string' || candidate.reference.length > 2_000) {
+      throw new TypeError('Invalid publication reference');
+    }
+    if (
+      !Array.isArray(candidate.authors) ||
+      candidate.authors.length > 20 ||
+      candidate.authors.some((author) => typeof author !== 'string' || author.length > 500)
+    ) {
+      throw new TypeError('Invalid publication authors');
+    }
+    return resolvePublication({
+      title: candidate.title,
+      reference: candidate.reference,
+      authors: candidate.authors as string[]
+    });
   });
 
   ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>

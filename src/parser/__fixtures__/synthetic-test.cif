@@ -27,6 +27,8 @@ _cell_angle_beta                         90
 _cell_angle_gamma                        90
 _cell_volume                             210
 _cell_formula_units_Z                    1
+_diffrn_radiation_type                   'X-rays, Cu Ka'
+_diffrn_radiation_wavelength             1.54056
 _space_group_IT_number                   1
 _space_group_name_H-M_alt                'P 1'
 
@@ -60,7 +62,9 @@ loop_
  _atom_site_fract_y
  _atom_site_fract_z
  _atom_site_occupancy
- Na1 Na 1 a 0 0 0 1
- Cl1 Cl 1 a 0.5 0.5 0.5 1
+ _atom_site_U_iso_or_equiv
+ _atom_site_B_iso_or_equiv
+ Na1 Na 1 a 0 0 0 1 0.0063 0.50
+ Cl1 Cl 1 a 0.5 0.5 0.5 1 0.0076 0.60
 
 _exptl_crystal_colour                    blue

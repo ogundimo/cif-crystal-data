@@ -8,6 +8,7 @@ import {
   type ColumnSizingState
 } from '@tanstack/react-table';
 import type { EntryRow, SearchSortColumn } from '../../../shared/types';
+import { useLayoutPreference, validColumnWidths } from '../layoutPreferences';
 import { formatFormula } from '../formatFormula';
 import { calculateVirtualRowWindow } from '../virtualRows';
 
@@ -16,72 +17,93 @@ const ROW_HEIGHT = 20;
 const HEADER_HEIGHT = 25;
 const ROW_OVERSCAN = 8;
 
-function formatCellLengthAngstrom(value: number | null | undefined): string {
-  return Number.isFinite(value) ? ((value as number) * 10).toFixed(4) : '';
+function formatCellLengthAngstrom(explicit: number | null, legacy: number): string {
+  const value = explicit ?? legacy * 10;
+  return Number.isFinite(value) ? value.toFixed(4) : '';
 }
 
 const columns = [
   columnHelper.accessor('formula', {
+    id: 'formula',
     header: 'Formula',
     size: 150,
     cell: (info) => formatFormula(info.getValue())
   }),
   columnHelper.accessor('cell_a', {
+    id: 'cell_a',
     header: 'a [Å]',
     size: 75,
-    cell: (info) => formatCellLengthAngstrom(info.getValue())
+    cell: (info) => formatCellLengthAngstrom(info.row.original.cell_a_angstrom, info.getValue())
   }),
   columnHelper.accessor('cell_b', {
+    id: 'cell_b',
     header: 'b [Å]',
     size: 75,
-    cell: (info) => formatCellLengthAngstrom(info.getValue())
+    cell: (info) => formatCellLengthAngstrom(info.row.original.cell_b_angstrom, info.getValue())
   }),
   columnHelper.accessor('cell_c', {
+    id: 'cell_c',
     header: 'c [Å]',
     size: 75,
-    cell: (info) => formatCellLengthAngstrom(info.getValue())
+    cell: (info) => formatCellLengthAngstrom(info.row.original.cell_c_angstrom, info.getValue())
   }),
   columnHelper.accessor('sg_number', {
+    id: 'sg_number',
     header: 'SG number',
-    size: 80
+    size: 80,
+    cell: (info) => String(info.row.original.sg_number)
   }),
   columnHelper.accessor('space_group', {
+    id: 'space_group',
     header: 'Space Group',
     size: 100
   }),
   columnHelper.accessor('reference', {
+    id: 'reference',
     header: 'Reference',
     size: 260
   }),
   columnHelper.accessor('level_struct_studies', {
+    id: 'level_struct_studies',
     header: 'Level struct. studies',
     size: 260
   })
 ];
 
+export interface EmptyResultsMessage { title: string; description: string; }
 interface Props {
+  emptyMessage?: EmptyResultsMessage;
   rows: EntryRow[];
   selectedId?: number | null;
   onSelect?: (entry: EntryRow) => void;
   totalRows?: number;
   loadingMore?: boolean;
   onLoadMore?: () => void;
-  onSortChange?: (column: SearchSortColumn, direction: 'asc' | 'desc') => void;
+  onSortChange?: (column?: SearchSortColumn, direction?: 'asc' | 'desc') => void;
+  sortColumn?: SearchSortColumn;
+  sortDirection?: 'asc' | 'desc';
 }
 
 export default function DataGrid({
   rows,
   selectedId = null,
   onSelect,
+  emptyMessage = { title: "Run a search", description: "Use Quick search to filter the imported structures." },
   totalRows = rows.length,
   loadingMore = false,
   onLoadMore,
-  onSortChange
+  onSortChange,
+  sortColumn,
+  sortDirection
 }: Props) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
+  const [localSorting, setSorting] = useState<SortingState>([]);
+  const [columnSizing, setColumnSizing] = useLayoutPreference<ColumnSizingState>('column-widths', {}, validColumnWidths);
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const sorting: SortingState = onSortChange
+    ? sortColumn ? [{ id: sortColumn, desc: sortDirection === 'desc' }] : []
+    : localSorting;
 
   const table = useReactTable({
     data: rows,
@@ -91,7 +113,7 @@ export default function DataGrid({
       const next = typeof updater === 'function' ? updater(sorting) : updater;
       setSorting(next);
       const first = next[0];
-      if (first) onSortChange?.(first.id as SearchSortColumn, first.desc ? 'desc' : 'asc');
+      onSortChange?.(first?.id as SearchSortColumn | undefined, first ? first.desc ? 'desc' : 'asc' : undefined);
     },
     onColumnSizingChange: setColumnSizing,
     columnResizeMode: 'onChange',
@@ -146,7 +168,22 @@ export default function DataGrid({
     <div
       ref={scrollContainerRef}
       data-testid="data-grid-scroll"
-      className="m-2 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-white"
+      tabIndex={0}
+      role="region"
+      aria-label="Search results. Use Up and Down arrow keys to select a row."
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || !onSelect || rows.length === 0 || !['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const current = rows.findIndex(row => row.id === selectedId);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? rows.length - 1 : Math.max(0, Math.min(rows.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)));
+        onSelect(rows[next]);
+        const container = event.currentTarget;
+        const top = HEADER_HEIGHT + next * ROW_HEIGHT;
+        if (top < container.scrollTop + HEADER_HEIGHT) container.scrollTop = top - HEADER_HEIGHT;
+        else if (top + ROW_HEIGHT > container.scrollTop + container.clientHeight) container.scrollTop = top + ROW_HEIGHT - container.clientHeight;
+        if (next === rows.length - 1 && rows.length < totalRows && !loadingMore) onLoadMore?.();
+      }}
+      className="mx-2 mt-2 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-white"
       style={{ overflowAnchor: 'none' }}
       onScroll={measureViewport}
     >
@@ -154,8 +191,8 @@ export default function DataGrid({
         <div className="flex h-full min-h-[16rem] items-center justify-center text-center">
           <div className="max-w-sm px-6 text-text-dim">
             <div className="mb-2 text-3xl" aria-hidden="true">⌕</div>
-            <p className="font-semibold text-[#444]">No results displayed</p>
-            <p className="mt-1">Use Quick search to filter the loaded database.</p>
+            <p className="font-semibold text-[#444]">{emptyMessage.title}</p>
+            <p className="mt-1">{emptyMessage.description}</p>
           </div>
         </div>
       ) : (
@@ -169,7 +206,8 @@ export default function DataGrid({
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
-                  style={{ width: header.getSize(), position: 'relative' }}
+                  title={header.id === 'sg_number' ? 'Space group number' : header.id === 'level_struct_studies' ? 'Level of structural studies' : String(header.column.columnDef.header)}
+                  style={{ width: header.getSize(), height: HEADER_HEIGHT }}
                   className="sticky top-0 z-[2] select-none overflow-hidden whitespace-nowrap border-b border-stroke-strong border-r border-stroke bg-[#f6f6f6] px-2 py-1 text-left font-semibold text-[#333] hover:bg-[#eef4fa]"
                   onClick={header.column.getToggleSortingHandler()}
                 >
@@ -204,6 +242,7 @@ export default function DataGrid({
                 key={row.id}
                 aria-rowindex={rowIndex + 2}
                 data-entry-id={row.original.id}
+                aria-selected={selectedId === row.original.id}
                 onClick={() => onSelect?.(row.original)}
                 style={{ height: ROW_HEIGHT }}
                 className={`cursor-default ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : ''} hover:bg-[#f0f6fc] ${
