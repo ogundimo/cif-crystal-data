@@ -4,11 +4,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   parseCif,
+  parseFormulaMoiety,
   parseFormulaSum,
   formatFormula,
   stripUncertainty,
   buildReference,
   calculateUnitCellVolume,
+  splitCifDataBlocks,
 } from './cifParser';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -57,6 +59,10 @@ describe('parseCif against the synthetic CIF fixture', () => {
     expect(entry.cell_c).toBeCloseTo(0.7, 10);
   });
 
+  it('retains angstrom cell lengths for diffraction calculations', () => {
+    expect([entry.cellAAngstrom, entry.cellBAngstrom, entry.cellCAngstrom]).toEqual([5, 6, 7]);
+  });
+
   it('parses cell angles and prefers the CIF-provided volume', () => {
     expect([entry.cellAlpha, entry.cellBeta, entry.cellGamma]).toEqual([90, 90, 90]);
     expect(entry.cellVolume).toBe(210);
@@ -73,6 +79,26 @@ describe('parseCif against the synthetic CIF fixture', () => {
 
   it('parses the space group symbol with spaces removed', () => {
     expect(entry.space_group).toBe('P1');
+  });
+
+  it('accepts legacy space-group number and symbol tags', () => {
+    const legacy = fixtureText
+      .replace('_space_group_IT_number', '_symmetry_Int_Tables_number')
+      .replace('_space_group_name_H-M_alt', '_symmetry_space_group_name_H-M');
+    expect(parseCif(legacy).sg_number).toBe(1);
+    expect(parseCif(legacy).space_group).toBe('P1');
+  });
+
+  it('parses radiation settings and formula units', () => {
+    expect(entry.formulaUnitsZ).toBe(1);
+    expect(entry.radiationType).toBe('X-rays, Cu Ka');
+    expect(entry.radiationWavelengthAngstrom).toBeCloseTo(1.54056, 8);
+  });
+
+  it('parses symmetry operations in source order', () => {
+    expect(entry.symmetryOperations).toEqual([
+      { operationId: '1', operationXyz: 'x, y, z' }
+    ]);
   });
 
   it('parses the publication title and journal language', () => {
@@ -125,9 +151,98 @@ describe('parseCif against the synthetic CIF fixture', () => {
       fractX: 0,
       fractY: 0,
       fractZ: 0,
-      occupancy: 1
+      occupancy: 1,
+      uIsoOrEquiv: 0.0063,
+      bIsoOrEquiv: 0.5
     });
     expect(entry.atomSites[1].siteLabel).toBe('Cl1');
+  });
+
+  it('parses anisotropic U and B tensors when supplied', () => {
+    const withAnisotropicData = `${fixtureText}\nloop_\n` +
+      `_atom_site_aniso_label\n_atom_site_aniso_U_11\n_atom_site_aniso_U_22\n` +
+      `_atom_site_aniso_U_33\n_atom_site_aniso_U_12\n_atom_site_aniso_U_13\n` +
+      `_atom_site_aniso_U_23\n_atom_site_aniso_B_11\nNa1 0.01 0.02 0.03 0.004 0.005 0.006 0.79\n`;
+    expect(parseCif(withAnisotropicData).atomSiteAnisotropic).toEqual([{
+      siteLabel: 'Na1',
+      u11: 0.01,
+      u22: 0.02,
+      u33: 0.03,
+      u12: 0.004,
+      u13: 0.005,
+      u23: 0.006,
+      b11: 0.79,
+      b22: null,
+      b33: null,
+      b12: null,
+      b13: null,
+      b23: null
+    }]);
+  });
+
+  it('accepts legacy symmetry operation tags', () => {
+    const legacy = fixtureText.replace(
+      /_space_group_symop_id\r?\n _space_group_symop_operation_xyz/,
+      '_symmetry_equiv_pos_site_id\n _symmetry_equiv_pos_as_xyz'
+    );
+    expect(parseCif(legacy).symmetryOperations).toEqual([
+      { operationId: '1', operationXyz: 'x, y, z' }
+    ]);
+  });
+});
+
+describe('citation metadata and multi-block CIF documents', () => {
+  it('reads the first citation row and citation authors', () => {
+    const citation = fixtureText
+      .replace(/_publ_section_title[\s\S]*?testing\n/, '')
+      .replace(/loop_\r?\n _publ_author_name[\s\S]*?Shelbyville'\r?\n/, '') + `
+loop_
+_citation_id
+_citation_title
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_doi
+primary 'Citation title' 'Journal of Tests' 2025 12 40 49 10.1000/test
+loop_
+_citation_author_citation_id
+_citation_author_name
+primary 'Researcher, R.'
+`;
+    const parsed = parseCif(citation);
+    expect(parsed.publTitle).toBe('Citation title');
+    expect(parsed.reference).toBe('Journal of Tests, 2025, 12, 40-49');
+    expect(parsed.citationDoi).toBe('10.1000/test');
+    expect(parsed.publAuthors[0].name).toBe('Researcher, R.');
+  });
+
+  it('splits concatenated data blocks and ignores a leading hash line', () => {
+    const blocks = splitCifDataBlocks(`0123456789abcdef\ndata_first\n_cell_length_a 1\n\ndata_second\n_cell_length_a 2\n`);
+    expect(blocks).toHaveLength(2);
+    expect(blocks.map((block) => block.name)).toEqual(['first', 'second']);
+    expect(blocks[0].text).toContain('_cell_length_a 1');
+    expect(blocks[0].text).not.toContain('0123456789abcdef');
+    expect(blocks[1].text).toContain('_cell_length_a 2');
+  });
+
+  it('stores CCDC and ICSD identifiers for reference fallback', () => {
+    const parsed = parseCif(`${fixtureText}\n_database_code_depnum_ccdc_archive 123456\n_database_code_CSD BEWTAY\n_database_code_ICSD 654321\n`);
+    expect(parsed.databaseCodeCcdc).toBe('123456');
+    expect(parsed.databaseCodeCsd).toBe('BEWTAY');
+    expect(parsed.databaseCodeIcsd).toBe('654321');
+  });
+
+  it('accepts the journal DOI used by publication-style CIFs', () => {
+    const parsed = parseCif(`${fixtureText}\n_journal_paper_doi 'https://doi.org/10.1000/example.'\n`);
+    expect(parsed.citationDoi).toBe('10.1000/example');
+  });
+
+  it('resolves the two space-group symbols used without IT numbers in the sample corpus', () => {
+    const withoutNumber = fixtureText.replace(/^_space_group_IT_number.*$/m, '');
+    expect(parseCif(withoutNumber.replace("'P 1'", 'Imma')).sg_number).toBe(74);
+    expect(parseCif(withoutNumber.replace("'P 1'", "'P6(1)'" )).sg_number).toBe(169);
   });
 });
 
@@ -248,5 +363,27 @@ describe('parseFormulaSum / formatFormula', () => {
   it('sorts out-of-order tokens alphabetically', () => {
     const pairs = parseFormulaSum("'Sb4 Eu3 S9'");
     expect(formatFormula(pairs)).toBe('Eu3S9Sb4');
+  });
+});
+
+describe('parseFormulaMoiety', () => {
+  it('combines charged components, multipliers, and fractional solvates', () => {
+    expect(parseFormulaMoiety("'C36 H30 Cl4 Fe4 S6 2-,2(C24 H20 P1 1+),0.75(C1 H2 Cl2)'"))
+      .toEqual([
+        { element: 'C', count: 84.75 },
+        { element: 'Cl', count: 5.5 },
+        { element: 'Fe', count: 4 },
+        { element: 'H', count: 71.5 },
+        { element: 'P', count: 2 },
+        { element: 'S', count: 6 }
+      ]);
+  });
+
+  it('provides the formula fallback when a sample has no sum formula', () => {
+    const cif = fixtureText.replace(
+      "_chemical_formula_sum                    'Na1 Cl1'",
+      "_chemical_formula_moiety                 '2(C8 H20 N1 1+),Mo1 O1 S8 2-'"
+    );
+    expect(parseCif(cif).formula).toBe('C16H40Mo1N2O1S8');
   });
 });

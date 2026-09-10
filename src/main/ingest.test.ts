@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { importCifFolder } from './ingest';
 import type { EntryWriteItem, EntryWriter } from './db';
 
@@ -69,5 +71,28 @@ describe('importCifFolder batching', () => {
       skippedCount: 0,
       failureCount: 1
     });
+  });
+
+  it('imports every data_ block in a concatenated CIF as a separate entry', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'cif-multi-block-'));
+    const fixture = readFileSync(join(fixtureDirectory, 'synthetic-test.cif'), 'utf8');
+    writeFileSync(
+      join(directory, 'combined.cif'),
+      `################################\n${fixture.replace('data_synthetic_test', 'data_first')}\n${fixture.replace('data_synthetic_test', 'data_second')}`
+    );
+    const written: EntryWriteItem[] = [];
+    try {
+      const result = importCifFolder(directory, {
+        writeBatch: (items) => { written.push(...items); return []; }
+      });
+      expect(result).toEqual({ importedCount: 2, skippedCount: 0, failures: [], total: 1 });
+      expect(written.map((item) => item.sourceFilename)).toEqual([
+        'combined.cif#1-first',
+        'combined.cif#2-second'
+      ]);
+      expect(written.map((item) => item.dataBlockIndex)).toEqual([0, 1]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

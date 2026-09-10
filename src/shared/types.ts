@@ -5,6 +5,9 @@ export interface EntryRow {
   cell_a: number;
   cell_b: number;
   cell_c: number;
+  cell_a_angstrom: number | null;
+  cell_b_angstrom: number | null;
+  cell_c_angstrom: number | null;
   cell_angle_alpha: number | null;
   cell_angle_beta: number | null;
   cell_angle_gamma: number | null;
@@ -16,7 +19,14 @@ export interface EntryRow {
   sample_type: string;
   crystal_colour: string;
   publ_title: string;
+  citation_doi: string;
+  database_code_ccdc: string;
+  database_code_csd: string;
+  database_code_icsd: string;
   journal_language: string;
+  formula_units_z: number | null;
+  radiation_type: string | null;
+  radiation_wavelength_angstrom: number | null;
 }
 
 export interface PublAuthorRow {
@@ -39,6 +49,40 @@ export interface AtomSiteRow {
   fract_y: number | null;
   fract_z: number | null;
   occupancy: number | null;
+  u_iso_or_equiv: number | null;
+  b_iso_or_equiv: number | null;
+}
+
+export interface SymmetryOperationRow {
+  id: number;
+  entry_id: number;
+  operation_order: number;
+  operation_id: string | null;
+  operation_xyz: string;
+}
+
+export interface AtomSiteAnisotropicRow {
+  id: number;
+  entry_id: number;
+  site_order: number;
+  site_label: string;
+  u_11: number | null;
+  u_22: number | null;
+  u_33: number | null;
+  u_12: number | null;
+  u_13: number | null;
+  u_23: number | null;
+  b_11: number | null;
+  b_22: number | null;
+  b_33: number | null;
+  b_12: number | null;
+  b_13: number | null;
+  b_23: number | null;
+}
+
+export interface DiffractionInput {
+  atomSites: AtomSiteRow[];
+  symmetryOperations: SymmetryOperationRow[];
 }
 
 export const LEVEL_FULL = 'Complete structure determined';
@@ -145,6 +189,24 @@ export interface ExportCifResult {
   fileName?: string;
 }
 
+export interface ExportPxrdResult {
+  exported: boolean;
+  fileName?: string;
+}
+
+export interface PublicationLookupRequest {
+  title: string;
+  reference: string;
+  authors: string[];
+}
+
+export interface PublicationResolutionResult {
+  status: 'verified' | 'not-found' | 'ambiguous' | 'insufficient-metadata' | 'unavailable';
+  doi?: string;
+  url?: string;
+  matchedTitle?: string;
+}
+
 export interface CifViewerSource {
   fileName: string;
   /** Original UTF-8 CIF text read from the imported source file without rewriting. */
@@ -155,10 +217,14 @@ export interface CifApi {
   getAllEntries: () => Promise<EntryRow[]>;
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
+  getDiffractionInput: (entryId: number) => Promise<DiffractionInput>;
   getPublAuthors: (entryId: number) => Promise<PublAuthorRow[]>;
   getViewerSource: (entryId: number) => Promise<CifViewerSource>;
   getImportFolder: () => Promise<string | null>;
   exportCif: (entryId: number) => Promise<ExportCifResult>;
+  exportPxrd: (entryId: number, contents: string) => Promise<ExportPxrdResult>;
+  resolvePublication: (request: PublicationLookupRequest) => Promise<PublicationResolutionResult>;
+  openExternal: (url: string) => Promise<void>;
   search: (filter: SearchFilter) => Promise<EntryRow[]>;
   searchPage: (request: SearchPageRequest) => Promise<SearchPageResult>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;

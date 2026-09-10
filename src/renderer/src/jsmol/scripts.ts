@@ -1,5 +1,6 @@
 export type CrystalRepresentation = 'atoms' | 'ball-stick' | 'spacefill';
 export type CrystalAxis = 'a' | 'b' | 'c';
+export type CrystalSupercellSize = 1 | 2 | 3;
 
 export const JSMOL_VERSION = '16.4.15';
 export const CRYSTAL_LOAD_PRECISION = 12;
@@ -9,6 +10,19 @@ export const CRYSTAL_OVERVIEW_ZOOM = 60;
 export const MIN_STRUCTURE_ZOOM = 20;
 export const MAX_STRUCTURE_ZOOM = 400;
 export const PROJECTED_VIEW_FILL = 0.60;
+
+export interface ViewportObstruction {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}
+
+export interface ProjectedViewFit {
+  zoom: number;
+  translateXPercent: number;
+  translateYPercent: number;
+}
 
 type Point3 = [number, number, number];
 
@@ -27,7 +41,9 @@ export function projectedStructureZoom(
   atomInfo: unknown,
   orientationInfo: unknown,
   viewportWidth: number,
-  viewportHeight: number
+  viewportHeight: number,
+  availableWidth = viewportWidth,
+  availableHeight = viewportHeight
 ): number {
   if (!Array.isArray(atomInfo) || viewportWidth <= 0 || viewportHeight <= 0) return CRYSTAL_OVERVIEW_ZOOM;
   const orientation = orientationInfo && typeof orientationInfo === 'object'
@@ -56,12 +72,43 @@ export function projectedStructureZoom(
   const height = Math.max(...ys) - Math.min(...ys);
   const pixelsPerAngstromAt100 = Math.max(viewportWidth, viewportHeight) / (2 * modelRadius);
   const zoomCandidates = [
-    width > 0.001 ? 100 * viewportWidth * PROJECTED_VIEW_FILL / (width * pixelsPerAngstromAt100) : null,
-    height > 0.001 ? 100 * viewportHeight * PROJECTED_VIEW_FILL / (height * pixelsPerAngstromAt100) : null
+    width > 0.001 ? 100 * availableWidth * PROJECTED_VIEW_FILL / (width * pixelsPerAngstromAt100) : null,
+    height > 0.001 ? 100 * availableHeight * PROJECTED_VIEW_FILL / (height * pixelsPerAngstromAt100) : null
   ].filter((value): value is number => value !== null && Number.isFinite(value) && value > 0);
   if (zoomCandidates.length === 0) return CRYSTAL_OVERVIEW_ZOOM;
   const zoom = Math.min(...zoomCandidates);
   return Math.round(Math.min(MAX_STRUCTURE_ZOOM, Math.max(MIN_STRUCTURE_ZOOM, zoom)));
+}
+
+export function projectedViewFit(
+  atomInfo: unknown,
+  orientationInfo: unknown,
+  viewportWidth: number,
+  viewportHeight: number,
+  obstruction: ViewportObstruction = {}
+): ProjectedViewFit {
+  const clampInset = (value: number | undefined, maximum: number) =>
+    Math.min(Math.max(0, Number(value) || 0), Math.max(0, maximum - 1));
+  const left = clampInset(obstruction.left, viewportWidth);
+  const right = clampInset(obstruction.right, viewportWidth - left);
+  const top = clampInset(obstruction.top, viewportHeight);
+  const bottom = clampInset(obstruction.bottom, viewportHeight - top);
+  const availableWidth = Math.max(1, viewportWidth - left - right);
+  const availableHeight = Math.max(1, viewportHeight - top - bottom);
+  const zoom = projectedStructureZoom(
+    atomInfo,
+    orientationInfo,
+    viewportWidth,
+    viewportHeight,
+    availableWidth,
+    availableHeight
+  );
+  const round = (value: number) => Math.round(value * 10) / 10;
+  return {
+    zoom,
+    translateXPercent: viewportWidth > 0 ? round(50 * (left - right) / viewportWidth) : 0,
+    translateYPercent: viewportHeight > 0 ? round(50 * (top - bottom) / viewportHeight) : 0
+  };
 }
 
 function completion(token: number): string {
@@ -69,13 +116,21 @@ function completion(token: number): string {
   return `javascript "window.CifJSmolBoundary.complete(${token})"`;
 }
 
-export function buildCrystalLoadScript(cifText: string, token: number): string {
+export function supercellLattice(size: CrystalSupercellSize): string {
+  return size === 1 ? UNIT_CELL_LATTICE : `{${size} ${size} ${size}}`;
+}
+
+export function buildCrystalLoadScript(
+  cifText: string,
+  token: number,
+  supercellSize: CrystalSupercellSize = 1
+): string {
   return [
     'set refreshing false',
     'zap',
     'set doublePrecision true',
     'set autobond false',
-    `load DATA "model"\n${cifText}\nEND "model" ${UNIT_CELL_LATTICE} PACKED FILTER "PRECISION=${CRYSTAL_LOAD_PRECISION}"`,
+    `load DATA "model"\n${cifText}\nEND "model" ${supercellLattice(supercellSize)} PACKED FILTER "PRECISION=${CRYSTAL_LOAD_PRECISION}"`,
     completion(token)
   ].join(';') + ';';
 }
@@ -106,6 +161,22 @@ export function cellParametersScript(visible: boolean): string {
   return `set displayCellParameters ${visible ? 'true' : 'false'}`;
 }
 
+export function clearMeasurementsScript(): string {
+  return 'measure delete;set pickingstyle MEASURE OFF;set picking OFF;select none';
+}
+
+export function polyhedraPickingScript(enabled: boolean): string {
+  if (!enabled) return 'unbind';
+  return [
+    'unbind',
+    'bind "LEFT+double+click" "polyhedra {*} DELETE;connect 15% 125% _ATOM {*} CREATE;polyhedra BONDS _ATOM TO {*} COLLAPSED EDGES;select _ATOM;color polyhedra translucent 0.45 [x66B5D8];select none"'
+  ].join(';');
+}
+
+export function clearPolyhedraScript(representation: CrystalRepresentation): string {
+  return `polyhedra {*} DELETE;${representationScript(representation)};select none`;
+}
+
 export function initialAppearanceScript(
   token: number,
   representation: CrystalRepresentation,
@@ -120,8 +191,12 @@ export function initialAppearanceScript(
     representationScript(representation),
     labelsScript(labelsVisible),
     `set axesScale ${CRYSTAL_AXES_SCALE}`,
+    'axes unitcell',
+    'axes on',
     'select all',
     'center selected',
+    'translate x 0',
+    'translate y 0',
     'moveto 0 front',
     `zoom ${zoom}`,
     'set refreshing true',
@@ -131,16 +206,21 @@ export function initialAppearanceScript(
 }
 
 export function fitResetScript(zoom = CRYSTAL_OVERVIEW_ZOOM, token?: number): string {
-  const script = `select all;center selected;moveto 1 front;zoom ${zoom}`;
+  const script = `select all;center selected;translate x 0;translate y 0;moveto 1 front;zoom ${zoom}`;
   return token === undefined ? script : `${script};${completion(token)};`;
 }
 
 export function axisViewScript(axis: CrystalAxis, zoom = CRYSTAL_OVERVIEW_ZOOM, token?: number): string {
-  const script = `select all;center selected;moveto 1 axis ${axis};zoom ${zoom}`;
+  const script = `select all;center selected;translate x 0;translate y 0;moveto 1 axis ${axis};zoom ${zoom}`;
   return token === undefined ? script : `${script};${completion(token)};`;
 }
 
 export function zoomScript(zoom: number, token?: number): string {
   const script = `zoom ${zoom};refresh`;
+  return token === undefined ? script : `${script};${completion(token)};`;
+}
+
+export function projectedViewScript(fit: ProjectedViewFit, token?: number): string {
+  const script = `zoom ${fit.zoom};translate x ${fit.translateXPercent};translate y ${fit.translateYPercent};refresh`;
   return token === undefined ? script : `${script};${completion(token)};`;
 }

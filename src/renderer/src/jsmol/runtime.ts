@@ -4,16 +4,21 @@ import {
   axisViewScript,
   buildCrystalLoadScript,
   cellParametersScript,
+  clearPolyhedraScript,
+  clearMeasurementsScript,
   CRYSTAL_OVERVIEW_ZOOM,
   fitResetScript,
   initialAppearanceScript,
   labelsScript,
-  projectedStructureZoom,
+  projectedViewFit,
+  projectedViewScript,
+  polyhedraPickingScript,
   representationScript,
   unitCellScript,
-  zoomScript,
+  type ViewportObstruction,
   type CrystalAxis,
-  type CrystalRepresentation
+  type CrystalRepresentation,
+  type CrystalSupercellSize
 } from './scripts';
 import { extractStructuralStatus, type StructuralStatus } from './status';
 
@@ -46,6 +51,7 @@ export interface ViewerRequest {
   representation: CrystalRepresentation;
   unitCellVisible: boolean;
   labelsVisible: boolean;
+  supercellSize: CrystalSupercellSize;
 }
 
 export interface ViewerResult {
@@ -81,8 +87,12 @@ export class CrystalViewerRuntime {
   private applet: unknown = null;
   private commandToken = 1_000_000;
   private cellParametersVisible = false;
+  private polyhedraPickingEnabled = false;
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
+  private refitTimer: number | null = null;
+  private modelReady = false;
+  private viewportObstruction: ViewportObstruction = {};
   private observedWidth = 0;
   private observedHeight = 0;
   private callbacks = new Map<number, { resolve: () => void; reject: (error: Error) => void; timeout: number }>();
@@ -168,11 +178,13 @@ export class CrystalViewerRuntime {
         this.resizeFrame = null;
         if (this.jmol && this.applet) this.jmol.repaint(this.applet, true);
       });
+      this.scheduleProjectedRefit();
     });
     this.resizeObserver.observe(this.host);
   }
 
   request(request: ViewerRequest): number {
+    this.modelReady = false;
     return this.scheduler.request(request);
   }
 
@@ -180,7 +192,7 @@ export class CrystalViewerRuntime {
     if (!this.jmol || !this.applet) throw new Error('JSmol is not ready.');
     const source = await this.fetchSource(request.entryId);
     if (!this.scheduler.isLatest(token)) return { fileName: source.fileName, status: this.blankStatus() };
-    await this.runScript(buildCrystalLoadScript(source.text, token), token);
+    await this.runScript(buildCrystalLoadScript(source.text, token, request.supercellSize), token);
     const status = extractStructuralStatus((name, parameter) =>
       this.jmol!.getPropertyAsArray(this.applet, name, parameter));
     if (!status.loaded) throw new Error(status.warning ?? 'JSmol did not parse any atoms from this CIF.');
@@ -192,8 +204,10 @@ export class CrystalViewerRuntime {
       CRYSTAL_OVERVIEW_ZOOM,
       this.cellParametersVisible
     ), token);
-    const fitZoom = this.projectedFitZoom();
-    await this.runScript(zoomScript(fitZoom, token), token);
+    if (this.polyhedraPickingEnabled) this.command(polyhedraPickingScript(true));
+    const fit = this.projectedFit();
+    await this.runScript(projectedViewScript(fit, token), token);
+    this.modelReady = true;
     return { fileName: source.fileName, status };
   }
 
@@ -225,21 +239,56 @@ export class CrystalViewerRuntime {
     this.cellParametersVisible = visible;
     this.command(cellParametersScript(visible));
   }
+  clearMeasurements(): void { this.command(clearMeasurementsScript()); }
+  setPolyhedraPicking(enabled: boolean): void {
+    this.polyhedraPickingEnabled = enabled;
+    this.command(polyhedraPickingScript(enabled));
+  }
+  clearPolyhedra(representation: CrystalRepresentation): void {
+    this.command(clearPolyhedraScript(representation));
+  }
+  setViewportObstruction(obstruction: ViewportObstruction): void {
+    const next = {
+      top: Math.max(0, Math.round(obstruction.top ?? 0)),
+      right: Math.max(0, Math.round(obstruction.right ?? 0)),
+      bottom: Math.max(0, Math.round(obstruction.bottom ?? 0)),
+      left: Math.max(0, Math.round(obstruction.left ?? 0))
+    };
+    if (
+      next.top === (this.viewportObstruction.top ?? 0) &&
+      next.right === (this.viewportObstruction.right ?? 0) &&
+      next.bottom === (this.viewportObstruction.bottom ?? 0) &&
+      next.left === (this.viewportObstruction.left ?? 0)
+    ) return;
+    this.viewportObstruction = next;
+    this.scheduleProjectedRefit();
+  }
   fitReset(): void { void this.refitView((token) => fitResetScript(CRYSTAL_OVERVIEW_ZOOM, token)); }
   viewAxis(axis: CrystalAxis): void {
     void this.refitView((token) => axisViewScript(axis, CRYSTAL_OVERVIEW_ZOOM, token));
   }
 
-  private projectedFitZoom(): number {
-    if (!this.jmol || !this.applet) return CRYSTAL_OVERVIEW_ZOOM;
+  private projectedFit() {
+    if (!this.jmol || !this.applet) {
+      return { zoom: CRYSTAL_OVERVIEW_ZOOM, translateXPercent: 0, translateYPercent: 0 };
+    }
     const atoms = this.jmol.getPropertyAsArray(this.applet, 'atomInfo', '(visible)');
     const orientation = this.jmol.getPropertyAsArray(this.applet, 'orientationInfo');
-    return projectedStructureZoom(
+    return projectedViewFit(
       atoms,
       orientation,
       this.host.clientWidth,
-      this.host.clientHeight
+      this.host.clientHeight,
+      this.viewportObstruction
     );
+  }
+
+  private scheduleProjectedRefit(): void {
+    if (this.refitTimer !== null) window.clearTimeout(this.refitTimer);
+    this.refitTimer = window.setTimeout(() => {
+      this.refitTimer = null;
+      if (this.modelReady) this.command(projectedViewScript(this.projectedFit()));
+    }, 180);
   }
 
   private async refitView(orient: (token: number) => string): Promise<void> {
@@ -247,8 +296,7 @@ export class CrystalViewerRuntime {
     const token = this.commandToken++;
     try {
       await this.runScript(orient(token), token);
-      const zoom = this.projectedFitZoom();
-      this.command(zoomScript(zoom));
+      this.command(projectedViewScript(this.projectedFit()));
     } catch {
       // A newer structure selection or disposal can safely supersede this view command.
     }
@@ -263,6 +311,8 @@ export class CrystalViewerRuntime {
     this.resizeObserver = null;
     if (this.resizeFrame !== null) window.cancelAnimationFrame(this.resizeFrame);
     this.resizeFrame = null;
+    if (this.refitTimer !== null) window.clearTimeout(this.refitTimer);
+    this.refitTimer = null;
     for (const callback of this.callbacks.values()) {
       window.clearTimeout(callback.timeout);
       callback.reject(new Error('Viewer disposed.'));

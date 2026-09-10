@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { AtomSiteRow, EntryRow, PublAuthorRow } from '../../../shared/types';
+import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import JSmolViewer from './JSmolViewer';
+import PxrdPattern from './PxrdPattern';
+import PublicationReference from './PublicationReference';
 
 interface Props {
   entry: EntryRow;
@@ -16,8 +19,10 @@ export default function CompoundInfoPanel({ entry }: Props) {
   const viewerRowsRef = useRef<HTMLDivElement>(null);
   const columnDragStart = useRef<{ x: number; width: number } | null>(null);
   const rowDragStart = useRef<{ y: number; height: number } | null>(null);
-  const [infoWidth, setInfoWidth] = useState<number | null>(null);
-  const [viewerHeight, setViewerHeight] = useState<number | null>(null);
+  const [infoWidth, setInfoWidth] = usePanelSize('information-width', panelRef, MIN_COLUMN_WIDTH, 16 + DIVIDER_SIZE + MIN_COLUMN_WIDTH, 'width');
+  const [viewerHeight, setViewerHeight] = usePanelSize('viewer-height', viewerRowsRef, MIN_VIEWER_ROW_HEIGHT, DIVIDER_SIZE + MIN_LOWER_ROW_HEIGHT, 'height');
+  const infoPercentage = usePanePercentage(panelRef, '#information-pane', 'width');
+  const viewerPercentage = usePanePercentage(viewerRowsRef, '[aria-label="Crystal structure viewer"]', 'height');
   const [atomSites, setAtomSites] = useState<AtomSiteRow[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [authors, setAuthors] = useState<PublAuthorRow[]>([]);
@@ -72,7 +77,8 @@ export default function CompoundInfoPanel({ entry }: Props) {
     }
   ];
   const publication = [
-    { label: 'Title', value: entry.publ_title },
+    { label: 'Reference', value: entry.reference },
+    { label: 'Publication link', value: <PublicationReference entry={entry} authors={authors} /> },
     { label: 'Language', value: entry.journal_language }
   ];
   const cellParameters = [
@@ -114,14 +120,15 @@ export default function CompoundInfoPanel({ entry }: Props) {
   }
 
   return (
-    <div ref={panelRef} className="mb-2 flex h-[calc(100%_-_0.5rem)] min-w-0 px-2">
+    <div id="compound-pane" ref={panelRef} className="mb-2 flex h-[calc(100%_-_0.5rem)] min-w-0 px-2">
       <section
-        aria-label="Atomic sites"
+        id="information-pane"
+        aria-label="Compound information"
         data-testid="compound-info-panel"
         className="min-w-0 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-[#f1f3f5]"
         style={infoWidth === null ? undefined : { flex: `0 0 ${infoWidth}px` }}
-      >
-        <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
+      >        <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
+          <caption className="info-section-label">Sample details</caption>
           <tbody>
             {metadata.map((field) => (
               <tr key={field.label} data-info-field={field.label}>
@@ -134,6 +141,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
           </tbody>
         </table>
         <table data-testid="cell-parameters-table" className="mt-1.5 w-full min-w-[15rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
+          <caption className="info-section-label">Cell angles</caption>
           <thead>
             <tr>
               {cellParameters.map((field) => (
@@ -157,11 +165,13 @@ export default function CompoundInfoPanel({ entry }: Props) {
           </tbody>
         </table>
         <table data-testid="atom-sites-table" className="mt-1.5 w-full min-w-[34rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
+          <caption className="info-section-label">Atomic sites</caption>
           <thead>
             <tr>
               {['Elements', 'Site', 'Wyck.', 'x', 'y', 'z', 'Occ.'].map((heading) => (
                 <th
                   key={heading}
+                  title={{ 'Wyck.': 'Wyckoff multiplicity and letter', 'Occ.': 'Site occupancy', x: 'Fractional coordinate x', y: 'Fractional coordinate y', z: 'Fractional coordinate z' }[heading] ?? heading}
                   className={`sticky top-0 z-[1] border-b border-r border-[#b9c7d5] bg-[#d7e3ee] px-2 py-1 text-left font-semibold text-[#26384a] ${['x', 'y', 'z'].includes(heading) ? 'italic' : ''}`}
                 >
                   {heading}
@@ -194,6 +204,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
           </tbody>
         </table>
         <table data-testid="publication-table" className="mt-5 w-full min-w-[34rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
+          <caption className="info-section-label">Publication</caption>
           <tbody>
             {publication.map((field) => (
               <tr key={field.label} data-info-field={field.label}>
@@ -246,9 +257,27 @@ export default function CompoundInfoPanel({ entry }: Props) {
         </table>
       </section>
       <div
-        role="separator"
+        role="separator" data-resize-handle="true"
         aria-label="Resize compound information and visual panels"
         aria-orientation="vertical"
+        aria-controls="information-pane"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={infoPercentage}
+        tabIndex={0}
+        title="Drag or use Left/Right arrows to resize · Enter or double-click to reset"
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') { event.preventDefault(); setInfoWidth(null); return; }
+          if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || !panelRef.current) return;
+          event.preventDefault();
+          const current = panelRef.current.querySelector('[data-testid="compound-info-panel"]')?.getBoundingClientRect().width ?? MIN_COLUMN_WIDTH;
+          const maximum = Math.max(MIN_COLUMN_WIDTH, panelRef.current.clientWidth - 16 - DIVIDER_SIZE - MIN_COLUMN_WIDTH);
+          setInfoWidth(Math.min(maximum, Math.max(MIN_COLUMN_WIDTH, current + (event.key === 'ArrowRight' ? 16 : -16))));
+        }}
+        onDoubleClick={() => {
+          columnDragStart.current = null;
+          setInfoWidth(null);
+        }}
         className="w-1.5 shrink-0 cursor-col-resize touch-none select-none border-x border-[#d6d6d6] bg-[#eeeeee] hover:bg-[#dddddd]"
         onPointerDown={(event) => {
           const informationPanel = panelRef.current?.querySelector('[data-testid="compound-info-panel"]');
@@ -264,18 +293,36 @@ export default function CompoundInfoPanel({ entry }: Props) {
       />
       <div
         ref={viewerRowsRef}
-        className="grid min-w-0 flex-1 pl-2"
+        className="grid min-w-0 flex-1"
         style={{
           gridTemplateRows: viewerHeight === null
             ? `minmax(${MIN_VIEWER_ROW_HEIGHT}px, 1fr) ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`
             : `${viewerHeight}px ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`
         }}
       >
-        <JSmolViewer entry={entry} />
+        <JSmolViewer entry={entry} atomSites={atomSites} />
         <div
-          role="separator"
+          role="separator" data-resize-handle="true"
           aria-label="Resize crystal viewer and lower visual panel"
           aria-orientation="horizontal"
+          aria-controls="crystal-viewer-pane"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={viewerPercentage}
+          tabIndex={0}
+          title="Drag or use Up/Down arrows to resize · Enter or double-click to reset"
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') { event.preventDefault(); setViewerHeight(null); return; }
+            if (!['ArrowUp', 'ArrowDown'].includes(event.key) || !viewerRowsRef.current) return;
+            event.preventDefault();
+            const current = viewerRowsRef.current.querySelector('[aria-label="Crystal structure viewer"]')?.getBoundingClientRect().height ?? MIN_VIEWER_ROW_HEIGHT;
+            const maximum = Math.max(MIN_VIEWER_ROW_HEIGHT, viewerRowsRef.current.clientHeight - DIVIDER_SIZE - MIN_LOWER_ROW_HEIGHT);
+            setViewerHeight(Math.min(maximum, Math.max(MIN_VIEWER_ROW_HEIGHT, current + (event.key === 'ArrowDown' ? 16 : -16))));
+          }}
+          onDoubleClick={() => {
+            rowDragStart.current = null;
+            setViewerHeight(null);
+          }}
           className="cursor-row-resize touch-none select-none border-y border-[#d6d6d6] bg-[#eeeeee] hover:bg-[#dddddd]"
           onPointerDown={(event) => {
             const viewer = viewerRowsRef.current?.querySelector('[aria-label="Crystal structure viewer"]');
@@ -289,7 +336,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
           onPointerUp={finishRowResize}
           onPointerCancel={finishRowResize}
         />
-        <div aria-hidden="true" className="min-h-0" />
+        <PxrdPattern entry={entry} />
       </div>
     </div>
   );

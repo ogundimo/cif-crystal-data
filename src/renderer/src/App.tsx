@@ -4,6 +4,7 @@ import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
 import type { EntryRow, ImportProgress, ImportResult, SearchFilter, SearchSortColumn } from '../../shared/types';
+import AboutDialog from './components/AboutDialog';
 
 const NO_CRITERIA_LABEL = 'A0 (No selection criteria)';
 const SEARCH_PAGE_SIZE = 500;
@@ -44,10 +45,12 @@ function AppInner() {
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
   const [databaseEntryCount, setDatabaseEntryCount] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [searchTotal, setSearchTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
   const searchRequestId = useRef(0);
   const activeFilter = useRef<SearchFilter | null>(null);
+  const [sort, setSort] = useState<{ column?: SearchSortColumn; direction?: 'asc' | 'desc' }>({});
   const activeSort = useRef<{ column?: SearchSortColumn; direction?: 'asc' | 'desc' }>({});
 
   const showApiError = useCallback((action: string, error: unknown) => {
@@ -70,6 +73,9 @@ function AppInner() {
     setAnswerSetLabel(NO_CRITERIA_LABEL);
     setSearchActive(false);
     setSearchTotal(0);
+    setLoadingMore(false);
+    activeSort.current = {};
+    setSort({});
     activeFilter.current = null;
     searchRequestId.current += 1;
     setExportMessage(null);
@@ -206,10 +212,12 @@ function AppInner() {
       clearAnswerSet();
       return;
     }
+    const requestId = ++searchRequestId.current;
+    setLoadingMore(true);
     try {
       activeFilter.current = filter;
       activeSort.current = {};
-      const requestId = ++searchRequestId.current;
+      setSort({});
       const result = await window.cifApi.searchPage({ filter, offset: 0, limit: SEARCH_PAGE_SIZE });
       if (requestId !== searchRequestId.current) return;
       setEntries(result.rows);
@@ -218,7 +226,9 @@ function AppInner() {
       setAnswerSetLabel(`A1 (${result.total} matching)`);
       setSearchActive(true);
     } catch (error) {
-      showApiError('search entries', error);
+      if (requestId === searchRequestId.current) showApiError('search entries', error);
+    } finally {
+      if (requestId === searchRequestId.current) setLoadingMore(false);
     }
   }
 
@@ -245,10 +255,11 @@ function AppInner() {
     }
   }, [entries.length, loadingMore, searchTotal, showApiError]);
 
-  const sortSearchResults = useCallback(async (column: SearchSortColumn, direction: 'asc' | 'desc') => {
+  const sortSearchResults = useCallback(async (column?: SearchSortColumn, direction?: 'asc' | 'desc') => {
     const filter = activeFilter.current;
     if (!filter) return;
     activeSort.current = { column, direction };
+    setSort({ column, direction });
     const requestId = ++searchRequestId.current;
     setLoadingMore(true);
     try {
@@ -272,64 +283,78 @@ function AppInner() {
 
   return (
     <div className="mx-auto flex h-screen max-w-full flex-col overflow-hidden bg-mica">
-      <div className="flex items-center gap-1.5 border-b border-stroke px-2.5 py-1.5">
-        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={() => setQsOpen(true)}>
-          <span>&#128269;</span> Quick search
-        </button>
-        <button
-          className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
-          onClick={handleResetSearch}
-          disabled={!searchActive}
-        >
-          <span aria-hidden="true">↺</span> Reset search
-        </button>
-        <button
-          className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
-          onClick={handleExportCif}
-          disabled={selectedEntryId === null || importing || refreshing || clearing || exporting}
-          title={selectedEntryId === null ? 'Select a Quick Search result first' : 'Export the selected original CIF file'}
-        >
-          <span aria-hidden="true">⇩</span> {exporting ? 'Exporting...' : 'Export CIF'}
-        </button>
-        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing}>
-          <span>&#128193;</span>{' '}
-          {importing && importProgress
-            ? `Importing ${importProgress.processed}/${importProgress.total}...`
-            : importing
-              ? 'Importing...'
-              : 'Import CIFs...'}
-        </button>
-        <button
-          className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
-          onClick={handleRefresh}
-          disabled={!importFolder || importing || refreshing || clearing}
-          title={importFolder ? `Scan again: ${importFolder}` : 'Choose a folder with Import CIFs first'}
-        >
-          <span aria-hidden="true">↻</span>{' '}
-          {refreshing && importProgress
-            ? `Refreshing ${importProgress.processed}/${importProgress.total}...`
-            : refreshing
-              ? 'Refreshing...'
-              : 'Refresh CIFs'}
-        </button>
-        {(importing || refreshing) && importProgress && (
-          <ImportProgressIndicator progress={importProgress} />
-        )}
-        <button
-          className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
-          onClick={handleClearCifs}
-          disabled={importing || refreshing || clearing}
-          title="Remove all imported entries from the local database"
-        >
-          <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
+      <div className="app-toolbar flex items-center gap-1.5 border-b border-stroke px-2.5 py-1.5" role="toolbar" aria-label="Application actions">
+        <div className="toolbar-group" role="group" aria-label="Search">
+          <button className="btn-w32 flex items-center gap-1.5 px-2.5" title="Edit search criteria" onClick={() => setQsOpen(true)}>
+            <span aria-hidden="true">&#128269;</span> Quick search
+          </button>
+          <button
+            className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
+            title={searchActive ? 'Clear the current search criteria and results' : 'No active search to reset'}
+            onClick={handleResetSearch}
+            disabled={!searchActive}
+          >
+            <span aria-hidden="true">↺</span> Reset search
+          </button>
+        </div>
+        <div className="mx-1.5 h-6 w-px bg-stroke-strong" aria-hidden="true" />
+        <div className="toolbar-group" role="group" aria-label="Selected entry">
+          <button
+            className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
+            onClick={handleExportCif}
+            disabled={selectedEntryId === null || importing || refreshing || clearing || exporting}
+            title={selectedEntryId === null ? 'Select a Quick Search result first' : 'Export the selected original CIF file'}
+          >
+            <span aria-hidden="true">⇩</span> {exporting ? 'Exporting...' : 'Export CIF'}
+          </button>
+        </div>
+        <div className="mx-1.5 h-6 w-px bg-stroke-strong" aria-hidden="true" />
+        <div className="toolbar-group" role="group" aria-label="Database">
+          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing}>
+            <span aria-hidden="true">&#128193;</span>{' '}
+            {importing && importProgress
+              ? `Importing ${importProgress.processed}/${importProgress.total}...`
+              : importing
+                ? 'Importing...'
+                : 'Import CIFs...'}
+          </button>
+          <button
+            className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
+            onClick={handleRefresh}
+            disabled={!importFolder || importing || refreshing || clearing}
+            title={importFolder ? `Scan again: ${importFolder}` : 'Choose a folder with Import CIFs first'}
+          >
+            <span aria-hidden="true">↻</span>{' '}
+            {refreshing && importProgress
+              ? `Refreshing ${importProgress.processed}/${importProgress.total}...`
+              : refreshing
+                ? 'Refreshing...'
+                : 'Refresh CIFs'}
+          </button>
+          {(importing || refreshing) && importProgress && (
+            <ImportProgressIndicator progress={importProgress} />
+          )}
+          <button
+            className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
+            onClick={handleClearCifs}
+            disabled={importing || refreshing || clearing}
+            title="Remove all imported entries from the local database"
+          >
+            <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
+          </button>
+        </div>
+        <div className="mx-1.5 h-6 w-px bg-stroke-strong" />
+        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={() => setAboutOpen(true)}>
+          <span aria-hidden="true">ⓘ</span> About
         </button>
         <div className="mx-1.5 h-6 w-px bg-stroke-strong" />
-        <span className="text-text-dim">
+        <span className="answer-summary text-text-dim">
           Answer set: <b>{answerSetLabel}</b> [{entries.length}]
         </span>
       </div>
 
       <ResultsWorkspace
+        emptyMessage={loadingMore ? { title: 'Searching…', description: 'Finding matching structures.' } : searchActive ? { title: 'No matching results', description: 'Open Quick search to adjust or remove criteria.' } : databaseEntryCount === 0 ? { title: 'No structures imported', description: 'Use Import CIFs to add structures, then run a Quick search.' } : databaseEntryCount === null ? { title: 'Loading database…', description: 'Checking the available structures.' } : { title: 'Run a search', description: 'Use Quick search to filter the imported structures.' }}
         rows={entries}
         selectedId={selectedEntryId}
         onSelect={(entry) => setSelectedEntryId(entry.id)}
@@ -337,9 +362,11 @@ function AppInner() {
         loadingMore={loadingMore}
         onLoadMore={loadMoreResults}
         onSortChange={sortSearchResults}
+        sortColumn={sort.column}
+        sortDirection={sort.direction}
       />
 
-      <div className="flex gap-2 border-t border-stroke px-2.5 py-1 text-text-dim">
+      <div className="app-status flex gap-2 border-t border-stroke px-2.5 py-1 text-text-dim" role="status">
         <div className="flex-1 px-2 py-0.5">
           {searchActive
             ? `${entries.length} of ${searchTotal} search results loaded`
@@ -379,6 +406,7 @@ function AppInner() {
         </div>
       )}
       {importResult && <ImportResultsPanel result={importResult} onDismiss={() => setImportResult(null)} />}
+      <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
   );
 }

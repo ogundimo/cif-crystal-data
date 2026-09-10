@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type Database from 'better-sqlite3';
-import { buildWhereClause, clearAllEntries, createEntryWriter, getEntryCount, searchEntriesPage } from './db';
+import {
+  buildWhereClause,
+  clearAllEntries,
+  createEntryWriter,
+  getAtomSiteAnisotropic,
+  getEntryCount,
+  getSymmetryOperations,
+  searchEntriesPage
+} from './db';
 import type { CifEntry } from '../parser/cifParser';
 
 const sampleEntry: CifEntry = {
@@ -12,6 +20,9 @@ const sampleEntry: CifEntry = {
   cell_a: 0.1,
   cell_b: 0.2,
   cell_c: 0.3,
+  cellAAngstrom: 1,
+  cellBAngstrom: 2,
+  cellCAngstrom: 3,
   cellAlpha: 90,
   cellBeta: 90,
   cellGamma: 90,
@@ -23,7 +34,14 @@ const sampleEntry: CifEntry = {
   sampleType: 'Sample crystal',
   crystalColour: 'red',
   publTitle: 'Test publication title',
+  citationDoi: '10.1000/example',
+  databaseCodeCcdc: '',
+  databaseCodeCsd: '',
+  databaseCodeIcsd: '',
   journalLanguage: 'English',
+  formulaUnitsZ: 2,
+  radiationType: 'X-rays, Cu Ka',
+  radiationWavelengthAngstrom: 1.54056,
   publAuthors: [{ name: 'Doe, J.', address: 'Example University' }],
   atomSites: [{
     siteLabel: 'Fe1',
@@ -33,7 +51,25 @@ const sampleEntry: CifEntry = {
     fractX: 0.1,
     fractY: 0.2,
     fractZ: 0.3,
-    occupancy: 1
+    occupancy: 1,
+    uIsoOrEquiv: 0.0063,
+    bIsoOrEquiv: 0.5
+  }],
+  symmetryOperations: [{ operationId: '1', operationXyz: 'x, y, z' }],
+  atomSiteAnisotropic: [{
+    siteLabel: 'Fe1',
+    u11: 0.01,
+    u22: 0.02,
+    u33: 0.03,
+    u12: 0.004,
+    u13: 0.005,
+    u23: 0.006,
+    b11: null,
+    b22: null,
+    b33: null,
+    b12: null,
+    b13: null,
+    b23: null
   }]
 };
 
@@ -185,6 +221,23 @@ describe('periodic-table selection query', () => {
     expect(preparedSql).toBe('SELECT COUNT(*) AS count FROM entries');
   });
 
+  it('loads stored symmetry and anisotropic diffraction inputs in source order', () => {
+    const preparedSql: string[] = [];
+    const database = {
+      prepare: (sql: string) => {
+        preparedSql.push(sql);
+        return { all: () => [{ id: 1 }] };
+      }
+    } as unknown as Database.Database;
+
+    expect(getSymmetryOperations(7, database)).toEqual([{ id: 1 }]);
+    expect(getAtomSiteAnisotropic(7, database)).toEqual([{ id: 1 }]);
+    expect(preparedSql).toEqual([
+      'SELECT * FROM symmetry_operations WHERE entry_id = ? ORDER BY operation_order',
+      'SELECT * FROM atom_site_anisotropic WHERE entry_id = ? ORDER BY site_order'
+    ]);
+  });
+
   it('pages and sorts search results in SQLite with a bounded page size', () => {
     const preparedSql: string[] = [];
     let allParameters: unknown[] = [];
@@ -235,7 +288,7 @@ describe('periodic-table selection query', () => {
     } as unknown as Database.Database;
 
     const writer = createEntryWriter(database);
-    expect(preparedSql).toHaveLength(11);
+    expect(preparedSql).toHaveLength(18);
     expect(
       writer.writeBatch([
         { sourceFilename: 'one.cif', entry: sampleEntry },
@@ -245,7 +298,7 @@ describe('periodic-table selection query', () => {
     expect(transactionExecutions).toBe(3); // one outer batch plus two per-entry savepoints
 
     expect(writer.writeBatch([{ sourceFilename: 'three.cif', entry: sampleEntry }])).toEqual([]);
-    expect(preparedSql).toHaveLength(11);
+    expect(preparedSql).toHaveLength(18);
     expect(transactionExecutions).toBe(5);
   });
 });

@@ -1,6 +1,6 @@
 {
   "name": "cif-crystal-data",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local CIF crystal data database desktop app",
   "license": "MIT",
   "engines": {
@@ -9,6 +9,7 @@
   "main": "dist-electron/main/index.js",
   "type": "module",
   "scripts": {
+    "start": "electron-vite dev",
     "dev": "electron-vite dev",
     "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
@@ -18,8 +19,7 @@
     "test:worker": "npm run build && electron scripts/import-worker-smoke-electron.cjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
-    "package": "npm run build && electron-builder",
-    "postinstall": "electron-builder install-app-deps"
+    "package": "npm run build && electron-builder"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",

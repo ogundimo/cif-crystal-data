@@ -269,3 +269,29 @@ body {
     grid-column: 1;
   }
 }
+
+/* Preserve keyboard focus visibility and narrow-window usability. */
+button:focus-visible, [role="separator"]:focus-visible, a:focus-visible {
+  outline: 2px solid #0067c0;
+  outline-offset: 3px;
+}
+.app-toolbar, .app-status { flex-wrap: wrap; }
+@media (min-width: 761px) and (max-width: 1050px) {
+  .quick-search-main-grid { grid-template-columns: minmax(0, 1fr); }
+  .quick-search-periodic-scroll { justify-self: center; max-width: 100%; }
+}
+@media (max-width: 640px) {
+  .answer-summary { width: 100%; }
+  .app-toolbar > .h-6 { display: none; }
+}
+
+/* Compact refinements using the existing desktop palette and dimensions. */
+.toolbar-group { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.info-section-label { padding: 2px 8px; text-align: left; font-size: 12px; font-weight: 600; color: #5d5d5d; background: #f3f3f3; border-bottom: 1px solid #e5e5e5; }
+.btn-w32:disabled { cursor: not-allowed; }
+.btn-w32:disabled:not(.btn-on) { border-color: #cfcfcf; background: #ededed; color: #8a8a8a; }
+[data-resize-handle] { position: relative; }
+[data-resize-handle]::after { content: ''; position: absolute; pointer-events: none; background: #b7b7b7; }
+[data-resize-handle][aria-orientation="horizontal"]::after { width: 24px; height: 2px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+[data-resize-handle][aria-orientation="vertical"]::after { height: 24px; width: 2px; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+[data-resize-handle]:hover::after, [data-resize-handle]:active::after { background: #5d5d5d; }
