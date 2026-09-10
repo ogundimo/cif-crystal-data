@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ImportResult } from '../../../shared/types';
 
 interface Props {

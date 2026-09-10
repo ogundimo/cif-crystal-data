@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import type Database from 'better-sqlite3';
 
-export const CURRENT_SCHEMA_VERSION = 8;
+const CURRENT_SCHEMA_VERSION = 8;
 
 function hasColumn(database: Database.Database, table: string, column: string): boolean {
   return (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
@@ -212,7 +212,7 @@ function createMigrationBackup(
   return backupPath;
 }
 
-export interface MigrationResult {
+interface MigrationResult {
   fromVersion: number;
   toVersion: number;
   backupPath: string | null;

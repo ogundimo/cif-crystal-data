@@ -7,7 +7,7 @@ export interface PxrdPeak {
   hkl: string;
 }
 
-export interface PxrdProfilePoint {
+interface PxrdProfilePoint {
   twoTheta: number;
   intensity: number;
 }

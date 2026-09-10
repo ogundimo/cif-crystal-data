@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,

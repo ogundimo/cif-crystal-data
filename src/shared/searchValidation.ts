@@ -10,7 +10,7 @@ export interface SearchValidationInput {
 }
 
 export type SearchValidationField = keyof SearchValidationInput;
-export type SearchValidationErrors = Partial<Record<SearchValidationField, string>>;
+type SearchValidationErrors = Partial<Record<SearchValidationField, string>>;
 
 function validatePositiveNumber(
   value: string,

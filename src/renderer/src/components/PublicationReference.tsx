@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { EntryRow, PublAuthorRow } from '../../../shared/types';
 
 interface PublicationTarget {

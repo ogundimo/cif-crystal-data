@@ -2,14 +2,13 @@ export type CrystalRepresentation = 'atoms' | 'ball-stick' | 'spacefill';
 export type CrystalAxis = 'a' | 'b' | 'c';
 export type CrystalSupercellSize = 1 | 2 | 3;
 
-export const JSMOL_VERSION = '16.4.15';
-export const CRYSTAL_LOAD_PRECISION = 12;
+const CRYSTAL_LOAD_PRECISION = 12;
 export const UNIT_CELL_LATTICE = '{555 555 1}';
 export const CRYSTAL_AXES_SCALE = 2.1;
 export const CRYSTAL_OVERVIEW_ZOOM = 60;
 export const MIN_STRUCTURE_ZOOM = 20;
 export const MAX_STRUCTURE_ZOOM = 400;
-export const PROJECTED_VIEW_FILL = 0.60;
+const PROJECTED_VIEW_FILL = 0.60;
 
 export interface ViewportObstruction {
   top?: number;
@@ -18,7 +17,7 @@ export interface ViewportObstruction {
   left?: number;
 }
 
-export interface ProjectedViewFit {
+interface ProjectedViewFit {
   zoom: number;
   translateXPercent: number;
   translateYPercent: number;
@@ -212,11 +211,6 @@ export function fitResetScript(zoom = CRYSTAL_OVERVIEW_ZOOM, token?: number): st
 
 export function axisViewScript(axis: CrystalAxis, zoom = CRYSTAL_OVERVIEW_ZOOM, token?: number): string {
   const script = `select all;center selected;translate x 0;translate y 0;moveto 1 axis ${axis};zoom ${zoom}`;
-  return token === undefined ? script : `${script};${completion(token)};`;
-}
-
-export function zoomScript(zoom: number, token?: number): string {
-  const script = `zoom ${zoom};refresh`;
   return token === undefined ? script : `${script};${completion(token)};`;
 }
 

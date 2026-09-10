@@ -3,12 +3,12 @@
 
 import { LEVEL_CELL, LEVEL_FULL } from '../shared/types';
 
-export interface ElementCount {
+interface ElementCount {
   element: string;
   count: number;
 }
 
-export interface ParsedAtomSite {
+interface ParsedAtomSite {
   siteLabel: string | null;
   typeSymbol: string | null;
   symmetryMultiplicity: number | null;
@@ -21,12 +21,12 @@ export interface ParsedAtomSite {
   bIsoOrEquiv: number | null;
 }
 
-export interface ParsedSymmetryOperation {
+interface ParsedSymmetryOperation {
   operationId: string | null;
   operationXyz: string;
 }
 
-export interface ParsedAtomSiteAnisotropic {
+interface ParsedAtomSiteAnisotropic {
   siteLabel: string;
   u11: number | null;
   u22: number | null;
@@ -42,7 +42,7 @@ export interface ParsedAtomSiteAnisotropic {
   b23: number | null;
 }
 
-export interface ParsedPublAuthor {
+interface ParsedPublAuthor {
   name: string;
   address: string | null;
 }
@@ -81,7 +81,7 @@ export interface CifEntry {
   atomSiteAnisotropic: ParsedAtomSiteAnisotropic[];
 }
 
-export interface CifDataBlock {
+interface CifDataBlock {
   name: string;
   text: string;
 }

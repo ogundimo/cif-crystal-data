@@ -1,4 +1,4 @@
-export interface ScheduledRequest<T> {
+interface ScheduledRequest<T> {
   token: number;
   value: T;
 }

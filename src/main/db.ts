@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { CifEntry } from '../parser/cifParser';
 import type {
-  AtomSiteAnisotropicRow,
   AtomSiteRow,
   EntryRow,
   PublAuthorRow,
@@ -35,7 +34,7 @@ export interface FileFingerprint {
   size: number;
 }
 
-export interface EntryWriteFailure {
+interface EntryWriteFailure {
   item: EntryWriteItem;
   error: unknown;
 }
@@ -66,7 +65,7 @@ export function initDb(userDataPath: string, appVersion?: string): Database.Data
   return db;
 }
 
-export function getDb(): Database.Database {
+function getDb(): Database.Database {
   if (!db) throw new Error('Database not initialized');
   return db;
 }
@@ -305,10 +304,6 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
   };
 }
 
-export function getAllEntries(): EntryRow[] {
-  return getDb().prepare('SELECT * FROM entries ORDER BY id').all() as EntryRow[];
-}
-
 export function getEntryCount(database: Database.Database = getDb()): number {
   const row = database.prepare('SELECT COUNT(*) AS count FROM entries').get() as { count: number };
   return row.count;
@@ -332,15 +327,6 @@ export function getSymmetryOperations(
     .all(entryId) as SymmetryOperationRow[];
 }
 
-export function getAtomSiteAnisotropic(
-  entryId: number,
-  database: Database.Database = getDb()
-): AtomSiteAnisotropicRow[] {
-  return database
-    .prepare('SELECT * FROM atom_site_anisotropic WHERE entry_id = ? ORDER BY site_order')
-    .all(entryId) as AtomSiteAnisotropicRow[];
-}
-
 export function getPublAuthors(
   entryId: number,
   database: Database.Database = getDb()
@@ -350,14 +336,14 @@ export function getPublAuthors(
     .all(entryId) as PublAuthorRow[];
 }
 
-export interface CifExportSource {
+interface CifExportSource {
   formula: string;
   sg_number: number;
   source_path: string | null;
   data_block_index: number;
 }
 
-export interface CifViewerSourceRecord {
+interface CifViewerSourceRecord {
   source_filename: string;
   source_path: string | null;
   data_block_index: number;
@@ -560,13 +546,6 @@ export function buildWhereClause(filter: SearchFilter): { sql: string; params: (
   return { sql: clauses.length ? clauses.join(' AND ') : '1=1', params };
 }
 
-export function searchEntries(filter: SearchFilter): EntryRow[] {
-  const { sql, params } = buildWhereClause(filter);
-  return getDb()
-    .prepare(`SELECT * FROM entries WHERE ${sql} ORDER BY id`)
-    .all(...params) as EntryRow[];
-}
-
 const SEARCH_SORT_COLUMNS: ReadonlySet<SearchSortColumn> = new Set([
   'formula', 'cell_a', 'cell_b', 'cell_c', 'sg_number', 'space_group', 'reference',
   'level_struct_studies'
@@ -591,7 +570,7 @@ export function searchEntriesPage(
   return { rows, total };
 }
 
-export function countForFilter(filter: SearchFilter): number {
+function countForFilter(filter: SearchFilter): number {
   const { sql, params } = buildWhereClause(filter);
   const row = getDb()
     .prepare(`SELECT COUNT(*) as c FROM entries WHERE ${sql}`)

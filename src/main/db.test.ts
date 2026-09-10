@@ -4,7 +4,6 @@ import {
   buildWhereClause,
   clearAllEntries,
   createEntryWriter,
-  getAtomSiteAnisotropic,
   getEntryCount,
   getSymmetryOperations,
   searchEntriesPage
@@ -221,7 +220,7 @@ describe('periodic-table selection query', () => {
     expect(preparedSql).toBe('SELECT COUNT(*) AS count FROM entries');
   });
 
-  it('loads stored symmetry and anisotropic diffraction inputs in source order', () => {
+  it('loads stored symmetry operations in source order', () => {
     const preparedSql: string[] = [];
     const database = {
       prepare: (sql: string) => {
@@ -231,10 +230,8 @@ describe('periodic-table selection query', () => {
     } as unknown as Database.Database;
 
     expect(getSymmetryOperations(7, database)).toEqual([{ id: 1 }]);
-    expect(getAtomSiteAnisotropic(7, database)).toEqual([{ id: 1 }]);
     expect(preparedSql).toEqual([
-      'SELECT * FROM symmetry_operations WHERE entry_id = ? ORDER BY operation_order',
-      'SELECT * FROM atom_site_anisotropic WHERE entry_id = ? ORDER BY site_order'
+      'SELECT * FROM symmetry_operations WHERE entry_id = ? ORDER BY operation_order'
     ]);
   });
 

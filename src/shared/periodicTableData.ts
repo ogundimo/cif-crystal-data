@@ -11,7 +11,7 @@ export const ELEMENT_SYMBOLS = [
   'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og'
 ] as const;
 
-export const GROUP_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
+const GROUP_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
   1: ['H', 'Li', 'Na', 'K', 'Rb', 'Cs', 'Fr'], 2: ['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra'],
   3: ['Sc', 'Y', 'La', 'Ac'], 4: ['Ti', 'Zr', 'Hf', 'Rf'], 5: ['V', 'Nb', 'Ta', 'Db'],
   6: ['Cr', 'Mo', 'W', 'Sg'], 7: ['Mn', 'Tc', 'Re', 'Bh'], 8: ['Fe', 'Ru', 'Os', 'Hs'],
@@ -22,7 +22,7 @@ export const GROUP_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
   18: ['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Og']
 };
 
-export const PERIOD_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
+const PERIOD_TO_ELEMENTS: Readonly<Record<number, readonly string[]>> = {
   1: ['H', 'He'], 2: ELEMENT_SYMBOLS.slice(2, 10), 3: ELEMENT_SYMBOLS.slice(10, 18),
   4: ELEMENT_SYMBOLS.slice(18, 36), 5: ELEMENT_SYMBOLS.slice(36, 54),
   // The picker displays the f-block on separate selectable rows, so 6P and

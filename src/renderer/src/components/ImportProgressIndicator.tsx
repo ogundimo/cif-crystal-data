@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ImportProgress } from '../../../shared/types';
 
 interface Props {
