@@ -1,4 +1,4 @@
-# CIF Crystal Data 1.0.0 — local release checkpoint
+# CIF Crystal Data 1.1.0 — Windows release
 
 ## Current features
 

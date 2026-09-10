@@ -29,7 +29,7 @@ export default function AboutDialog({ open, onClose }: { open: boolean; onClose:
           <button className="rounded px-2 py-1 hover:bg-[#c42b1c] hover:text-white" onClick={onClose} aria-label="Close About">✕</button>
         </header>
         <div className="min-h-0 space-y-3 overflow-y-auto p-4 text-xs leading-5 text-[#33475b]">
-          <p><strong>CIF Crystal Data 1.0.0</strong> is a local desktop application for indexing, searching, inspecting, and exporting crystallographic information files.</p>
+          <p><strong>CIF Crystal Data 1.1.0</strong> is a local desktop application for indexing, searching, inspecting, and exporting crystallographic information files.</p>
           <p>It provides searchable structure metadata, atomic-site tables, an interactive JSmol crystal viewer, and simulated powder X-ray diffraction patterns with configurable wavelength and peak broadening.</p>
           <section aria-labelledby="contributors-title">
             <h2 id="contributors-title" className="font-semibold">Contributors</h2>

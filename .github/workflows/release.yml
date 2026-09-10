@@ -168,7 +168,7 @@ jobs:
             ) + $assets + @(
               '--repo', $env:GITHUB_REPOSITORY,
               '--verify-tag',
-              '--generate-notes',
+              '--notes-file', 'RELEASE_NOTES.md',
               '--title', "CIF Crystal Data $env:RELEASE_VERSION"
             )
             if ($env:IS_PRERELEASE -eq 'true') {
