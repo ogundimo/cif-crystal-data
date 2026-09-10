@@ -1,4 +1,4 @@
-export interface ElementDef {
+interface ElementDef {
   symbol: string;
   z: number;
   row: number;
@@ -46,12 +46,3 @@ export const CATEGORY_CLASS: Record<string, string> = {
 
 export const ALKALINE_EARTH_SYMBOLS = new Set(['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra']);
 export const ALKALINE_EARTH_CLASS = 'bg-[#f4b52f] text-[#1c1608]';
-
-/** Grid cells that must render as an empty gap (no border/background) inside the periodic table's
- *  bounding rectangle: the main-group gap in periods 1-3 (cols 3-12) and the lanthanide/actinide
- *  placeholder gap under La/Ac (row 7 cols 4-17 minus the actual row-7 elements up to col 10). */
-export function isPeriodicGap(row: number, col: number): boolean {
-  if (row >= 1 && row <= 3 && col >= 3 && col <= 12) return true;
-  if (row === 8) return true;
-  return false;
-}

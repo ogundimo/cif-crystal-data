@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AtomSiteRow, EntryRow } from '../../../shared/types';
 import { CrystalViewerRuntime, type ViewerRequest, type ViewerResult } from '../jsmol/runtime';
 import type { CrystalAxis, CrystalRepresentation, CrystalSupercellSize } from '../jsmol/scripts';

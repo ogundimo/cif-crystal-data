@@ -85,7 +85,6 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('cif:getAllEntries', async () => (await getDbModule()).getAllEntries());
   ipcMain.handle('cif:getEntryCount', async () => (await getDbModule()).getEntryCount());
   ipcMain.handle('cif:getAtomSites', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
@@ -214,10 +213,6 @@ app.whenReady().then(() => {
       authors: candidate.authors as string[]
     });
   });
-
-  ipcMain.handle('cif:search', async (_e, filter: SearchFilter) =>
-    (await getDbModule()).searchEntries(validateSearchFilter(filter))
-  );
 
   ipcMain.handle('cif:searchPage', async (_e, request: SearchPageRequest) => {
     if (!request || typeof request !== 'object') throw new TypeError('Invalid search page request');

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ResultsWorkspace from './components/ResultsWorkspace';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';

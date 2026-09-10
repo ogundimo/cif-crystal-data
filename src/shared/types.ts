@@ -61,25 +61,6 @@ export interface SymmetryOperationRow {
   operation_xyz: string;
 }
 
-export interface AtomSiteAnisotropicRow {
-  id: number;
-  entry_id: number;
-  site_order: number;
-  site_label: string;
-  u_11: number | null;
-  u_22: number | null;
-  u_33: number | null;
-  u_12: number | null;
-  u_13: number | null;
-  u_23: number | null;
-  b_11: number | null;
-  b_22: number | null;
-  b_33: number | null;
-  b_12: number | null;
-  b_13: number | null;
-  b_23: number | null;
-}
-
 export interface DiffractionInput {
   atomSites: AtomSiteRow[];
   symmetryOperations: SymmetryOperationRow[];
@@ -108,13 +89,9 @@ export interface ImportProgress {
   failureCount: number;
 }
 
-export interface ClearCifsResult {
+interface ClearCifsResult {
   cleared: boolean;
   deletedCount: number;
-}
-
-export interface ElementGroup {
-  elements: string[];
 }
 
 export interface ElementSelection {
@@ -184,12 +161,12 @@ export interface RestraintRow {
   entries: number;
 }
 
-export interface ExportCifResult {
+interface ExportCifResult {
   exported: boolean;
   fileName?: string;
 }
 
-export interface ExportPxrdResult {
+interface ExportPxrdResult {
   exported: boolean;
   fileName?: string;
 }
@@ -214,7 +191,6 @@ export interface CifViewerSource {
 }
 
 export interface CifApi {
-  getAllEntries: () => Promise<EntryRow[]>;
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
   getDiffractionInput: (entryId: number) => Promise<DiffractionInput>;
@@ -225,7 +201,6 @@ export interface CifApi {
   exportPxrd: (entryId: number, contents: string) => Promise<ExportPxrdResult>;
   resolvePublication: (request: PublicationLookupRequest) => Promise<PublicationResolutionResult>;
   openExternal: (url: string) => Promise<void>;
-  search: (filter: SearchFilter) => Promise<EntryRow[]>;
   searchPage: (request: SearchPageRequest) => Promise<SearchPageResult>;
   restraints: (filter: SearchFilter) => Promise<RestraintRow[]>;
   importCifFolder: () => Promise<ImportResult | null>;

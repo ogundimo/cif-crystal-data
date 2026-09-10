@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type { AtomSiteRow } from '../../../shared/types';
 
 export type CrystalLegendMode = 'vertical' | 'horizontal';

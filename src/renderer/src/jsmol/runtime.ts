@@ -59,7 +59,7 @@ export interface ViewerResult {
   status: StructuralStatus;
 }
 
-export interface ViewerEvents {
+interface ViewerEvents {
   requested: (fileName: string) => void;
   loading: (fileName: string) => void;
   ready: (result: ViewerResult) => void;
@@ -73,7 +73,7 @@ export function jsmolAssetUrls(base = document.baseURI): { script: string; j2s: 
   };
 }
 
-export function loadLocalJSmol(): Promise<JmolApi> {
+function loadLocalJSmol(): Promise<JmolApi> {
   if (window.Jmol) return Promise.resolve(window.Jmol);
   return Promise.reject(new Error('The packaged JSmol runtime was not loaded before the application started.'));
 }

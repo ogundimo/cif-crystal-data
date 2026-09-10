@@ -1,4 +1,4 @@
-export interface VirtualRowWindow {
+interface VirtualRowWindow {
   start: number;
   end: number;
   paddingTop: number;

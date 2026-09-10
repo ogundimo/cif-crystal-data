@@ -40,7 +40,6 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
 }));
 
 window.cifApi = {
-  getAllEntries: async () => [],
   getEntryCount: async () => 0,
   getAtomSites: async (entryId) => [{
     id: entryId,
@@ -91,7 +90,6 @@ window.cifApi = {
   exportPxrd: async () => ({ exported: false }),
   resolvePublication: async () => ({ status: 'not-found' }),
   openExternal: async () => undefined,
-  search: async () => [],
   searchPage: async () => ({ rows: [], total: 0 }),
   restraints: async () => [],
   importCifFolder: async () => null,
