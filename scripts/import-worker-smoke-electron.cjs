@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { Worker } = require('node:worker_threads');
 const Database = require('better-sqlite3');
 const { app } = require('electron');
+const runDatabaseQueryRegressions = require('./database-query-regressions.cjs');
 
 const root = dirname(dirname(__filename));
 
@@ -34,6 +35,7 @@ async function run() {
     /^importWorker-.*\.js$/.test(name)
   );
   assert.ok(workerFilename, 'Production build did not emit the import worker chunk');
+  await runDatabaseQueryRegressions(chunksDirectory);
 
   const userDataPath = mkdtempSync(join(tmpdir(), 'cif-import-worker-'));
   const fixtureDirectory = join(root, 'src', 'parser', '__fixtures__');
@@ -113,6 +115,15 @@ async function run() {
         readdirSync(legacyUserDataPath).some((name) => name.startsWith('cif-local.pre-migration-v1-')),
         'legacy migration did not create a backup'
       );
+      const backupName = readdirSync(legacyUserDataPath).find(name => name.startsWith('cif-local.pre-migration-v1-'));
+      const backup = new Database(join(legacyUserDataPath, backupName), { readonly: true });
+      try {
+        assert.equal(backup.pragma('user_version', { simple: true }), 1);
+        assert.equal(backup.prepare('SELECT formula FROM entries').get().formula, 'Stale',
+          'backup must contain the pre-migration data, not just exist');
+      } finally {
+        backup.close();
+      }
     } finally {
       legacyDatabase.close();
     }
@@ -276,6 +287,20 @@ async function run() {
     assert.equal(retry.result.skippedCount, 0, 'partial write must not mark the whole file complete');
     assert.equal(retry.result.importedCount, 2);
     assert.equal((await runWorker(workerUrl, multiInput, userDataPath)).result.skippedCount, 1);
+
+    // A successful shrink/rename refresh removes obsolete sibling blocks and their children.
+    writeFileSync(multiPath, goodBlock.replace('data_good', 'data_only'));
+    const shrink = await runWorker(workerUrl, multiInput, userDataPath);
+    assert.equal(shrink.result.importedCount, 1);
+    database = new Database(databasePath);
+    try {
+      assert.deepEqual(database.prepare('SELECT source_filename FROM entries').all(), [{ source_filename: 'multi.cif' }]);
+      assert.equal(database.prepare('SELECT COUNT(*) AS count FROM atom_sites').get().count, 2);
+      assert.equal(database.prepare('SELECT COUNT(*) AS count FROM imported_files').get().count, 1);
+      assert.equal(database.prepare('SELECT data_block_index FROM imported_files').get().data_block_index, 0);
+    } finally {
+      database.close();
+    }
 
     writeFileSync(multiPath, `${goodBlock.replace('data_good', 'data_new')}\ndata_invalid\n_cell_length_a 1\n`);
     const partialParse = await runWorker(workerUrl, multiInput, userDataPath);

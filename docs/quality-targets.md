@@ -88,7 +88,9 @@ authorize a change to CI thresholds or repository branch protection.
 
 ## Work tracked by existing issues
 
-With #13, #24 and #25 completed, begin **#14: Review and close test gaps** next.
+With #13, #24 and #25 completed, **#14: Review and close test gaps** is the current
+workstream. Its [test-gap review](test-gap-review.md) records the added regression
+evidence and remaining gaps; check the issue/PR status before assuming it is merged.
 Use that evidence to guide #16–#18 refactors, then the #19 mutation pilot. #20
 coordinates incremental adoption of the results; #15 remains an independent
 supporting workstream.

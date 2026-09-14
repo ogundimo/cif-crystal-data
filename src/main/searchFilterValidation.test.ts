@@ -10,6 +10,39 @@ const validFilter = {
 };
 
 describe('validateSearchFilter', () => {
+  it.each([null, undefined, [], 'Fe', 7])('rejects a non-object IPC payload: %j', (value) => {
+    expect(() => validateSearchFilter(value)).toThrow('payload must be an object');
+  });
+
+  it.each([
+    [{ mode: 'XOR' }, 'mode must be AND or OR'],
+    [{ slot3: ['Xx'] }, 'slot3 contains an invalid element symbol'],
+    [{ slot4: Array(119).fill('Fe') }, 'slot4 contains too many elements'],
+    [{ elementSelections: [null] }, 'elementSelections[0] must be an object'],
+    [{ elementSelection: { elements: [], groups: [0], periods: [] } }, 'groups contains an out-of-range value'],
+    [{ elementSelection: { elements: [], groups: [19], periods: [] } }, 'groups contains an out-of-range value'],
+    [{ elementSelection: { elements: [], groups: [1.5], periods: [] } }, 'groups contains an out-of-range value'],
+    [{ elementSelection: { elements: [], groups: '1', periods: [] } }, 'groups must be an array'],
+    [{ elementSelection: { elements: [], groups: Array(19).fill(1), periods: [] } }, 'groups contains too many values'],
+    [{ elementSelection: { elements: [], groups: [], periods: null } }, 'periods must be an array'],
+    [{ elementSelection: { elements: [], groups: [], periods: Array(10).fill(1) } }, 'periods contains too many values'],
+    [{ bMax: Infinity }, 'bMax must be a finite number'],
+    [{ cMin: '5' }, 'cMin must be a finite number'],
+    [{ referenceQuery: 'x'.repeat(201) }, 'referenceQuery must be a string of at most 200 characters'],
+    [{ sgQuery: 62 }, 'sgQuery must be a string']
+  ])('rejects malformed search fields %j', (fields, message) => {
+    expect(() => validateSearchFilter({ ...validFilter, ...fields })).toThrow(message);
+  });
+
+  it('accepts bounded selections and maximum-length text without altering the request', () => {
+    const filter = {
+      ...validFilter, slot3: ['Cl'], slot4: ['Na'], referenceQuery: 'x'.repeat(200),
+      elementSelection: { elements: ['Fe'], groups: [1, 18], periods: [1, 7, 9, 10], exclude: false }
+    };
+    const before = structuredClone(filter);
+    expect(validateSearchFilter(filter)).toBe(filter);
+    expect(filter).toEqual(before);
+  });
   it('accepts a valid filter', () => {
     expect(validateSearchFilter(validFilter)).toBe(validFilter);
   });
