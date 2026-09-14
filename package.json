@@ -22,7 +22,9 @@
     "package": "npm run build && electron-builder",
     "quality:baseline": "node scripts/quality/baseline.mjs",
     "quality:test": "node --test scripts/quality/*.test.mjs",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "quality:unused": "npm run typecheck && knip",
+    "quality:unused:test": "node scripts/verify-unused-checks.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
@@ -44,6 +46,7 @@
     "eslint": "10.10.0",
     "eslint-plugin-sonarjs": "4.2.0",
     "jscpd": "4.3.0",
+    "knip": "6.35.1",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",

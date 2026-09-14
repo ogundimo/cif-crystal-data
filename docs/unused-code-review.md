@@ -59,3 +59,31 @@ tracing was performed. Runtime tracing is tracked separately in issue #15.
 Full external CIF corpus and packaged real-data smoke verification require
 explicit test inputs and are not claimed by this review. Quantitative coverage,
 complexity, duplication, and mutation baselines belong to their separate issues.
+
+## Automated follow-up — issue #25
+
+Review date: 2026-09-14. Starting application revision:
+`1add04a` (main after the #13 baseline work). Analyzer: Knip 6.35.1 in normal full-project
+mode, with the source scope and entry points in `knip.json` and both TypeScript unused checks
+enabled. Reproduce with `npm run quality:unused`; configuration and interpretation are in
+[Code-quality measurements](code-quality.md#unused-code-regression-gate-25).
+
+| Initial finding | Decision and evidence |
+| --- | --- |
+| `scripts/database-scale-benchmark.cjs` reported as unused | Keep; `benchmark:database` invokes it through Electron and the scheduled performance workflow runs that command. Declare it as an explicit entry. |
+| `scripts/import-worker-smoke-electron.cjs` reported as unused | Keep; `test:worker` invokes it through Electron, and `test:all` runs that command in CI. Declare it as an explicit entry. |
+| Redundant main/preload/renderer entries | Rely on the electron-vite plugin's discovery from the checked-in build configuration rather than duplicate declarations. |
+| Ignore patterns for already out-of-scope generated folders | Remove redundant ignore patterns; the positive project scope excludes those folders. Keep the vendor subtree explicitly excluded within `src`. |
+| CSS project-scope hint | Include first-party CSS so its imports are followed; no claim of selector-level dead-code analysis. |
+
+After this configuration review: **zero unused-file, unused-export/type, unused-dependency,
+unlisted/unresolved-import, or duplicate-export findings**, with no finding suppressions.
+Both TypeScript projects pass their permanent unused-local/parameter checks. No additional
+application code, assets, stored data, or test-only APIs were removed for this automation.
+
+`quality:unused:test` verifies that the real configuration passes on an isolated copy and
+fails for injected unused files, reachable-module exports, production/development dependencies,
+and unused locals/parameters in both TypeScript projects. These probes are removed with the
+temporary fixture. They check the detector, not exhaustive runtime reachability. If the source,
+entry declarations, or analyzer version changes, rerun and review rather than assuming this
+baseline still applies.
