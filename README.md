@@ -32,7 +32,7 @@ See [screenshot capture instructions](docs/images/README.md) to regenerate these
 
 ## Dev mode
 
-Development requires Node.js 22.12 or newer.
+Development requires Node.js 22.13 or newer.
 
 ```
 npm install
@@ -71,6 +71,11 @@ when returned metadata agrees across the available title and citation fields. Am
 are never stored and retain the exact-title Scholar or Access Structures fallback.
 
 ## Building the packaged app
+
+Reproducible coverage, complexity, and duplication reports are documented in
+[Code-quality measurements](docs/code-quality.md). Run `npm run quality:baseline` to
+collect an advisory baseline locally; the Code-quality baseline workflow publishes
+the same reports in GitHub Actions.
 
 ```
 npm test          # Vitest unit and regression tests
