@@ -36,6 +36,9 @@ do not replace the original baseline snapshot.
 The [#16 quick-search refactor](quick-search-refactor.md) records the next
 responsibility extraction, comparable complexity measurements and UI regressions.
 
+The [#17 database refactor](database-refactor.md) records the persistence/query
+boundaries, unchanged complexity hotspots, native regressions and benchmark comparison.
+
 ## Metrics and interpretation
 
 | Measurement | Analyzer / definition | Interpretation |

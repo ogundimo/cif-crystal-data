@@ -19,6 +19,7 @@
     "test:worker": "npm run build && electron scripts/import-worker-smoke-electron.cjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
+    "benchmark:database:api": "npm run build && electron scripts/database-api-benchmark.cjs",
     "package": "npm run build && electron-builder",
     "quality:baseline": "node scripts/quality/baseline.mjs",
     "quality:test": "node --test scripts/quality/*.test.mjs",
