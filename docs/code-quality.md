@@ -42,6 +42,9 @@ boundaries, unchanged complexity hotspots, native regressions and benchmark comp
 The [#18 parser refactor](parser-refactor.md) records stage boundaries, preserved
 behavior, complexity exceptions and the available local corpus comparison.
 
+The [#19 mutation pilot](mutation-testing.md) records the targeted command, scope,
+survivor review and execution cost. It runs separately from the coverage baseline.
+
 ## Metrics and interpretation
 
 | Measurement | Analyzer / definition | Interpretation |
@@ -168,6 +171,7 @@ but this does not detect unused CSS selectors or exhaustively review binary asse
 | `scripts/packaged-smoke.mjs`, `scripts/capture-readme-screenshots.cjs` | Documented manual entry points; do not delete them because application modules do not import them. |
 | `scripts/quality/*.test.mjs` | Node test-runner files invoked by `quality:test`. This narrow test convention does not mark ordinary helper modules as entries. |
 | Vitest and package scripts | Knip's plugins/script discovery retain unit-test consumers and directly invoked Node commands; config dependencies such as the V8 coverage provider remain visible. |
+| `stryker.config.json` | Knip's Stryker plugin resolves the Vitest runner and TypeScript checker from their configured names; no dependency ignore is needed for the #19 pilot. |
 
 There are **no ignored dependencies, exports, or individual findings**, and no nonzero
 finding allowance. Explicit entry declarations are documented execution roots, not blanket

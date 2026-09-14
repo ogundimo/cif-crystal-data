@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "mutate": [
+    "src/parser/cif/formula.ts",
+    "src/shared/searchValidation.ts",
+    "src/renderer/src/pxrd.ts"
+  ],
+  "testRunner": "vitest",
+  "vitest": { "configFile": "vitest.config.ts" },
+  "checkers": ["typescript"],
+  "tsconfigFile": "tsconfig.mutation.json",
+  "typescriptChecker": { "prioritizePerformanceOverAccuracy": false },
+  "coverageAnalysis": "perTest",
+  "concurrency": 2,
+  "timeoutMS": 5000,
+  "timeoutFactor": 1.5,
+  "reporters": ["clear-text", "progress", "html", "json"],
+  "htmlReporter": { "fileName": "reports/mutation/index.html" },
+  "jsonReporter": { "fileName": "reports/mutation/mutation.json" },
+  "thresholds": { "high": 90, "low": 70, "break": 0 },
+  "ignorePatterns": ["reports/**", "dist/**", "dist-electron/**", "release/**", ".dist/**", "third_party/**", "src/renderer/public/**"]
+}

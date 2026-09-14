@@ -31,6 +31,57 @@ const site = {
 const identity = [{ id: 1, entry_id: 1, operation_order: 0, operation_id: '1', operation_xyz: 'x,y,z' }] as SymmetryOperationRow[];
 
 describe('simulatePxrd', () => {
+  it('matches the monoclinic reciprocal metric, including the signed h/l cross term', () => {
+    const beta = 105 * Math.PI / 180;
+    const crystal = { ...entry, cell_a_angstrom: 4, cell_b_angstrom: 5,
+      cell_c_angstrom: 7, cell_angle_beta: 105 };
+    const peaks = simulatePxrd(crystal, [site], identity);
+    for (const [h, k, l] of [[0, 0, 1], [0, 1, 0], [1, 0, 0], [1, 0, 1], [1, 0, -1]]) {
+      const reciprocalSquared = (h ** 2 / 16 + l ** 2 / 49 - 2 * h * l * Math.cos(beta) / 28) /
+        Math.sin(beta) ** 2 + k ** 2 / 25;
+      const angle = 2 * Math.asin(1.5406 * Math.sqrt(reciprocalSquared) / 2) * 180 / Math.PI;
+      expect(peaks.some(peak => Math.abs(peak.twoTheta - angle) < 1e-8)).toBe(true);
+    }
+  });
+
+  it.each([{ element: 'Na', number: 11 }, { element: 'H', number: 1 }])('matches orthorhombic Bragg positions and Fe/$element interference intensities', ({ element, number }) => {
+    const crystal = { ...entry, cell_a_angstrom: 4.1, cell_b_angstrom: 5.3, cell_c_angstrom: 6.7 };
+    const sites = [{ ...site, type_symbol: 'Fe' },
+      { ...site, type_symbol: element, fract_x: 0.17, fract_y: 0.23, fract_z: 0.37, occupancy: 0.6 }];
+    const peaks = simulatePxrd(crystal, sites, identity);
+    // The first two nondegenerate families are 001 and 010. Their structure
+    // factors satisfy |F|² = Z1² + (occupancy Z2)² + 2 Z1 occupancy Z2 cos(phase).
+    const expected = (length: number, coordinate: number) => {
+      const theta = Math.asin(1.5406 / (2 * length));
+      const structure = 26 ** 2 + (0.6 * number) ** 2 + 2 * 26 * 0.6 * number * Math.cos(2 * Math.PI * coordinate);
+      const scattering = Math.exp(-0.44 / (4 * length ** 2));
+      const polarization = (1 + Math.cos(2 * theta) ** 2) / (Math.sin(theta) ** 2 * Math.cos(theta));
+      return { angle: 2 * theta * 180 / Math.PI, intensity: structure * scattering * polarization };
+    };
+    const first = expected(6.7, 0.37);
+    const second = expected(5.3, 0.23);
+    expect(peaks[0].twoTheta).toBeCloseTo(first.angle, 8);
+    expect(peaks[1].twoTheta).toBeCloseTo(second.angle, 8);
+    expect(peaks[1].intensity / peaks[0].intensity).toBeCloseTo(second.intensity / first.intensity, 8);
+    expect(peaks.every(peak => peak.twoTheta >= 5 && peak.twoTheta <= 80)).toBe(true);
+    expect(peaks[0].hkl).toBe('0 0 1');
+    expect(peaks[1].hkl).toBe('0 1 0');
+  });
+
+  it('expands fractional, signed and decorated symmetry coordinates like explicit atom positions', () => {
+    const originalSite = { ...site, fract_x: 0.13, fract_y: 0.27, fract_z: 0.39 };
+    const operations = [identity[0], { ...identity[0], operation_xyz: "'( -X + 1/2, 2 * Y, Z - 1/4 )'" }];
+    const expected = simulatePxrd(entry, [originalSite,
+      { ...originalSite, fract_x: 0.37, fract_y: 0.54, fract_z: 0.14 }], identity);
+    const actual = simulatePxrd(entry, [originalSite], operations);
+    expect(actual.length).toBeGreaterThan(0);
+    expect(actual).toHaveLength(expected.length);
+    actual.forEach((peak, index) => {
+      expect(peak.twoTheta).toBeCloseTo(expected[index].twoTheta, 8);
+      expect(peak.intensity).toBeCloseTo(expected[index].intensity, 8);
+    });
+  });
+
   it('obeys body-centering extinctions and the analytic cubic Bragg positions', () => {
     const centered = [...identity, { ...identity[0], operation_xyz: 'x+1/2,y+1/2,z+1/2' }];
     const peaks = simulatePxrd(entry, [site], centered);
@@ -96,6 +147,14 @@ describe('simulatePxrd', () => {
     expect(original[0].twoTheta).toBeLessThan(simulatePxrd(entry, [site], identity, 2.0)[0].twoTheta);
   });
 
+  it('uses a positive stored wavelength and falls back for negative wavelengths', () => {
+    const stored = { ...entry, radiation_wavelength_angstrom: 1 };
+    expect(simulatePxrd(stored, [site], identity)).toEqual(simulatePxrd(entry, [site], identity, 1));
+    expect(simulatePxrd(stored, [site], identity, -1)).toEqual(simulatePxrd(stored, [site], identity));
+    expect(simulatePxrd({ ...entry, radiation_wavelength_angstrom: -1 }, [site], identity))
+      .toEqual(simulatePxrd(entry, [site], identity));
+  });
+
   it('returns no pattern when atomic positions are unavailable', () => {
     expect(simulatePxrd(entry, [{ ...site, fract_x: null }], identity)).toEqual([]);
   });
@@ -120,6 +179,16 @@ describe('serializePxrdProfile', () => {
 });
 
 describe('profile boundaries', () => {
+  it('uses the default width and truncates negligible Gaussian tails', () => {
+    const peaks = [{ twoTheta: 40, intensity: 100, hkl: '1 0 0' }];
+    const profile = createPxrdProfile(peaks);
+    expect(profile).toEqual(createPxrdProfile(peaks, 0.1, 0.02));
+    const at = (angle: number) => profile.find(point => Math.abs(point.twoTheta - angle) < 1e-8)!.intensity;
+    expect(at(40.2)).toBeGreaterThan(0);
+    expect(at(40.24)).toBe(0);
+    expect(at(39.76)).toBe(0);
+  });
+
   it('rejects empty patterns and nonpositive profile settings', () => {
     const peaks = [{ twoTheta: 40, intensity: 100, hkl: '1 0 0' }];
     expect(createPxrdProfile([])).toEqual([]);

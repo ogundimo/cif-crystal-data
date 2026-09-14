@@ -51,15 +51,15 @@ investigation trigger, not a failure condition. For integer complexity scores,
 `<22` would permit at most 21 if adopted. Use the baseline's pinned analyzers when
 calibrating these proposals.
 
-## Deferred measurements
+## Additional and deferred measurements
 
 | Metric | Current evidence | Next action |
 | --- | --- | --- |
-| Mutation score | Not measured | Establish the focused #19 pilot, including execution cost and equivalent-mutant handling, before choosing a threshold |
+| Mutation score | Three-file [#19 pilot](mutation-testing.md): 59.04% initial, 82.66% after stronger tests; 94 survivors remain | Advisory manual CI; review survivors and hosted execution cost before choosing a threshold in #20 |
 | Halstead difficulty | No validated TypeScript/TSX measurement | Validate an analyzer before evaluating #20's proposed reference value of 80 |
 | CRAP | No validated function-level complexity/coverage mapping | Validate attribution before evaluating #20's proposed target of <25 |
 
-These are unavailable measurements, not zero scores. Do not infer them from file
+The remaining deferred measurements are unavailable, not zero scores. Do not infer them from file
 size, repository coverage or other proxy metrics.
 
 ## How to apply the proposals
@@ -88,9 +88,9 @@ authorize a change to CI thresholds or repository branch protection.
 
 ## Work tracked by existing issues
 
-With #13, #14, #16, #17, #24 and #25 completed, **#18: Refactor parser stages**
-is the current workstream. [PR #33](https://github.com/ogundimo/cif-crystal-data-public/pull/33)
-merged with both hosted checks passing and closed #17. The
+With #13, #14, #16, #17, #18, #24 and #25 completed, **#19: Add targeted mutation testing**
+is the current workstream. [PR #38](https://github.com/ogundimo/cif-crystal-data-public/pull/38)
+merged and closed #18. The
 [test-gap review](test-gap-review.md) and [quick-search refactor](quick-search-refactor.md)
 retain their evidence; the [database refactor](database-refactor.md) records #17's
 boundaries and benchmarks, and the [parser refactor](parser-refactor.md) records
@@ -103,8 +103,8 @@ supporting workstream.
 | [#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) | Completed in PR #31: priority regression tests and a separate blocking viewer CI step; remaining gaps recorded in the test-gap review |
 | [#16](https://github.com/ogundimo/cif-crystal-data-public/issues/16) | Completed in PR #32: quick-search responsibilities separated with characterization checks and measured results |
 | [#17](https://github.com/ogundimo/cif-crystal-data-public/issues/17) | Completed in PR #33: database responsibilities separated with native regressions and benchmark evidence |
-| [#18](https://github.com/ogundimo/cif-crystal-data-public/issues/18) | Separate parser stages with characterization tests, corpus parity and before/after measurements |
-| [#19](https://github.com/ogundimo/cif-crystal-data-public/issues/19) | Pilot mutation testing on a focused, well-tested module and establish a baseline |
+| [#18](https://github.com/ogundimo/cif-crystal-data-public/issues/18) | Completed in PR #38: parser stages separated with characterization tests, corpus parity and before/after measurements |
+| [#19](https://github.com/ogundimo/cif-crystal-data-public/issues/19) | Review the targeted pilot, initial/follow-up results and manual CI workflow in the mutation-testing record |
 | [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20) | Calibrate these proposals and document which numerical targets become enforced gates |
 | [#15](https://github.com/ogundimo/cif-crystal-data-public/issues/15) | Investigate runtime usage that static unused-code analysis cannot establish |
 

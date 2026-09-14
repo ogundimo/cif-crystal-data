@@ -9,3 +9,5 @@ out/
 .DS_Store
 reports/quality/
 reports/architecture/
+reports/mutation/
+.stryker-tmp/
