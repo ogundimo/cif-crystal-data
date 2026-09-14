@@ -1,0 +1,76 @@
+const assert = require('node:assert/strict');
+
+// Exercise the real dialog through App; only the preload API responses are doubled.
+module.exports = async function testQuickSearchLifecycle(window, testUrl, waitForRenderer) {
+  await window.loadURL(testUrl + '?app-regression');
+  const js = (code) => window.webContents.executeJavaScript(code);
+  const wait = (code) => waitForRenderer(window, code, code);
+  const click = async (text) => {
+    await js(`(() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.includes(${JSON.stringify(text)})); b.focus(); b.click(); })()`);
+  };
+  const input = async (value) => {
+    await js(`(() => { const e = document.querySelector('#quick-search-space-group-number'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(e, ${JSON.stringify(value)}); e.dispatchEvent(new Event('input', {bubbles:true})); })()`);
+    await wait(`document.querySelector('#quick-search-space-group-number')?.value === ${JSON.stringify(value)}`);
+  };
+  const open = async () => {
+    await click('Quick search');
+    await wait("document.activeElement?.getAttribute('aria-labelledby') === 'quick-search-title'");
+  };
+  const closed = () => wait("!document.querySelector('[role=dialog]')");
+  await wait("[...document.querySelectorAll('button')].some(b => b.textContent.includes('Quick search'))");
+  await js(`window.previewRegression = {requests:[], pending:[]}; window.cifApi.restraints = filter => {
+    window.previewRegression.requests.push(filter);
+    return new Promise((resolve, reject) => window.previewRegression.pending.push({resolve,reject}));
+  }; undefined`);
+  await open();
+  await wait('window.previewRegression.pending.length === 1');
+  await input('62');
+  await wait('window.previewRegression.pending.length === 2');
+  await js("window.previewRegression.pending[1].resolve([{field:'Space group',content:'current 62',entries:7}])");
+  await wait("document.querySelector('.quick-search-preview').textContent.includes('current 62')");
+  await js("window.previewRegression.pending[0].resolve([{field:'Space group',content:'stale',entries:99}])");
+  // Flush the settled promise and a renderer frame before checking stale suppression.
+  await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  assert.equal(await js("document.querySelector('.quick-search-preview').textContent.includes('stale')"), false);
+  await input('231');
+  await wait("document.querySelector('#quick-search-space-group-number').getAttribute('aria-invalid') === 'true'");
+  assert.equal(await js("document.querySelector('button[type=submit]').disabled"), true);
+  await js('new Promise(resolve => setTimeout(resolve, 350))');
+  assert.equal(await js('window.previewRegression.requests.length'), 2, 'invalid input must not request restraints');
+  await input('63');
+  await wait('window.previewRegression.pending.length === 3');
+  await js("window.previewRegression.pending[2].reject('unavailable')");
+  await wait("document.querySelector('.quick-search-preview').textContent.includes('Could not update')");
+  await click('Retry');
+  await wait('window.previewRegression.pending.length === 4');
+  await js("window.previewRegression.pending[3].resolve([{field:'Space group',content:'retry 63',entries:8}])");
+  await wait("document.querySelector('.quick-search-preview').textContent.includes('retry 63')");
+  await js("document.querySelector('#quick-search-space-group-number').dispatchEvent(new KeyboardEvent('keydown', {key:'Enter',bubbles:true}))");
+  await closed();
+  assert.equal(await js('window.appRegression.requests.at(-1).filter.sgQuery'), '63');
+  await open();
+  assert.equal(await js("document.querySelector('#quick-search-space-group-number').value"), '63');
+  await input('64');
+  await click('Cancel');
+  await closed();
+  await open();
+  assert.equal(await js("document.querySelector('#quick-search-space-group-number').value"), '63', 'Cancel must discard only the draft');
+  await click('Clear all');
+  await wait("document.querySelector('#quick-search-space-group-number').value === ''");
+  assert.equal(await js("document.querySelector('button[type=submit]').disabled"), true);
+  await js("document.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape',bubbles:true}))");
+  await closed();
+  await wait("document.activeElement?.textContent.includes('Quick search')");
+  await open();
+  assert.equal(await js("document.querySelector('#quick-search-space-group-number').value"), '63', 'Escape after Clear all must restore the applied form');
+  await js("document.dispatchEvent(new KeyboardEvent('keydown', {key:'Tab',shiftKey:true,bubbles:true,cancelable:true}))");
+  assert.equal(await js('document.activeElement.textContent.trim()'), 'Clear all');
+  await js("document.dispatchEvent(new KeyboardEvent('keydown', {key:'Tab',bubbles:true,cancelable:true}))");
+  assert.equal(await js("document.activeElement.getAttribute('aria-label')"), 'Close');
+  await click('Cancel');
+  await closed();
+  await click('Reset search');
+  await open();
+  assert.equal(await js("document.querySelector('#quick-search-space-group-number').value"), '', 'external reset must clear the applied form');
+  console.log('✓ quick-search validation, stale preview, retry, Enter, draft cancellation, reset and focus trapping');
+};

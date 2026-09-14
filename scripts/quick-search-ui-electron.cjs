@@ -566,6 +566,8 @@ async function run() {
   await testLargeGridVirtualization(window);
   await testImportProgressIndicator(window);
 
+  await require('./quick-search-lifecycle.cjs')(window, testUrl, waitForRenderer);
+
   await window.loadURL(testUrl + '?app-regression');
   await pause(300);
   const clickButton = async (text) => {
@@ -687,4 +689,3 @@ app.whenReady().then(run).then(
     app.exit(1);
   }
 );
-
