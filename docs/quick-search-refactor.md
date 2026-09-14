@@ -3,6 +3,8 @@
 Baseline: `cab5ee1090ac27fb714ab40d1881e1f322e83da3` (PR #31), measured on
 2026-09-14 with Node 22.23.2. Tracking issue:
 [#16](https://github.com/ogundimo/cif-crystal-data-public/issues/16).
+Implementation and hosted validation:
+[PR #32](https://github.com/ogundimo/cif-crystal-data-public/pull/32).
 
 ## Boundaries and preserved behavior
 
@@ -85,8 +87,9 @@ in place.
 
 Local checks: 268 unit tests in 22 files, the complete Electron UI suite,
 TypeScript, Knip, production build, separate viewer suite and dependency-boundary scan passed. The
-boundary scan includes 44 production inputs with zero violations. Hosted CI and
-the implementation PR are recorded when the change is submitted for review.
+boundary scan includes 44 production inputs with zero violations. See PR #32's
+checks for hosted results on the current review commit; the results above are
+the local validation snapshot.
 
 An intermediate UI run logged a JSmol `setScreenDimension` error during navigation
 while all assertions passed; the final UI run did not reproduce it. This refactor
