@@ -17,6 +17,35 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturePath = join(__dirname, '__fixtures__', 'synthetic-test.cif');
 const fixtureText = readFileSync(fixturePath, 'utf-8');
 
+describe('parser stage boundaries', () => {
+  it.each(['\n', '\r\n', '\r'])('preserves complete entries and block boundaries with %j line endings', newline => {
+    const text = fixtureText.replace(/\r\n|\n|\r/g, newline);
+    expect(parseCif(text)).toEqual(parseCif(fixtureText));
+    const blocks = splitCifDataBlocks(text + newline + text);
+    expect(blocks).toHaveLength(2);
+    expect(blocks.map(block => parseCif(block.text))).toEqual([
+      parseCif(fixtureText), parseCif(fixtureText)
+    ]);
+  });
+
+  it('does not carry scalar or loop metadata into the next independently parsed block', () => {
+    const minimal = `data_minimal
+_chemical_formula_sum 'Fe'
+_cell_length_a 4
+_cell_length_b 5
+_cell_length_c 6
+_space_group_name_H-M_alt 'P 1'
+_space_group_IT_number 1
+`;
+    const expected = parseCif(minimal);
+    expect(expected).toMatchObject({ formula: 'Fe1', publAuthors: [], atomSites: [],
+      symmetryOperations: [], atomSiteAnisotropic: [], reference: '', publTitle: '' });
+    const blocks = splitCifDataBlocks(fixtureText + '\n' + minimal);
+    expect(parseCif(blocks[0].text).atomSites.length).toBeGreaterThan(0);
+    expect(parseCif(blocks[1].text)).toEqual(expected);
+  });
+});
+
 describe('invalid CIF records', () => {
   it.each([
     ['_chemical_formula_sum', '?', 'Missing chemical formula'],

@@ -88,12 +88,13 @@ authorize a change to CI thresholds or repository branch protection.
 
 ## Work tracked by existing issues
 
-With #13, #14, #16, #24 and #25 completed, **#17: Refactor database responsibilities**
-is the current workstream. [PR #32](https://github.com/ogundimo/cif-crystal-data-public/pull/32)
-merged with both hosted checks passing and closed #16. The
+With #13, #14, #16, #17, #24 and #25 completed, **#18: Refactor parser stages**
+is the current workstream. [PR #33](https://github.com/ogundimo/cif-crystal-data-public/pull/33)
+merged with both hosted checks passing and closed #17. The
 [test-gap review](test-gap-review.md) and [quick-search refactor](quick-search-refactor.md)
 retain their evidence; the [database refactor](database-refactor.md) records #17's
-boundaries, before/after metrics and benchmarks. Continue with #18, then the #19 mutation pilot. #20
+boundaries and benchmarks, and the [parser refactor](parser-refactor.md) records
+#18's stages, metrics and corpus parity. Continue with the #19 mutation pilot. #20
 coordinates incremental adoption of the results; #15 remains an independent
 supporting workstream.
 
@@ -101,7 +102,8 @@ supporting workstream.
 | --- | --- |
 | [#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) | Completed in PR #31: priority regression tests and a separate blocking viewer CI step; remaining gaps recorded in the test-gap review |
 | [#16](https://github.com/ogundimo/cif-crystal-data-public/issues/16) | Completed in PR #32: quick-search responsibilities separated with characterization checks and measured results |
-| [#17](https://github.com/ogundimo/cif-crystal-data-public/issues/17), [#18](https://github.com/ogundimo/cif-crystal-data-public/issues/18) | Refactor database and parser responsibilities with regression tests and before/after measurements |
+| [#17](https://github.com/ogundimo/cif-crystal-data-public/issues/17) | Completed in PR #33: database responsibilities separated with native regressions and benchmark evidence |
+| [#18](https://github.com/ogundimo/cif-crystal-data-public/issues/18) | Separate parser stages with characterization tests, corpus parity and before/after measurements |
 | [#19](https://github.com/ogundimo/cif-crystal-data-public/issues/19) | Pilot mutation testing on a focused, well-tested module and establish a baseline |
 | [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20) | Calibrate these proposals and document which numerical targets become enforced gates |
 | [#15](https://github.com/ogundimo/cif-crystal-data-public/issues/15) | Investigate runtime usage that static unused-code analysis cannot establish |

@@ -39,6 +39,9 @@ responsibility extraction, comparable complexity measurements and UI regressions
 The [#17 database refactor](database-refactor.md) records the persistence/query
 boundaries, unchanged complexity hotspots, native regressions and benchmark comparison.
 
+The [#18 parser refactor](parser-refactor.md) records stage boundaries, preserved
+behavior, complexity exceptions and the available local corpus comparison.
+
 ## Metrics and interpretation
 
 | Measurement | Analyzer / definition | Interpretation |
