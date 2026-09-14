@@ -77,6 +77,10 @@ Reproducible coverage, complexity, and duplication reports are documented in
 collect an advisory baseline locally; the Code-quality baseline workflow publishes
 the same reports in GitHub Actions.
 
+The [test-gap review](docs/test-gap-review.md) documents current regression coverage
+and remaining gaps. Run `npm run test:all` for unit/UI/worker checks and
+`npm run test:viewer` for the separate self-contained JSmol suite; CI runs both.
+
 ```
 npm test          # Vitest unit and regression tests
 npm run typecheck # TypeScript, no emit

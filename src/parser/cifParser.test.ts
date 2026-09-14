@@ -17,6 +17,38 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturePath = join(__dirname, '__fixtures__', 'synthetic-test.cif');
 const fixtureText = readFileSync(fixturePath, 'utf-8');
 
+describe('invalid CIF records', () => {
+  it.each([
+    ['_chemical_formula_sum', '?', 'Missing chemical formula'],
+    ['_cell_length_a', '.', 'Missing cell length'],
+    ['_cell_length_b', 'invalid', 'Invalid _cell_length_b'],
+    ['_cell_length_c', 'invalid', 'Invalid _cell_length_c'],
+    ['_space_group_name_H-M_alt', '?', 'Missing _space_group_name_H-M_alt'],
+    ['_space_group_IT_number', '0', 'Invalid _space_group_IT_number'],
+    ['_space_group_IT_number', '231', 'Invalid _space_group_IT_number'],
+    ['_space_group_IT_number', '1.5', 'Invalid _space_group_IT_number']
+  ])('rejects %s = %s before persistence', (tag, value, error) => {
+    const changed = fixtureText.replace(new RegExp(`^${tag}[^\\r\\n]*`, 'm'), `${tag} ${value}`);
+    expect(() => parseCif(changed)).toThrow(error);
+  });
+
+  it('does not treat quoted text-block content as cell tags or data-block boundaries', () => {
+    const text = fixtureText + '\n_publ_section_title\n;\ndata_fake\n_cell_length_a 999\n;\n';
+    const blocks = splitCifDataBlocks(text.replace(/\r?\n/g, '\r\n'));
+    expect(blocks).toHaveLength(1);
+    const parsed = parseCif(blocks[0].text);
+    expect(parsed.cellAAngstrom).toBe(5);
+    expect(parsed.publTitle).toBe('data_fake _cell_length_a 999');
+  });
+
+  it('retains missing optional crystallographic values as null instead of inventing a volume', () => {
+    const text = fixtureText.replace(/^_cell_angle_alpha[^\r\n]*/m, '_cell_angle_alpha 180')
+      .replace(/^_cell_volume[^\r\n]*/m, '_cell_volume ?')
+      .replace(/^_diffrn_radiation_wavelength[^\r\n]*/m, '_diffrn_radiation_wavelength -1');
+    expect(parseCif(text)).toMatchObject({ cellAlpha: null, cellVolume: null, radiationWavelengthAngstrom: null });
+  });
+});
+
 describe('parseCif against the synthetic CIF fixture', () => {
   const entry = parseCif(fixtureText);
 

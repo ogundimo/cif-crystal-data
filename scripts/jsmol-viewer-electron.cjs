@@ -77,7 +77,10 @@ async function run() {
     if (/ERR_FILE_NOT_FOUND|Failed to load resource|Refused to load|JSmol.*error/i.test(message)) resourceErrors.push(message);
   });
   await window.loadURL(testUrl);
-  const representativeCif = await readFile(join(process.cwd(), '..', 'CIFS', '1140624.cif'), 'utf8');
+  // Default to repository-owned synthetic geometry; real corpora are optional manual probes.
+  const fixturePath = process.env.CIF_VIEWER_TEST_CIF || join(process.cwd(), 'docs', 'samples', 'rocksalt-demo.cif');
+  const representativeCif = await readFile(fixturePath, 'utf8');
+  console.log(`[viewer fixture] ${fixturePath}`);
   await window.webContents.executeJavaScript(`
     window.cifApi.getViewerSource = async (entryId) => ({
       fileName: entryId + '.cif',
@@ -210,6 +213,28 @@ async function run() {
     })()
   `);
   await waitFor(window, `document.querySelector('[aria-label="Crystal structure viewer"] strong')?.textContent === '4.cif'`);
+  await window.webContents.executeJavaScript(`
+    (() => {
+      const fetchSource = window.cifApi.getViewerSource;
+      // Exercise the documented fallback for a non-Error rejection. Errors created by
+      // executeJavaScript can belong to a different realm from the Vite application.
+      window.cifApi.getViewerSource = (id) => id === 2
+        ? Promise.reject('Intentional missing CIF test') : fetchSource(id);
+      document.querySelector('tr[data-entry-id="2"]').click();
+    })()
+  `);
+  await waitFor(window, `document.querySelector('[aria-label="Crystal structure viewer"]')?.textContent.includes('Could not display 2.cif')`);
+  const errorState = await window.webContents.executeJavaScript(`({
+    message: Array.from(document.querySelectorAll('[aria-label="Crystal structure viewer"] strong'))
+      .find(node => node.textContent === 'Could not display 2.cif')?.nextElementSibling?.textContent,
+    enabledModelControls: Array.from(document.querySelectorAll('[aria-label="Crystal structure viewer"] button'))
+      .filter(button => ['Atoms', 'Ball + stick', 'Space fill'].includes(button.textContent.trim()) && !button.disabled).length
+  })`);
+  assert.equal(errorState.message, 'JSmol could not load this CIF.');
+  assert.equal(errorState.enabledModelControls, 0, 'Model controls must stay disabled after a failed load');
+  await window.webContents.executeJavaScript(`document.querySelector('tr[data-entry-id="1"]').click(); true`);
+  await waitFor(window, `document.querySelector('[aria-label="Crystal structure viewer"] strong')?.textContent === '1.cif'`);
+  console.log('✓ failed CIF load reports the selected file, disables controls, and recovers on the next selection');
   await clickByText(window, '← Back to results');
   await waitFor(window, `!document.querySelector('[aria-label="Crystal structure viewer"] button')`);
   await waitFor(window, `

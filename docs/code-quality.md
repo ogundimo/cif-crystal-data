@@ -29,6 +29,10 @@ targets, their baseline values, enforcement status, and the issues that track ad
 Future sessions should read that record before selecting quality improvements or
 introducing score gates.
 
+The [#14 test-gap review](test-gap-review.md) records follow-up coverage, added
+behavioral checks, the viewer CI decision, and remaining gaps. Its measurements
+do not replace the original baseline snapshot.
+
 ## Metrics and interpretation
 
 | Measurement | Analyzer / definition | Interpretation |

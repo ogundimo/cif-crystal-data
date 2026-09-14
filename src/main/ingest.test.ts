@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { importCifFolder } from './ingest';
 import type { EntryWriteItem, EntryWriter } from './db';
@@ -12,6 +12,85 @@ const fixtureDirectory = join(
   'parser',
   '__fixtures__'
 );
+
+const temporaryDirectories: string[] = [];
+function temporaryDirectory() {
+  const directory = mkdtempSync(join(tmpdir(), 'cif-ingest-regression-'));
+  temporaryDirectories.push(directory);
+  return directory;
+}
+afterEach(() => {
+  // Only directories created by this test module are removed.
+  for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true });
+});
+
+describe('import recovery and refresh cleanup', () => {
+  const text = readFileSync(join(fixtureDirectory, 'synthetic-test.cif'), 'utf8');
+
+  it('retains retryable source metadata and skips stale cleanup after a sibling parse failure', () => {
+    const directory = temporaryDirectory();
+    const path = join(directory, 'partial.cif');
+    writeFileSync(path, `${text.replace('data_synthetic_test', 'data_good')}\ndata_bad\n_cell_length_a 1\n`);
+    const written: EntryWriteItem[] = [];
+    const cleaned: string[] = [];
+    const writer: EntryWriter = {
+      writeBatch: items => { written.push(...items); return []; },
+      removeStaleSourceEntries: source => { cleaned.push(source); }
+    };
+    const result = importCifFolder(directory, writer);
+    expect(result).toMatchObject({ total: 1, importedCount: 1, skippedCount: 0,
+      failures: [{ filename: 'partial.cif#2-bad', reason: 'Missing chemical formula' }] });
+    expect(written).toHaveLength(1);
+    expect(written[0]).toMatchObject({ sourcePath: path, dataBlockIndex: 0, recordFingerprint: false });
+    expect(cleaned).toEqual([]);
+  });
+
+  it('cleans stale blocks only for files whose writes all succeeded', () => {
+    const directory = temporaryDirectory();
+    writeFileSync(join(directory, 'bad.cif'), text);
+    writeFileSync(join(directory, 'good.cif'), text);
+    const cleaned: Array<[string, string[]]> = [];
+    const result = importCifFolder(directory, {
+      writeBatch: items => [{ item: items.find(item => item.sourceFilename === 'bad.cif')!, error: 'disk full' }],
+      removeStaleSourceEntries: (source, names) => { cleaned.push([source, names]); }
+    });
+    expect(result).toEqual({ total: 2, importedCount: 1, skippedCount: 0,
+      failures: [{ filename: 'bad.cif', reason: 'disk full' }] });
+    expect(cleaned).toEqual([[join(directory, 'good.cif'), ['good.cif']]]);
+  });
+
+  it('reports a file disappearing after discovery and continues with its sibling', () => {
+    const directory = temporaryDirectory();
+    writeFileSync(join(directory, 'gone.cif'), text);
+    writeFileSync(join(directory, 'good.cif'), text);
+    const written: EntryWriteItem[] = [];
+    const result = importCifFolder(directory, {
+      isUnchanged: file => { if (file.path.endsWith('gone.cif')) rmSync(file.path); return false; },
+      writeBatch: items => { written.push(...items); return []; }
+    });
+    expect(result.importedCount).toBe(1);
+    expect(result.failures).toHaveLength(1);
+    expect(result.failures[0].filename).toBe('gone.cif');
+    expect(result.failures[0].reason).toMatch(/ENOENT/);
+    expect(written.map(item => item.sourceFilename)).toEqual(['good.cif']);
+  });
+
+  it('discovers nested uppercase CIFs, ignores other files, and flushes the final partial batch', () => {
+    const directory = temporaryDirectory();
+    const nested = join(directory, 'nested');
+    mkdirSync(nested);
+    for (let index = 0; index < 251; index++) writeFileSync(join(nested, `${index}.CIF`), text);
+    writeFileSync(join(directory, 'ignore.txt'), text);
+    const batches: number[] = [];
+    const processed: number[] = [];
+    const result = importCifFolder(directory, {
+      writeBatch: items => { batches.push(items.length); return []; }
+    }, progress => { processed.push(progress.processed); });
+    expect(result).toEqual({ total: 251, importedCount: 251, skippedCount: 0, failures: [] });
+    expect(batches).toEqual([250, 1]);
+    expect(processed).toEqual([0, 250, 251]);
+  });
+});
 
 describe('importCifFolder batching', () => {
   it('parses discovered files and sends them through the injected batch writer', () => {

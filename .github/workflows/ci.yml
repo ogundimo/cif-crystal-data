@@ -48,8 +48,20 @@ jobs:
           path: reports/architecture/dependencies.json
           retention-days: 30
 
-      - name: Run complete test suite
+      - name: Run unit, UI, and worker suite
         run: npm run test:all
+
+      - name: Run self-contained Electron viewer regression suite
+        run: npm run test:viewer
+
+      - name: Retain viewer captures
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: viewer-${{ github.sha }}
+          path: .dist/jsmol-verification/
+          include-hidden-files: true
+          retention-days: 30
 
       - name: Check unused code and dependencies
         run: npm run quality:unused
