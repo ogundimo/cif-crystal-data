@@ -88,16 +88,18 @@ authorize a change to CI thresholds or repository branch protection.
 
 ## Work tracked by existing issues
 
-With #13, #24 and #25 completed, **#14: Review and close test gaps** is the current
-workstream. Its [test-gap review](test-gap-review.md) records the added regression
-evidence and remaining gaps; check the issue/PR status before assuming it is merged.
-Use that evidence to guide #16–#18 refactors, then the #19 mutation pilot. #20
+With #13, #14, #24 and #25 completed, **#16: Refactor the quick-search dialog** is
+the current workstream. [PR #31](https://github.com/ogundimo/cif-crystal-data-public/pull/31)
+merged with both hosted checks passing and closed #14. Its
+[test-gap review](test-gap-review.md) records regression evidence and remaining gaps;
+the [quick-search refactor](quick-search-refactor.md) records #16's boundaries,
+before/after measurements and validation. Continue with #17–#18, then the #19 mutation pilot. #20
 coordinates incremental adoption of the results; #15 remains an independent
 supporting workstream.
 
 | Issue | Next deliverable |
 | --- | --- |
-| [#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) | Identify important coverage gaps, add behavior-focused tests, and decide whether the separate viewer suite belongs in test:all or another CI job |
+| [#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) | Completed in PR #31: priority regression tests and a separate blocking viewer CI step; remaining gaps recorded in the test-gap review |
 | [#16](https://github.com/ogundimo/cif-crystal-data-public/issues/16), [#17](https://github.com/ogundimo/cif-crystal-data-public/issues/17), [#18](https://github.com/ogundimo/cif-crystal-data-public/issues/18) | Refactor QuickSearchDialog, database and parser hotspots with regression tests and before/after measurements |
 | [#19](https://github.com/ogundimo/cif-crystal-data-public/issues/19) | Pilot mutation testing on a focused, well-tested module and establish a baseline |
 | [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20) | Calibrate these proposals and document which numerical targets become enforced gates |

@@ -33,6 +33,9 @@ The [#14 test-gap review](test-gap-review.md) records follow-up coverage, added
 behavioral checks, the viewer CI decision, and remaining gaps. Its measurements
 do not replace the original baseline snapshot.
 
+The [#16 quick-search refactor](quick-search-refactor.md) records the next
+responsibility extraction, comparable complexity measurements and UI regressions.
+
 ## Metrics and interpretation
 
 | Measurement | Analyzer / definition | Interpretation |
