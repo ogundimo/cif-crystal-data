@@ -8,6 +8,7 @@
     "scripts/jsmol-viewer-electron.cjs",
     "scripts/quick-search-ui-electron.cjs",
     "scripts/database-scale-benchmark.cjs",
+    "scripts/database-api-benchmark.cjs",
     "scripts/import-worker-smoke-electron.cjs",
     "scripts/quality/*.test.mjs"
   ],
