@@ -36,3 +36,9 @@ jobs:
 
       - name: Run complete test suite
         run: npm run test:all
+
+      - name: Check unused code and dependencies
+        run: npm run quality:unused
+
+      - name: Verify unused-code gate detects regressions
+        run: npm run quality:unused:test

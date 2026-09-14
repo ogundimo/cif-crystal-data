@@ -110,9 +110,71 @@ not be added as a required quality-score status check during initial baseline co
 Policy and calibrated thresholds belong to [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20).
 The numerical proposals there are not accepted limits. Start by reviewing the findings with
 [#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) before refactoring #16–#18.
-Architecture and unused-code automation remain #24 and #25. Mutation testing remains #19;
+Architecture checks remain #24; the unused-code gate is described below. Mutation testing remains #19;
 it is not required to collect these measurements. No separate service, token, or dashboard
 subscription is needed for these reports.
+
+## Unused-code regression gate (#25)
+
+Unlike the advisory numerical baseline, the unused-code gate fails on findings. Run:
+
+```powershell
+npm run quality:unused
+npm run quality:unused:test
+```
+
+`quality:unused` first runs both TypeScript projects with permanent `noUnusedLocals` and
+`noUnusedParameters`, then runs pinned **Knip 6.35.1** using `knip.json`. It checks unused
+files, exports/exported types (including namespace consumers), production/development
+dependencies, duplicate exports, unlisted dependencies, and unresolved imports. Knip's
+`dependencies` filter includes development dependencies. The existing strict typing stays
+enabled. The application CI runs this gate and its isolated verification after `test:all`;
+no separate required status or repository-setting change is needed to include it in the
+existing Test and build job.
+
+Knip analyzes `src` TypeScript/TSX/CSS, JavaScript runners under `scripts`, and root JS/TS
+configuration. Generated build/report directories, `node_modules`, and bundled JSmol are
+outside that project scope; the vendor subtree is also explicitly excluded. Referenced
+first-party JSmol adapters and helper scripts remain analyzed. CSS imports are followed,
+but this does not detect unused CSS selectors or exhaustively review binary assets.
+
+### Entry points and reviewed exceptions
+
+| Entry / configuration | Why it is retained |
+| --- | --- |
+| `electron.vite.config.ts` | Knip's electron-vite plugin reads main/preload inputs and the renderer HTML module script, discovering `src/main/index.ts`, `src/preload/index.ts`, and `src/renderer/src/main.tsx`. |
+| `src/main/importWorker.ts` | Explicit entry for electron-vite's `importWorker?nodeWorker` loading boundary. |
+| `src/renderer/src/uiTest.tsx` | Explicit module entry used by `src/renderer/ui-test.html`, served by the UI/viewer test runners. |
+| `scripts/jsmol-viewer-electron.cjs`, `scripts/quick-search-ui-electron.cjs` | Explicit child-process entry points spawned by the Node test runners. |
+| `scripts/database-scale-benchmark.cjs`, `scripts/import-worker-smoke-electron.cjs` | Explicit Electron CLI entry points from `benchmark:database` and `test:worker`; the initial scan did not discover these through those commands. |
+| `scripts/packaged-smoke.mjs`, `scripts/capture-readme-screenshots.cjs` | Documented manual entry points; do not delete them because application modules do not import them. |
+| `scripts/quality/*.test.mjs` | Node test-runner files invoked by `quality:test`. This narrow test convention does not mark ordinary helper modules as entries. |
+| Vitest and package scripts | Knip's plugins/script discovery retain unit-test consumers and directly invoked Node commands; config dependencies such as the V8 coverage provider remain visible. |
+
+There are **no ignored dependencies, exports, or individual findings**, and no nonzero
+finding allowance. Explicit entry declarations are documented execution roots, not blanket
+exclusions: their imports are still analyzed. Knip normally exempts entry-file exports,
+including externally consumed configuration exports. Do not mark arbitrary source folders
+as entries to silence findings. Test-only consumers are retained in the normal full-project
+scan; `--production` is deliberately not the gate because it would change that interpretation.
+
+The [existing decision record](unused-code-review.md#automated-follow-up--issue-25) records
+the reviewed zero-finding baseline and initial false positives. This extends #12's cleanup
+rather than repeating its removals. To capture a machine-readable result, run
+`npm exec -- knip --reporter json`; a clean scan returns `{"issues":[]}` and exit status 0.
+
+The verification command copies first-party repository files into a temporary directory and
+links the installed dependencies. It first requires a clean scan, then injects an unreachable
+file, an unused export in a reachable module, and unused production/development dependencies.
+It asserts specific findings and a nonzero exit. It also verifies that both actual TypeScript
+configs reject unused locals and parameters. The real checkout is not modified by the probes.
+
+Review any new finding against actual references, build/plugin discovery, manual entry points,
+and meaningful tests before removing code. If a new exception is justified, keep it narrow,
+document its execution path here and in the decision record, and verify the regression probes
+still detect unused code. Static reachability does not prove runtime use or absence of dead
+code; computed paths and reflective access still need review. Runtime tracing remains #15,
+and architectural dependency rules remain #24.
 
 Analyzer references: [Vitest coverage](https://vitest.dev/guide/coverage.html),
 [ESLint complexity](https://eslint.org/docs/latest/rules/complexity),

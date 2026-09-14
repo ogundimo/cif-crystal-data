@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@6.35.1/schema.json",
+  "entry": [
+    "src/main/importWorker.ts",
+    "src/renderer/src/uiTest.tsx",
+    "scripts/packaged-smoke.mjs",
+    "scripts/capture-readme-screenshots.cjs",
+    "scripts/jsmol-viewer-electron.cjs",
+    "scripts/quick-search-ui-electron.cjs",
+    "scripts/database-scale-benchmark.cjs",
+    "scripts/import-worker-smoke-electron.cjs",
+    "scripts/quality/*.test.mjs"
+  ],
+  "project": ["src/**/*.{ts,tsx,css}", "!src/renderer/public/vendor/**", "scripts/**/*.{js,mjs,cjs}", "*.{ts,js,mjs,cjs}"],
+  "include": ["files", "dependencies", "unlisted", "unresolved", "exports", "nsExports", "types", "nsTypes", "duplicates"]
+}
