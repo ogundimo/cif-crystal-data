@@ -7,3 +7,4 @@ out/
 *.db
 *.log
 .DS_Store
+reports/quality/
