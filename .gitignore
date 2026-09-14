@@ -8,3 +8,4 @@ out/
 *.log
 .DS_Store
 reports/quality/
+reports/architecture/
