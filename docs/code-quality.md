@@ -24,6 +24,11 @@ Open `reports/quality/summary.md` for the overview and
 `reports/quality/coverage/index.html` for annotated source coverage. The initial results
 are retained in [the baseline snapshot](quality-baseline.md).
 
+See [Quality targets and next steps](quality-targets.md) for the proposed numerical
+targets, their baseline values, enforcement status, and the issues that track adoption.
+Future sessions should read that record before selecting quality improvements or
+introducing score gates.
+
 ## Metrics and interpretation
 
 | Measurement | Analyzer / definition | Interpretation |
