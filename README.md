@@ -5,6 +5,31 @@ Electron, React, TypeScript, Tailwind CSS, and better-sqlite3.
 
 Released under the [MIT License](LICENSE).
 
+![CIF Crystal Data workspace showing a selected synthetic sodium chloride structure, unit-cell parameters, atomic sites, crystal viewer, and simulated powder-diffraction pattern.](docs/images/workspace.png)
+
+The main workspace keeps search results, compound details, the crystal structure, and
+simulated diffraction together. All screenshots use an [original synthetic sample](docs/samples/rocksalt-demo.cif)
+in a clean test profile; the sample is an idealized demonstration, not experimental data.
+
+## App screenshots
+
+![Quick search dialog with a periodic-table element picker, space group number set to 1, cell-length filters, and a preview showing one matching entry.](docs/images/quick-search.png)
+
+**Quick search:** combine element selections, space-group criteria, and cell-length ranges;
+preview the number of matching structures before running the search.
+
+![Expanded JSmol crystal viewer displaying a 2 by 2 by 2 block of the synthetic sodium chloride cell, with atom colors, cell parameters, and representation controls.](docs/images/crystal-viewer.png)
+
+**Crystal viewer:** double-click the embedded structure to open the full-window controls,
+then choose a representation, unit-cell block size, or crystallographic viewing axis.
+
+![Simulated powder-diffraction panel plotting relative intensity against 2 theta, with wavelength 1.5406 angstroms, FWHM 0.1 degrees, and Export .xy controls.](docs/images/powder-diffraction.png)
+
+**Powder diffraction:** adjust wavelength and peak broadening, inspect reflections, and
+export the simulated pattern as a two-column `.xy` file.
+
+See [screenshot capture instructions](docs/images/README.md) to regenerate these images.
+
 ## Dev mode
 
 Development requires Node.js 22.12 or newer.
