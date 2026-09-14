@@ -24,7 +24,9 @@
     "quality:test": "node --test scripts/quality/*.test.mjs",
     "test:coverage": "vitest run --coverage",
     "quality:unused": "npm run typecheck && knip",
-    "quality:unused:test": "node scripts/verify-unused-checks.mjs"
+    "quality:unused:test": "node scripts/verify-unused-checks.mjs",
+    "quality:architecture": "node scripts/check-architecture.mjs",
+    "quality:architecture:test": "node scripts/verify-architecture-checks.mjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
@@ -40,6 +42,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "4.1.11",
     "autoprefixer": "^10.4.20",
+    "dependency-cruiser": "18.3.0",
     "electron": "^44.1.0",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",

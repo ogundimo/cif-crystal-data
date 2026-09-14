@@ -110,7 +110,7 @@ not be added as a required quality-score status check during initial baseline co
 Policy and calibrated thresholds belong to [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20).
 The numerical proposals there are not accepted limits. Start by reviewing the findings with
 [#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) before refactoring #16–#18.
-Architecture checks remain #24; the unused-code gate is described below. Mutation testing remains #19;
+The [architecture dependency gate](architecture.md) implements #24; the unused-code gate is described below. Mutation testing remains #19;
 it is not required to collect these measurements. No separate service, token, or dashboard
 subscription is needed for these reports.
 
@@ -174,7 +174,7 @@ and meaningful tests before removing code. If a new exception is justified, keep
 document its execution path here and in the decision record, and verify the regression probes
 still detect unused code. Static reachability does not prove runtime use or absence of dead
 code; computed paths and reflective access still need review. Runtime tracing remains #15,
-and architectural dependency rules remain #24.
+and architectural dependency rules are documented in the [#24 architecture policy](architecture.md).
 
 Analyzer references: [Vitest coverage](https://vitest.dev/guide/coverage.html),
 [ESLint complexity](https://eslint.org/docs/latest/rules/complexity),

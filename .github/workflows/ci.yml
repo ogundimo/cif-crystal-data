@@ -34,6 +34,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check architecture dependency boundaries
+        run: npm run quality:architecture
+
+      - name: Verify architecture gate detects regressions
+        run: npm run quality:architecture:test
+
+      - name: Retain architecture dependency report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: architecture-${{ github.sha }}
+          path: reports/architecture/dependencies.json
+          retention-days: 30
+
       - name: Run complete test suite
         run: npm run test:all
 
