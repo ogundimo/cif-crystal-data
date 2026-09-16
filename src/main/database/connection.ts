@@ -11,7 +11,8 @@ export function initDb(userDataPath: string, appVersion?: string): Database.Data
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
-  migrateDatabase(db, dbPath, databaseExisted);
+  try { migrateDatabase(db, dbPath, databaseExisted); }
+  catch (error) { db.close(); db = null; throw error; }
   db.prepare(
     `INSERT INTO app_settings (key, value) VALUES ('schema_version', ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`

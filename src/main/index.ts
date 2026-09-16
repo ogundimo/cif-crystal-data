@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
-import { readFile, stat, writeFile } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { stat, writeFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type {
   PublicationLookupRequest,
@@ -12,23 +12,15 @@ import { validateSearchFilter } from './searchFilterValidation';
 import { ImportWorkerError, runImportWorker } from './importRunner';
 import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
 import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
-import { splitCifDataBlocks } from '../parser/cifParser';
+import { sourceKey } from './sourceIdentity';
 import { resolvePublication } from './publicationResolver';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
 
 let dbReady: Promise<DbModule> | null = null;
-let dataMutationInFlight: 'import' | 'refresh' | 'clear' | null = null;
+let dataMutationInFlight: 'import' | 'refresh' | 'clear' | 'backup' | 'restore' | 'relink' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
-
-async function readCifDataBlock(sourcePath: string, blockIndex: number): Promise<string> {
-  const text = await readFile(sourcePath, 'utf8');
-  const blocks = splitCifDataBlocks(text);
-  const block = blocks[blockIndex];
-  if (!block) throw new Error(`CIF data block ${blockIndex + 1} is no longer available.`);
-  return block.text;
-}
 
 function databaseInitializationError(error: unknown): Error {
   const databasePath = join(app.getPath('userData'), 'cif-local.db');
@@ -112,37 +104,20 @@ app.whenReady().then(() => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
-    const source = (await getDbModule()).getCifViewerSourceRecord(entryId);
+    const database = await getDbModule();
+    const source = database.getCifViewerSourceRecord(entryId);
     if (!source) throw new Error('The selected compound is no longer in the database.');
-    if (!source.source_path) throw new Error('The original CIF file location is unavailable.');
-    try {
-      if (!(await stat(source.source_path)).isFile()) throw new Error('Path is not a file');
-      return {
-        fileName: source.source_filename,
-        text: await readCifDataBlock(source.source_path, source.data_block_index)
-      };
-    } catch (error) {
-      if (error instanceof Error && error.message === 'Path is not a file') {
-        throw new Error(`The original CIF file could not be found: ${source.source_path}`);
-      }
-      if (error instanceof Error && error.message.startsWith('The original CIF')) throw error;
-      throw new Error(`The original CIF file could not be read: ${source.source_path}`);
-    }
+    return { fileName: source.source_filename, text: database.readStoredCif(entryId) };
   });
   ipcMain.handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
   ipcMain.handle('cif:exportCif', async (event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
-    const source = (await getDbModule()).getCifExportSource(entryId);
+    const database = await getDbModule();
+    const source = database.getCifExportSource(entryId);
     if (!source) throw new Error('The selected compound is no longer in the database.');
-    if (!source.source_path) throw new Error('The original CIF file location is unavailable.');
-    try {
-      if (!(await stat(source.source_path)).isFile()) throw new Error('Path is not a file');
-    } catch {
-      throw new Error(`The original CIF file could not be found: ${source.source_path}`);
-    }
-
+    const contents = database.readStoredCif(entryId);
     const fileName = buildCifExportFilename(source.formula, source.sg_number);
     const options = {
       title: 'Export CIF',
@@ -154,11 +129,10 @@ app.whenReady().then(() => {
       ? await dialog.showSaveDialog(win, options)
       : await dialog.showSaveDialog(options);
     if (result.canceled || !result.filePath) return { exported: false };
-    if (resolve(result.filePath) === resolve(source.source_path)) {
+    if (source.source_path && sourceKey(result.filePath) === sourceKey(source.source_path)) {
       throw new Error('Choose a different destination so the imported source file is not overwritten.');
     }
-    const contents = await readCifDataBlock(source.source_path, source.data_block_index);
-    await writeFile(result.filePath, contents, 'utf8');
+    await writeFile(result.filePath, contents, { encoding: 'utf8', flag: 'wx' });
     return { exported: true, fileName: basename(result.filePath) };
   });
 
@@ -169,7 +143,8 @@ app.whenReady().then(() => {
     if (typeof contents !== 'string' || contents.length === 0 || contents.length > 10_000_000) {
       throw new TypeError('Invalid PXRD export contents');
     }
-    const source = (await getDbModule()).getCifExportSource(entryId);
+    const database = await getDbModule();
+    const source = database.getCifExportSource(entryId);
     if (!source) throw new Error('The selected compound is no longer in the database.');
     const fileName = buildPxrdExportFilename(source.formula, source.sg_number);
     const options = {
@@ -180,8 +155,50 @@ app.whenReady().then(() => {
     const win = BrowserWindow.fromWebContents(event.sender);
     const result = win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
     if (result.canceled || !result.filePath) return { exported: false };
-    await writeFile(result.filePath, contents, 'utf8');
+    await writeFile(result.filePath, contents, { encoding: 'utf8', flag: 'wx' });
     return { exported: true, fileName: basename(result.filePath) };
+  });
+
+  ipcMain.handle('cif:relinkSource', async (_event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) throw new TypeError('Invalid entry id');
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    dataMutationInFlight = 'relink';
+    try {
+      const result = await dialog.showOpenDialog({ title: 'Relink to an exact copy of the imported CIF', properties: ['openFile'], filters: [{ name: 'CIF', extensions: ['cif'] }] });
+      if (result.canceled || !result.filePaths.length) return false;
+      (await getDbModule()).relinkSource(entryId, result.filePaths[0]);
+      return true;
+    } finally { dataMutationInFlight = null; }
+  });
+
+  ipcMain.handle('cif:getPreservedLayout', async () => (await getDbModule()).getPreservedLayout());
+  ipcMain.handle('cif:backupProfile', async (_event, layout: unknown = {}) => {
+    if (!layout || typeof layout !== 'object' || Array.isArray(layout) || JSON.stringify(layout).length > 100_000 ||
+      Object.entries(layout).some(([key, value]) => !key.startsWith('cif-layout-v1:') || typeof value !== 'string')) {
+      throw new TypeError('Invalid layout settings');
+    }
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    dataMutationInFlight = 'backup';
+    try {
+      const result = await dialog.showSaveDialog({ title: 'Save portable backup (choose a new filename)', filters: [{ name: 'CIF backup', extensions: ['cifbackup'] }] });
+      if (result.canceled || !result.filePath) return false;
+      (await getDbModule()).backupProfile(result.filePath, undefined, layout as Record<string, string>);
+      return true;
+    } finally { dataMutationInFlight = null; }
+  });
+
+  ipcMain.handle('cif:restoreProfile', async () => {
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    dataMutationInFlight = 'restore';
+    try {
+      const result = await dialog.showOpenDialog({ title: 'Restore portable backup', properties: ['openFile'], filters: [{ name: 'CIF backup', extensions: ['cifbackup'] }] });
+      if (result.canceled || !result.filePaths.length) return false;
+      const confirmation = await dialog.showMessageBox({ type: 'warning', title: 'Restore database', message: 'Replace the current database with this backup?',
+        detail: 'The backup will be validated first. A recovery snapshot of the current database will be kept in the profile folder. Original CIF files will not be changed.', buttons: ['Cancel', 'Restore'], defaultId: 0, cancelId: 0 });
+      if (confirmation.response !== 1) return false;
+      (await getDbModule()).restoreProfile(result.filePaths[0]);
+      return true;
+    } finally { dataMutationInFlight = null; }
   });
 
   ipcMain.handle('cif:openExternal', async (_event, url: unknown) => {

@@ -63,8 +63,8 @@ module.exports = async function runDatabaseQueryRegressions(chunksDirectory) {
     // The same physical source can contain multiple separately exported/viewed blocks.
     const sourcePath = join(directory, 'multi.cif');
     database.prepare(`INSERT INTO imported_files
-      (source_filename, source_path, source_mtime_ms, source_size, data_block_index)
-      VALUES (?, ?, ?, ?, ?)`).run('two.cif', sourcePath, 1, 1, 1);
+      (entry_id, source_filename, source_path, source_mtime_ms, source_size, data_block_index)
+      VALUES (2, ?, ?, ?, ?, ?)`).run('two.cif', sourcePath, 1, 1, 1);
     assert.deepEqual(api.getCifExportSource(2, database), {
       formula: 'Fe1O1', sg_number: 1, source_path: sourcePath, data_block_index: 1
     });

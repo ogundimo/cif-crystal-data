@@ -1,3 +1,4 @@
+import { blockIdentities, contentHash } from './sourceIdentity';
 import { readdirSync, statSync, readFileSync } from 'node:fs';
 import { join, extname, basename } from 'node:path';
 import { parseCif, splitCifDataBlocks } from '../parser/cifParser';
@@ -55,6 +56,7 @@ export function importCifFolder(
   const failures: ImportFailure[] = [];
   let importedCount = 0;
   let skippedCount = 0;
+  const outcomes = { created: 0, updated: 0, duplicate: 0 };
   onProgress?.({
     processed: 0,
     total: files.length,
@@ -68,19 +70,18 @@ export function importCifFolder(
     const writeFailures = writer.writeBatch(pending);
     const failedItems = new Set(writeFailures.map((failure) => failure.item));
     importedCount += pending.length - failedItems.size;
+    for (const item of pending) if (!failedItems.has(item) && item.outcome) outcomes[item.outcome]++;
     for (const failure of writeFailures) {
       failures.push({
         filename: failure.item.sourceFilename,
         reason: failure.error instanceof Error ? failure.error.message : String(failure.error)
       });
     }
-    return new Set(writeFailures.map((failure) => failure.item));
   };
 
   for (let offset = 0; offset < files.length; offset += IMPORT_BATCH_SIZE) {
     const fileBatch = files.slice(offset, offset + IMPORT_BATCH_SIZE);
     const pending: EntryWriteItem[] = [];
-    const cleanupCandidates = new Map<string, string[]>();
     for (const file of fileBatch) {
       const filename = basename(file.path);
       try {
@@ -88,8 +89,10 @@ export function importCifFolder(
           skippedCount++;
           continue;
         }
-        const text = readFileSync(file.path, 'utf-8');
+        const sourceContent = readFileSync(file.path);
+        const text = sourceContent.toString('utf8');
         const blocks = splitCifDataBlocks(text);
+        const identities = blockIdentities(blocks);
         const fileItems: EntryWriteItem[] = [];
         let blockFailed = false;
         blocks.forEach((block, index) => {
@@ -97,6 +100,9 @@ export function importCifFolder(
           try {
             fileItems.push({
               sourceFilename,
+              sourceContent,
+              blockKey: identities[index],
+              blockHash: contentHash(block.text),
               sourcePath: file.path,
               sourceMtimeMs: file.mtimeMs,
               sourceSize: file.size,
@@ -111,20 +117,13 @@ export function importCifFolder(
             });
           }
         });
-        if (blockFailed) fileItems.forEach((item) => { item.recordFingerprint = false; });
+        if (blockFailed) continue;
         pending.push(...fileItems);
-        if (!blockFailed) cleanupCandidates.set(file.path, fileItems.map((item) => item.sourceFilename));
       } catch (err) {
         failures.push({ filename, reason: err instanceof Error ? err.message : String(err) });
       }
     }
-    const failedItems = writePending(pending) ?? new Set<EntryWriteItem>();
-    for (const [sourcePath, names] of cleanupCandidates) {
-      const items = pending.filter((item) => item.sourcePath === sourcePath);
-      if (!items.some((item) => failedItems.has(item))) {
-        writer.removeStaleSourceEntries?.(sourcePath, names);
-      }
-    }
+    writePending(pending);
     onProgress?.({
       processed: offset + fileBatch.length,
       total: files.length,
@@ -134,5 +133,5 @@ export function importCifFolder(
     });
   }
 
-  return { importedCount, skippedCount, failures, total: files.length };
+  return { importedCount, skippedCount, failures, total: files.length, ...(Object.values(outcomes).some(Boolean) ? { outcomes } : {}) };
 }

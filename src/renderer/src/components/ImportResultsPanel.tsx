@@ -17,9 +17,11 @@ export default function ImportResultsPanel({ result, onDismiss }: Props) {
       </div>
       <div className="max-h-72 overflow-auto px-3 py-2">
         <p className="mb-2">
-          Scanned <b>{result.total}</b> file(s): <b>{result.importedCount}</b> imported or updated
-          {result.skippedCount > 0 && <>, <b>{result.skippedCount}</b> unchanged</>}.
+          Scanned <b>{result.total}</b> file(s): <b>{result.importedCount}</b> structure(s) imported or updated
+          {result.skippedCount > 0 && <>, <b>{result.skippedCount}</b> unchanged file(s)</>}.
         </p>
+        {result.outcomes && <p className="mb-2">{result.outcomes.created} new structures; {result.outcomes.updated} updated;
+          {' '}{result.outcomes.duplicate} structures from identical copies kept separately. Changed files with block failures retain their previous imported version.</p>}
         {result.failures.length > 0 && (
           <>
             <p className="mb-1 font-semibold text-[#c42b1c]">Failures ({result.failures.length}):</p>

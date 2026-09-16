@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { contentHash, sourceKey } from '../sourceIdentity';
 import type Database from 'better-sqlite3';
 import type { CifEntry } from '../../parser/cifParser';
 import { getDb } from './connection';
@@ -8,7 +10,10 @@ export interface EntryWriteItem {
   sourceMtimeMs?: number;
   sourceSize?: number;
   dataBlockIndex?: number;
-  recordFingerprint?: boolean;
+  blockKey?: string;
+  sourceContent?: Buffer;
+  blockHash?: string;
+  outcome?: 'created' | 'updated' | 'duplicate';
   entry: CifEntry;
 }
 
@@ -26,12 +31,16 @@ interface EntryWriteFailure {
 export interface EntryWriter {
   writeBatch: (items: EntryWriteItem[]) => EntryWriteFailure[];
   isUnchanged?: (file: FileFingerprint) => boolean;
-  removeStaleSourceEntries?: (sourcePath: string, activeSourceFilenames: string[]) => void;
 }
 
 /** Prepare one reusable writer whose batches commit once while each file remains atomic. */
 export function createEntryWriter(database: Database.Database = getDb()): EntryWriter {
-  const selectEntry = database.prepare('SELECT id FROM entries WHERE source_filename = ?');
+  const selectEntry = database.prepare('SELECT id FROM entries WHERE source_key = ? AND block_key = ?');
+  const selectLegacy = database.prepare(`SELECT e.id FROM entries e JOIN imported_files f ON f.entry_id = e.id
+    WHERE e.source_key IS NULL AND f.source_path = ? ${process.platform === 'win32' ? 'COLLATE NOCASE' : ''} AND f.data_block_index = ?`);
+  const setIdentity = database.prepare('UPDATE entries SET source_key = ?, block_key = ?, source_filename = ? WHERE id = ?');
+  const findDuplicate = database.prepare('SELECT 1 FROM imported_files f JOIN entries e ON e.id = f.entry_id WHERE f.content_hash = ? AND e.source_key != ? LIMIT 1');
+  const storeContent = database.prepare('INSERT OR IGNORE INTO source_contents(hash, content) VALUES (?, ?)');
   const updateEntry = database.prepare(
     `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, cell_angle_alpha = ?,
      cell_angle_beta = ?, cell_angle_gamma = ?, cell_volume = ?, sg_number = ?,
@@ -83,28 +92,28 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
       b_11, b_22, b_33, b_12, b_13, b_23)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
-  const selectFingerprint = database.prepare(
-    `SELECT 1 FROM imported_files
-     WHERE source_path = ? AND source_mtime_ms = ? AND source_size = ?`
-  );
-  const invalidateSource = database.prepare(
-    'UPDATE imported_files SET source_mtime_ms = -1 WHERE source_path = ?'
-  );
+  const selectFingerprint = database.prepare(`SELECT f.content_hash, f.source_mtime_ms FROM imported_files f
+    JOIN entries e ON e.id = f.entry_id WHERE e.source_key = ?`);
   const upsertFingerprint = database.prepare(
-    `INSERT INTO imported_files (source_filename, source_path, source_mtime_ms, source_size, data_block_index)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(source_filename) DO UPDATE SET source_path = excluded.source_path,
+    `INSERT INTO imported_files (entry_id, source_filename, source_path, source_mtime_ms, source_size, data_block_index, content_hash, block_hash)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(entry_id) DO UPDATE SET source_filename = excluded.source_filename, source_path = excluded.source_path,
        source_mtime_ms = excluded.source_mtime_ms, source_size = excluded.source_size,
-       data_block_index = excluded.data_block_index`
+       data_block_index = excluded.data_block_index, content_hash = excluded.content_hash, block_hash = excluded.block_hash`
   );
-  const selectSourceEntries = database.prepare(
-    'SELECT source_filename FROM imported_files WHERE source_path = ?'
-  );
-  const deleteEntry = database.prepare('DELETE FROM entries WHERE source_filename = ?');
+  const selectSourceEntries = database.prepare(`SELECT id, block_key FROM entries WHERE source_key = ?
+    OR (source_key IS NULL AND id IN (SELECT entry_id FROM imported_files WHERE source_path = ? ${process.platform === 'win32' ? 'COLLATE NOCASE' : ''}))`);
+  const deleteEntry = database.prepare('DELETE FROM entries WHERE id = ?');
 
-  const writeOne = database.transaction((item: EntryWriteItem) => {
+  const writeOne = (item: EntryWriteItem) => {
     const { sourceFilename, entry } = item;
-    const existing = selectEntry.get(sourceFilename) as { id: number } | undefined;
+    const key = item.sourcePath ? sourceKey(item.sourcePath) : `unlinked:${sourceFilename}`;
+    const blockKey = item.blockKey ?? `legacy:${item.dataBlockIndex ?? 0}`;
+    const existing = (selectEntry.get(key, blockKey) ?? (item.sourcePath
+      ? selectLegacy.get(item.sourcePath, item.dataBlockIndex ?? 0) : undefined)) as { id: number } | undefined;
+    const hash = item.sourceContent ? contentHash(item.sourceContent) : null;
+    const duplicate = hash && findDuplicate.get(hash, key);
+    item.outcome = existing ? 'updated' : duplicate ? 'duplicate' : 'created';
     let entryId: number;
     if (existing) {
       entryId = existing.id;
@@ -169,6 +178,7 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
       );
       entryId = Number(info.lastInsertRowid);
     }
+    setIdentity.run(key, blockKey, sourceFilename, entryId);
     deleteElements.run(entryId);
     deleteAtomSites.run(entryId);
     deletePublAuthors.run(entryId);
@@ -223,47 +233,62 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
       item.sourceMtimeMs !== undefined &&
       item.sourceSize !== undefined
     ) {
+      if (hash) storeContent.run(hash, item.sourceContent);
       upsertFingerprint.run(
+        entryId,
         sourceFilename,
         item.sourcePath,
-        item.recordFingerprint === false ? -1 : item.sourceMtimeMs,
+        item.sourceMtimeMs,
         item.sourceSize,
-        item.dataBlockIndex ?? 0
+        item.dataBlockIndex ?? 0,
+        hash,
+        item.blockHash ?? null
       );
     }
-  });
+  };
 
   const writeBatchTransaction = database.transaction((items: EntryWriteItem[]) => {
     const failures: EntryWriteFailure[] = [];
+    const groups = new Map<string, EntryWriteItem[]>();
     for (const item of items) {
-      try {
-        // Nested better-sqlite3 transactions use savepoints, preserving per-file atomicity.
-        writeOne(item);
-      } catch (error) {
-        failures.push({ item, error });
-      }
+      const key = item.sourcePath ? sourceKey(item.sourcePath) : `unlinked:${item.sourceFilename}`;
+      groups.set(key, [...(groups.get(key) ?? []), item]);
     }
-    // A physical file is complete only if every block was written successfully.
-    for (const failure of failures) {
-      if (failure.item.sourcePath !== undefined) invalidateSource.run(failure.item.sourcePath);
+    for (const [key, group] of groups) {
+      try {
+        database.transaction(() => {
+          for (const item of group) writeOne(item);
+          // Reconciliation is in the same transaction as every block and its stored bytes.
+          if (group.every(item => item.blockKey)) {
+            const active = new Set(group.map(item => item.blockKey));
+            for (const row of selectSourceEntries.all(key, group[0].sourcePath ?? key) as { id: number; block_key: string }[]) {
+              if (!active.has(row.block_key)) deleteEntry.run(row.id);
+            }
+          }
+        })();
+      } catch (error) {
+        for (const item of group) { delete item.outcome; failures.push({ item, error }); }
+      }
     }
     return failures;
   });
 
   return {
     writeBatch: writeBatchTransaction,
-    isUnchanged: (file) => Boolean(selectFingerprint.get(file.path, file.mtimeMs, file.size)),
-    removeStaleSourceEntries: database.transaction((sourcePath: string, activeSourceFilenames: string[]) => {
-      const active = new Set(activeSourceFilenames);
-      const rows = selectSourceEntries.all(sourcePath) as { source_filename: string }[];
-      for (const row of rows) {
-        if (!active.has(row.source_filename)) deleteEntry.run(row.source_filename);
-      }
-    })
+    isUnchanged: (file) => {
+      const rows = selectFingerprint.all(sourceKey(file.path)) as { content_hash: string | null; source_mtime_ms: number }[];
+      if (!rows.length || rows.some(row => !row.content_hash || row.source_mtime_ms === -1)) return false;
+      const hash = contentHash(readFileSync(file.path));
+      return rows.every(row => row.content_hash === hash);
+    }
   };
 }
 
-/** Delete all imported CIF data in one transaction. Cascades remove entry_elements rows. */
+/** Clear stored sources together with their records. Original files are never touched. */
 export function clearAllEntries(database: Database.Database = getDb()): number {
-  return database.transaction(() => database.prepare('DELETE FROM entries').run().changes)();
+  return database.transaction(() => {
+    const count = database.prepare('DELETE FROM entries').run().changes;
+    database.prepare('DELETE FROM source_contents').run();
+    return count;
+  })();
 }

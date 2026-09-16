@@ -10,7 +10,11 @@ export default defineConfig({
       outDir: 'dist-electron/main',
       rollupOptions: {
         external: ['better-sqlite3'],
-        input: 'src/main/index.ts'
+        input: 'src/main/index.ts',
+        output: {
+          // Shared search data must not make database chunks import the Electron entry point.
+          manualChunks: (id) => id.replaceAll('\\', '/').includes('/src/shared/') ? 'shared' : undefined
+        }
       }
     }
   },

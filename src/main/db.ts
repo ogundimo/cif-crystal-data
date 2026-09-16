@@ -5,8 +5,11 @@ export { createEntryWriter, clearAllEntries } from './database/writer';
 export type { EntryWriteItem, EntryWriter, FileFingerprint } from './database/writer';
 export {
   getEntryCount, getAtomSites, getSymmetryOperations, getPublAuthors,
-  getCifViewerSourceRecord, getCifExportSource, getImportFolder, setImportFolder
+  getCifViewerSourceRecord, getCifExportSource, getImportFolder, setImportFolder, getPreservedLayout
 } from './database/metadata';
 export { buildWhereClause } from './database/query';
 export { searchEntriesPage } from './database/search';
 export { computeRestraints } from './database/restraints';
+
+export { readStoredCif, relinkSource } from './database/sources';
+export { backupProfile, restoreProfile } from './database/preservation';

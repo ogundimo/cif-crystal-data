@@ -17,6 +17,7 @@
     "test:ui": "node scripts/run-quick-search-ui-tests.mjs",
     "test:viewer": "npm run build && node scripts/run-jsmol-viewer-test.mjs",
     "test:worker": "npm run build && electron scripts/import-worker-smoke-electron.cjs",
+    "test:packaged-preservation": "node scripts/packaged-preservation-smoke.mjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
     "benchmark:database:api": "npm run build && electron scripts/database-api-benchmark.cjs",

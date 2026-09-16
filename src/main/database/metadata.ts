@@ -54,7 +54,7 @@ export function getCifViewerSourceRecord(
   return (database.prepare(
     `SELECT entries.source_filename, imported_files.source_path, imported_files.data_block_index
      FROM entries
-     LEFT JOIN imported_files ON imported_files.source_filename = entries.source_filename
+     LEFT JOIN imported_files ON imported_files.entry_id = entries.id
      WHERE entries.id = ?`
   ).get(entryId) as CifViewerSourceRecord | undefined) ?? null;
 }
@@ -66,7 +66,7 @@ export function getCifExportSource(
   return (database.prepare(
     `SELECT entries.formula, entries.sg_number, imported_files.source_path, imported_files.data_block_index
      FROM entries
-     LEFT JOIN imported_files ON imported_files.source_filename = entries.source_filename
+     LEFT JOIN imported_files ON imported_files.entry_id = entries.id
      WHERE entries.id = ?`
   ).get(entryId) as CifExportSource | undefined) ?? null;
 }
@@ -87,4 +87,9 @@ export function setImportFolder(folderPath: string, database: Database.Database 
        ON CONFLICT(key) DO UPDATE SET value = excluded.value`
     )
     .run(IMPORT_FOLDER_SETTING, folderPath);
+}
+
+export function getPreservedLayout(database: Database.Database = getDb()): Record<string, string> {
+  const row = database.prepare("SELECT value FROM app_settings WHERE key = 'renderer_layout'").get() as { value: string } | undefined;
+  return row ? JSON.parse(row.value) : {};
 }

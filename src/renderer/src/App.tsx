@@ -38,6 +38,7 @@ function AppInner() {
   const [refreshing, setRefreshing] = useState(false);
   const [importFolder, setImportFolder] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [preserving, setPreserving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [searchActive, setSearchActive] = useState(false);
@@ -113,6 +114,32 @@ function AppInner() {
   }, [refreshDatabaseCount, showApiError]);
 
   useEffect(() => window.cifApi.onImportProgress(setImportProgress), []);
+
+  async function handlePreservation(action: 'backupProfile' | 'restoreProfile' | 'relinkSource') {
+    setPreserving(true);
+    setApiError(null);
+    try {
+      const changed = action === 'relinkSource'
+        ? selectedEntryId !== null && await window.cifApi.relinkSource(selectedEntryId)
+        : action === 'backupProfile'
+          ? await window.cifApi.backupProfile(Object.fromEntries(Object.keys(localStorage).filter(key => key.startsWith('cif-layout-v1:')).map(key => [key, localStorage.getItem(key)!])))
+          : await window.cifApi.restoreProfile();
+      if (changed) {
+        if (action === 'restoreProfile') {
+          const layout = await window.cifApi.getPreservedLayout();
+          for (const key of Object.keys(localStorage)) if (key.startsWith('cif-layout-v1:')) localStorage.removeItem(key);
+          for (const [key, value] of Object.entries(layout)) if (key.startsWith('cif-layout-v1:') && typeof value === 'string') localStorage.setItem(key, value);
+          window.location.reload();
+          return;
+        }
+        clearAnswerSet(true);
+        setImportFolder(await window.cifApi.getImportFolder());
+        await refreshDatabaseCount();
+        setExportMessage(action === 'backupProfile' ? 'Portable backup saved.' : 'Source relinked to the verified copy.');
+      }
+    } catch (error) { showApiError('complete source preservation', error); }
+    finally { setPreserving(false); }
+  }
 
   async function handleImport() {
     setImporting(true);
@@ -302,7 +329,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
             onClick={handleExportCif}
-            disabled={selectedEntryId === null || importing || refreshing || clearing || exporting}
+            disabled={selectedEntryId === null || importing || refreshing || clearing || preserving || exporting}
             title={selectedEntryId === null ? 'Select a Quick Search result first' : 'Export the selected original CIF file'}
           >
             <span aria-hidden="true">⇩</span> {exporting ? 'Exporting...' : 'Export CIF'}
@@ -310,7 +337,16 @@ function AppInner() {
         </div>
         <div className="mx-1.5 h-6 w-px bg-stroke-strong" aria-hidden="true" />
         <div className="toolbar-group" role="group" aria-label="Database">
-          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing}>
+          <details className="relative">
+            <summary className="btn-w32 cursor-pointer px-2.5">Sources &amp; backups</summary>
+            <div className="absolute right-0 z-50 flex w-56 flex-col gap-1 border border-stroke bg-white p-2 shadow-lg">
+              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving} onClick={() => handlePreservation('backupProfile')}>Save portable backup...</button>
+              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving} onClick={() => handlePreservation('restoreProfile')}>Restore backup...</button>
+              <button className="btn-w32" disabled={selectedEntryId === null || importing || refreshing || clearing || preserving} onClick={() => handlePreservation('relinkSource')}>Relink selected source...</button>
+              <p className="text-xs">New imports keep a managed copy. Relinking requires identical content. Export and backup require new destination filenames.</p>
+            </div>
+          </details>
+          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing || preserving}>
             <span aria-hidden="true">&#128193;</span>{' '}
             {importing && importProgress
               ? `Importing ${importProgress.processed}/${importProgress.total}...`
@@ -321,7 +357,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
             onClick={handleRefresh}
-            disabled={!importFolder || importing || refreshing || clearing}
+            disabled={!importFolder || importing || refreshing || clearing || preserving}
             title={importFolder ? `Scan again: ${importFolder}` : 'Choose a folder with Import CIFs first'}
           >
             <span aria-hidden="true">↻</span>{' '}
@@ -337,7 +373,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
             onClick={handleClearCifs}
-            disabled={importing || refreshing || clearing}
+            disabled={importing || refreshing || clearing || preserving}
             title="Remove all imported entries from the local database"
           >
             <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
