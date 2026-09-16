@@ -24,6 +24,7 @@
     "quality:baseline": "node scripts/quality/baseline.mjs",
     "quality:test": "node --test scripts/quality/*.test.mjs",
     "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run",
     "quality:unused": "npm run typecheck && knip",
     "quality:unused:test": "node scripts/verify-unused-checks.mjs",
     "quality:architecture": "node scripts/check-architecture.mjs",
@@ -36,6 +37,9 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
@@ -56,6 +60,11 @@
     "typescript": "^5.5.4",
     "vite": "^7.3.6",
     "vitest": "4.1.11"
+  },
+  "overrides": {
+    "typed-rest-client": {
+      "qs": "6.16.0"
+    }
   },
   "build": {
     "appId": "com.cif.crystaldata",

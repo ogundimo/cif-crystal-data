@@ -1,0 +1,1885 @@
+{
+  "measuredOn": "2026-09-14",
+  "platform": "Windows",
+  "node": "22.23.2",
+  "stryker": "10.0.0",
+  "vitest": "4.1.11",
+  "typescript": "5.9.3",
+  "productionCommit": "6716a927e6a3b2374756f7403e33e3465409809b",
+  "note": "Local initial/follow-up comparison. SHA-256 normalizes CRLF to LF. Tests/config/lock hashes identify the uncommitted follow-up inputs. Raw HTML/JSON reports are generated separately.",
+  "inputHashes": {
+    "package-lock.json": "d2cb21d0e4b989944d9a1934c1964937f120ac476d568023628b71352d85ca87",
+    "src/main/ingest.test.ts": "a01928b524a158ec8ba9ae7f3b864f0f0186b1d6be14cb09a96baee861a1f7c6",
+    "src/main/ipc.test.ts": "d8b68b83863c55f7d8c020c4f35ad74117c181c1db71429aa250dd56488387b5",
+    "src/parser/cif/formula.test.ts": "84dd8042ba46ccc9748130cf7fa5c1b22c3ffc2b5e56fa5281f633cdc9cea2d0",
+    "src/parser/cif/formula.ts": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+    "src/parser/cifParser.test.ts": "2f223856a002d515fcfff14f94e582de968257ed4e0633cf6e980b3d8b9a7ff3",
+    "src/renderer/src/pxrd.test.ts": "5c9befdf6885a7b057e769c00476e8771432f4df6ce23cfc8b8db25ed0b102c8",
+    "src/renderer/src/pxrd.ts": "d344ea26461bf59c6991cb63eb2aabfba363df193c0a998e1b44dd7148a95728",
+    "src/shared/searchValidation.test.ts": "738801b30117d8627f793f25b13c7251fade09f27d1aa1a48d7c272815e4eb4e",
+    "src/shared/searchValidation.ts": "b0c26f34e560d0a3de21608fc2cddc0d0fe3d104f6118dacbc3b8b309c4f57ba",
+    "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+    "tsconfig.mutation.json": "fe0b211244af68a8472f0a34a0a2da4c925603800085df5bda3a2fe90ffb2568",
+    "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2"
+  },
+  "initial": {
+    "total": {
+      "Killed": 314,
+      "Survived": 207,
+      "NoCoverage": 15,
+      "Timeout": 6,
+      "CompileError": 167,
+      "RuntimeError": 0,
+      "Ignored": 0,
+      "Pending": 0
+    },
+    "files": {
+      "src/parser/cif/formula.ts": {
+        "Killed": 69,
+        "Survived": 38,
+        "NoCoverage": 5,
+        "Timeout": 1,
+        "CompileError": 23,
+        "RuntimeError": 0,
+        "Ignored": 0,
+        "Pending": 0
+      },
+      "src/renderer/src/pxrd.ts": {
+        "Killed": 195,
+        "Survived": 156,
+        "NoCoverage": 0,
+        "Timeout": 5,
+        "CompileError": 107,
+        "RuntimeError": 0,
+        "Ignored": 0,
+        "Pending": 0
+      },
+      "src/shared/searchValidation.ts": {
+        "Killed": 50,
+        "Survived": 13,
+        "NoCoverage": 10,
+        "Timeout": 0,
+        "CompileError": 37,
+        "RuntimeError": 0,
+        "Ignored": 0,
+        "Pending": 0
+      }
+    }
+  },
+  "final": {
+    "total": {
+      "Killed": 442,
+      "Survived": 94,
+      "NoCoverage": 0,
+      "Timeout": 6,
+      "CompileError": 167,
+      "RuntimeError": 0,
+      "Ignored": 0,
+      "Pending": 0
+    },
+    "files": {
+      "src/parser/cif/formula.ts": {
+        "Killed": 96,
+        "Survived": 16,
+        "NoCoverage": 0,
+        "Timeout": 1,
+        "CompileError": 23,
+        "RuntimeError": 0,
+        "Ignored": 0,
+        "Pending": 0
+      },
+      "src/renderer/src/pxrd.ts": {
+        "Killed": 273,
+        "Survived": 78,
+        "NoCoverage": 0,
+        "Timeout": 5,
+        "CompileError": 107,
+        "RuntimeError": 0,
+        "Ignored": 0,
+        "Pending": 0
+      },
+      "src/shared/searchValidation.ts": {
+        "Killed": 73,
+        "Survived": 0,
+        "NoCoverage": 0,
+        "Timeout": 0,
+        "CompileError": 37,
+        "RuntimeError": 0,
+        "Ignored": 0,
+        "Pending": 0
+      }
+    }
+  },
+  "changedStatuses": [
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "6",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "7",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "21",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "64",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "67",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "68",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "69",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "70",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "76",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "79",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "88",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "91",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "92",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "94",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "95",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "99",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "100",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "102",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "103",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "108",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "110",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "112",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "115",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "117",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "127",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "129",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "132",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "156",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "158",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "159",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "165",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "166",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "167",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "171",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "180",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "186",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "212",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "230",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "231",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "241",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "243",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "324",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "332",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "343",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "344",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "345",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "350",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "356",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "358",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "402",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "403",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "404",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "405",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "410",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "411",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "412",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "413",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "414",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "415",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "416",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "417",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "419",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "420",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "421",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "422",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "424",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "425",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "426",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "427",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "428",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "429",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "430",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "431",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "432",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "433",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "435",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "436",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "438",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "442",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "447",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "448",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "452",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "453",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "454",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "469",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "470",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "474",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "477",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "479",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "481",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "492",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "494",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "497",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "498",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "499",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "500",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "501",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "502",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "503",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "510",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "569",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "571",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "572",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "575",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "578",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "617",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "627",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "629",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "649",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "657",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "660",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "663",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "669",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "687",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "692",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "700",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "701",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "702",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "703",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "704",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "706",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "714",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "715",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "716",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "717",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "718",
+      "before": "NoCoverage",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "721",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/shared/searchValidation.ts",
+      "id": "724",
+      "before": "Survived",
+      "after": "Killed"
+    }
+  ],
+  "remaining": [
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "1",
+      "line": 7,
+      "column": 18,
+      "operator": "MethodExpression",
+      "replacement": "stripped.trim().split(/\\s+/)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "2",
+      "line": 7,
+      "column": 18,
+      "operator": "MethodExpression",
+      "replacement": "stripped",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "3",
+      "line": 7,
+      "column": 40,
+      "operator": "Regex",
+      "replacement": "/\\s/",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "31",
+      "line": 28,
+      "column": 16,
+      "operator": "MethodExpression",
+      "replacement": "stripQuotes(rawMoiety)",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "34",
+      "line": 32,
+      "column": 23,
+      "operator": "EqualityOperator",
+      "replacement": "index <= text.length",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "36",
+      "line": 32,
+      "column": 44,
+      "operator": "UpdateOperator",
+      "replacement": "index--",
+      "status": "Timeout",
+      "review": "timeout; not an assertion kill"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "39",
+      "line": 33,
+      "column": 9,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "41",
+      "line": 33,
+      "column": 25,
+      "operator": "StringLiteral",
+      "replacement": "\"\"",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "42",
+      "line": 33,
+      "column": 30,
+      "operator": "UpdateOperator",
+      "replacement": "depth--",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "47",
+      "line": 34,
+      "column": 43,
+      "operator": "MethodExpression",
+      "replacement": "Math.min(0, depth - 1)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "55",
+      "line": 35,
+      "column": 37,
+      "operator": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "80",
+      "line": 49,
+      "column": 20,
+      "operator": "MethodExpression",
+      "replacement": "body.split(/\\s+/)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "81",
+      "line": 49,
+      "column": 31,
+      "operator": "Regex",
+      "replacement": "/\\s/",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "86",
+      "line": 52,
+      "column": 11,
+      "operator": "Regex",
+      "replacement": "/\\d+(?:\\.\\d+)?[+-]$/",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "87",
+      "line": 52,
+      "column": 11,
+      "operator": "Regex",
+      "replacement": "/^\\d+(?:\\.\\d+)?[+-]/",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "122",
+      "line": 58,
+      "column": 7,
+      "operator": "UpdateOperator",
+      "replacement": "parsedElements--",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/parser/cif/formula.ts",
+      "id": "124",
+      "line": 60,
+      "column": 9,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "148",
+      "line": 25,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "a[1] * b[2] + a[2] * b[1]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "151",
+      "line": 25,
+      "column": 38,
+      "operator": "ArithmeticOperator",
+      "replacement": "a[2] * b[0] + a[0] * b[2]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "154",
+      "line": 25,
+      "column": 65,
+      "operator": "ArithmeticOperator",
+      "replacement": "a[0] * b[1] + a[1] * b[0]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "173",
+      "line": 39,
+      "column": 25,
+      "operator": "MethodExpression",
+      "replacement": "compact.split('+')",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "194",
+      "line": 45,
+      "column": 7,
+      "operator": "AssignmentOperator",
+      "replacement": "value -= coefficient * point['xyz'.indexOf(variable)]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "200",
+      "line": 48,
+      "column": 22,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "206",
+      "line": 50,
+      "column": 7,
+      "operator": "AssignmentOperator",
+      "replacement": "value -= number",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "208",
+      "line": 53,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "value % 1 - 1",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "209",
+      "line": 53,
+      "column": 12,
+      "operator": "ArithmeticOperator",
+      "replacement": "value * 1",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "220",
+      "line": 60,
+      "column": 51,
+      "operator": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "240",
+      "line": 71,
+      "column": 10,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "272",
+      "line": 86,
+      "column": 77,
+      "operator": "StringLiteral",
+      "replacement": "\"\"",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "305",
+      "line": 107,
+      "column": 7,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "306",
+      "line": 107,
+      "column": 7,
+      "operator": "LogicalOperator",
+      "replacement": "![a, b, c, alpha, beta, gamma].every(Number.isFinite) && a <= 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "308",
+      "line": 107,
+      "column": 8,
+      "operator": "MethodExpression",
+      "replacement": "[a, b, c, alpha, beta, gamma].some(Number.isFinite)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "309",
+      "line": 107,
+      "column": 8,
+      "operator": "ArrayDeclaration",
+      "replacement": "[]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "310",
+      "line": 107,
+      "column": 64,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "311",
+      "line": 107,
+      "column": 64,
+      "operator": "EqualityOperator",
+      "replacement": "a < 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "314",
+      "line": 107,
+      "column": 74,
+      "operator": "EqualityOperator",
+      "replacement": "b < 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "316",
+      "line": 107,
+      "column": 84,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "317",
+      "line": 107,
+      "column": 84,
+      "operator": "EqualityOperator",
+      "replacement": "c < 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "319",
+      "line": 107,
+      "column": 94,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "320",
+      "line": 107,
+      "column": 94,
+      "operator": "EqualityOperator",
+      "replacement": "Math.abs(Math.sin(gamma)) <= 1e-8",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "325",
+      "line": 109,
+      "column": 42,
+      "operator": "ArithmeticOperator",
+      "replacement": "b / Math.sin(gamma)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "327",
+      "line": 111,
+      "column": 14,
+      "operator": "ArithmeticOperator",
+      "replacement": "c * (Math.cos(alpha) - Math.cos(beta) * Math.cos(gamma)) * Math.sin(gamma)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "334",
+      "line": 113,
+      "column": 7,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "335",
+      "line": 113,
+      "column": 7,
+      "operator": "EqualityOperator",
+      "replacement": "czSquared < 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "339",
+      "line": 116,
+      "column": 7,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "340",
+      "line": 116,
+      "column": 7,
+      "operator": "EqualityOperator",
+      "replacement": "Math.abs(volume) <= 1e-8",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "351",
+      "line": 128,
+      "column": 44,
+      "operator": "EqualityOperator",
+      "replacement": "wavelengthOverride >= 0",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "357",
+      "line": 130,
+      "column": 46,
+      "operator": "EqualityOperator",
+      "replacement": "entry.radiation_wavelength_angstrom >= 0",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "363",
+      "line": 133,
+      "column": 17,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "366",
+      "line": 134,
+      "column": 20,
+      "operator": "ArithmeticOperator",
+      "replacement": "MAX_TWO_THETA * DEG * 2",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "368",
+      "line": 135,
+      "column": 16,
+      "operator": "ArithmeticOperator",
+      "replacement": "wavelength * (2 * Math.sin(thetaMax))",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "369",
+      "line": 135,
+      "column": 30,
+      "operator": "ArithmeticOperator",
+      "replacement": "2 / Math.sin(thetaMax)",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "378",
+      "line": 137,
+      "column": 42,
+      "operator": "MethodExpression",
+      "replacement": "Math.max(36, Math.max(1, Math.ceil(length / dMin) + 1))",
+      "status": "Timeout",
+      "review": "timeout; not an assertion kill"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "380",
+      "line": 137,
+      "column": 67,
+      "operator": "ArithmeticOperator",
+      "replacement": "Math.ceil(length / dMin) - 1",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "381",
+      "line": 137,
+      "column": 77,
+      "operator": "ArithmeticOperator",
+      "replacement": "length * dMin",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "385",
+      "line": 139,
+      "column": 28,
+      "operator": "EqualityOperator",
+      "replacement": "h < limits[0]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "387",
+      "line": 139,
+      "column": 44,
+      "operator": "AssignmentOperator",
+      "replacement": "h -= 1",
+      "status": "Timeout",
+      "review": "timeout; not an assertion kill"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "391",
+      "line": 140,
+      "column": 30,
+      "operator": "EqualityOperator",
+      "replacement": "k < limits[1]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "393",
+      "line": 140,
+      "column": 46,
+      "operator": "AssignmentOperator",
+      "replacement": "k -= 1",
+      "status": "Timeout",
+      "review": "timeout; not an assertion kill"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "397",
+      "line": 141,
+      "column": 32,
+      "operator": "EqualityOperator",
+      "replacement": "l < limits[2]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "399",
+      "line": 141,
+      "column": 48,
+      "operator": "AssignmentOperator",
+      "replacement": "l -= 1",
+      "status": "Timeout",
+      "review": "timeout; not an assertion kill"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "406",
+      "line": 142,
+      "column": 13,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "407",
+      "line": 142,
+      "column": 13,
+      "operator": "LogicalOperator",
+      "replacement": "h === 0 && k === 0 && l === 0 && h < 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "408",
+      "line": 142,
+      "column": 14,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "418",
+      "line": 142,
+      "column": 48,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "423",
+      "line": 142,
+      "column": 58,
+      "operator": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "434",
+      "line": 142,
+      "column": 91,
+      "operator": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "437",
+      "line": 142,
+      "column": 102,
+      "operator": "EqualityOperator",
+      "replacement": "l <= 0",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "440",
+      "line": 144,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * basis[0][0] + k * basis[1][0] - l * basis[2][0]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "441",
+      "line": 144,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * basis[0][0] - k * basis[1][0]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "445",
+      "line": 145,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * basis[0][1] + k * basis[1][1] - l * basis[2][1]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "446",
+      "line": 145,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * basis[0][1] - k * basis[1][1]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "450",
+      "line": 146,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * basis[0][2] + k * basis[1][2] - l * basis[2][2]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "451",
+      "line": 146,
+      "column": 11,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * basis[0][2] - k * basis[1][2]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "458",
+      "line": 150,
+      "column": 13,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "459",
+      "line": 150,
+      "column": 13,
+      "operator": "LogicalOperator",
+      "replacement": "sinTheta <= 0 && sinTheta >= 1",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "460",
+      "line": 150,
+      "column": 13,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "461",
+      "line": 150,
+      "column": 13,
+      "operator": "EqualityOperator",
+      "replacement": "sinTheta < 0",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "463",
+      "line": 150,
+      "column": 30,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "464",
+      "line": 150,
+      "column": 30,
+      "operator": "EqualityOperator",
+      "replacement": "sinTheta > 1",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "471",
+      "line": 153,
+      "column": 13,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "472",
+      "line": 153,
+      "column": 13,
+      "operator": "EqualityOperator",
+      "replacement": "twoTheta <= MIN_TWO_THETA",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "475",
+      "line": 153,
+      "column": 41,
+      "operator": "EqualityOperator",
+      "replacement": "twoTheta >= MAX_TWO_THETA",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "486",
+      "line": 160,
+      "column": 40,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * atom.position[0] + k * atom.position[1] - l * atom.position[2]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "487",
+      "line": 160,
+      "column": 40,
+      "operator": "ArithmeticOperator",
+      "replacement": "h * atom.position[0] - k * atom.position[1]",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "493",
+      "line": 162,
+      "column": 11,
+      "operator": "AssignmentOperator",
+      "replacement": "real -= amplitude * Math.cos(phase)",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "495",
+      "line": 163,
+      "column": 11,
+      "operator": "AssignmentOperator",
+      "replacement": "imaginary -= amplitude * Math.sin(phase)",
+      "status": "Survived",
+      "review": "equivalent; see mutation-testing.md"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "506",
+      "line": 167,
+      "column": 13,
+      "operator": "EqualityOperator",
+      "replacement": "intensity >= 1e-8",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "517",
+      "line": 174,
+      "column": 32,
+      "operator": "UnaryOperator",
+      "replacement": "+1",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "522",
+      "line": 175,
+      "column": 21,
+      "operator": "EqualityOperator",
+      "replacement": "Math.abs(previous.twoTheta - peak.twoTheta) <= 0.025",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "524",
+      "line": 175,
+      "column": 30,
+      "operator": "ArithmeticOperator",
+      "replacement": "previous.twoTheta + peak.twoTheta",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "525",
+      "line": 175,
+      "column": 74,
+      "operator": "BlockStatement",
+      "replacement": "{}",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "527",
+      "line": 177,
+      "column": 11,
+      "operator": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "529",
+      "line": 177,
+      "column": 11,
+      "operator": "EqualityOperator",
+      "replacement": "peak.intensity >= previous.intensity",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "530",
+      "line": 177,
+      "column": 11,
+      "operator": "EqualityOperator",
+      "replacement": "peak.intensity <= previous.intensity",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "541",
+      "line": 185,
+      "column": 10,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "554",
+      "line": 194,
+      "column": 7,
+      "operator": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "576",
+      "line": 201,
+      "column": 27,
+      "operator": "ArithmeticOperator",
+      "replacement": "pointCount + 1",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "581",
+      "line": 202,
+      "column": 29,
+      "operator": "EqualityOperator",
+      "replacement": "index < last",
+      "status": "Survived",
+      "review": "open; not presumed equivalent"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "id": "583",
+      "line": 202,
+      "column": 44,
+      "operator": "AssignmentOperator",
+      "replacement": "index -= 1",
+      "status": "Timeout",
+      "review": "timeout; not an assertion kill"
+    }
+  ]
+}
