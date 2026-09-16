@@ -7,7 +7,7 @@ import { contentHash } from '../sourceIdentity';
 import { getDb } from './connection';
 import { readStoredCif } from './sources';
 
-const TABLES = ['entries', 'entry_elements', 'app_settings', 'atom_sites', 'publ_authors',
+const TABLES = ['entries', 'entry_elements', 'app_settings', 'atom_sites', 'publ_authors', 'data_authors',
   'symmetry_operations', 'atom_site_anisotropic', 'source_contents', 'imported_files', 'sqlite_sequence'] as const;
 
 // SQLite retains formatting in sqlite_master. Ignore formatting,

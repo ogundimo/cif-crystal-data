@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { importCifFolder } from './ingest';
 import type { EntryWriteItem, EntryWriter } from './db';
@@ -46,9 +46,9 @@ describe('import recovery', () => {
     writeFileSync(join(directory, 'bad.cif'), text);
     writeFileSync(join(directory, 'good.cif'), text);
     const result = importCifFolder(directory, {
-      writeBatch: items => [{ item: items.find(item => item.sourceFilename === 'bad.cif')!, error: 'disk full' }]
+      writeBatch: items => items.filter(item => item.sourceFilename === 'bad.cif').map(item => ({ item, error: 'disk full' }))
     });
-    expect(result).toEqual({ total: 2, importedCount: 1, skippedCount: 0,
+    expect(result).toMatchObject({ total: 2, importedCount: 1, skippedCount: 0,
       failures: [{ filename: 'bad.cif', reason: 'disk full' }] });
   });
 
@@ -68,7 +68,7 @@ describe('import recovery', () => {
     expect(written.map(item => item.sourceFilename)).toEqual(['good.cif']);
   });
 
-  it('discovers nested uppercase CIFs, ignores other files, and flushes the final partial batch', () => {
+  it('discovers nested uppercase CIFs, ignores other files, and commits at file boundaries', () => {
     const directory = temporaryDirectory();
     const nested = join(directory, 'nested');
     mkdirSync(nested);
@@ -78,10 +78,10 @@ describe('import recovery', () => {
     const processed: number[] = [];
     const result = importCifFolder(directory, {
       writeBatch: items => { batches.push(items.length); return []; }
-    }, progress => { processed.push(progress.processed); });
-    expect(result).toEqual({ total: 251, importedCount: 251, skippedCount: 0, failures: [] });
-    expect(batches).toEqual([250, 1]);
-    expect(processed).toEqual([0, 250, 251]);
+    }, progress => { if (progress.phase === 'ingestion') processed.push(progress.processed); });
+    expect(result).toMatchObject({ total: 251, importedCount: 251, skippedCount: 0, failures: [] });
+    expect(batches).toEqual(Array(251).fill(1));
+    expect(processed).toEqual(Array.from({ length: 252 }, (_, index) => index));
   });
 });
 
@@ -98,11 +98,11 @@ describe('importCifFolder batching', () => {
 
     const result = importCifFolder(fixtureDirectory, writer, (update) => progress.push(update));
 
-    expect(result).toEqual({ importedCount: 1, skippedCount: 0, failures: [], total: 1 });
+    expect(result).toMatchObject({ importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     expect(written).toHaveLength(1);
     expect(written[0].sourceFilename).toBe('synthetic-test.cif');
     expect(written[0].entry.formula).toBe('Cl1Na1');
-    expect(progress).toEqual([
+    expect(progress.filter(update => 'phase' in update && update.phase === 'ingestion')).toMatchObject([
       { processed: 0, total: 1, importedCount: 0, skippedCount: 0, failureCount: 0 },
       { processed: 1, total: 1, importedCount: 1, skippedCount: 0, failureCount: 0 }
     ]);
@@ -116,7 +116,7 @@ describe('importCifFolder batching', () => {
       }
     };
 
-    expect(importCifFolder(fixtureDirectory, writer)).toEqual({
+    expect(importCifFolder(fixtureDirectory, writer)).toMatchObject({
       importedCount: 0,
       skippedCount: 1,
       failures: [],
@@ -130,13 +130,13 @@ describe('importCifFolder batching', () => {
       writeBatch: (items) => [{ item: items[0], error: new Error('database write failed') }]
     };
 
-    expect(importCifFolder(fixtureDirectory, writer, (update) => progress.push(update))).toEqual({
+    expect(importCifFolder(fixtureDirectory, writer, (update) => progress.push(update))).toMatchObject({
       importedCount: 0,
       skippedCount: 0,
       failures: [{ filename: 'synthetic-test.cif', reason: 'database write failed' }],
       total: 1
     });
-    expect(progress.at(-1)).toEqual({
+    expect(progress.at(-1)).toMatchObject({
       processed: 1,
       total: 1,
       importedCount: 0,
@@ -157,7 +157,7 @@ describe('importCifFolder batching', () => {
       const result = importCifFolder(directory, {
         writeBatch: (items) => { written.push(...items); return []; }
       });
-      expect(result).toEqual({ importedCount: 2, skippedCount: 0, failures: [], total: 1 });
+      expect(result).toMatchObject({ importedCount: 2, skippedCount: 0, failures: [], total: 1 });
       expect(written.map((item) => item.sourceFilename)).toEqual([
         'combined.cif#1-first',
         'combined.cif#2-second'
@@ -167,4 +167,42 @@ describe('importCifFolder batching', () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+});
+
+ describe('discovery and cancellation boundaries', () => {
+  const text = readFileSync(join(fixtureDirectory, 'synthetic-test.cif'), 'utf8');
+  it('reports an unavailable root as a discovery failure', () => {
+    const directory = temporaryDirectory();
+    const result = importCifFolder(join(directory, 'missing'), { writeBatch: () => [] });
+    expect(result).toMatchObject({ total: 0, processed: 0, unattempted: 0, cancelled: false,
+      failures: [{ phase: 'discovery', reason: expect.stringMatching(/ENOENT/) }] });
+  });
+  it('cancels discovery before any commit and reports an unknown remaining total', () => {
+    const directory = temporaryDirectory();
+    writeFileSync(join(directory, 'first.cif'), text);
+    let cancel = false;
+    const result = importCifFolder(directory, { writeBatch: () => { throw new Error('must not write'); } },
+      progress => { if (progress.phase === 'discovery' && progress.discovered === 1) cancel = true; }, () => cancel);
+    expect(result).toMatchObject({ cancelled: true, discoveryComplete: false, importedCount: 0, processed: 0, unattempted: 1 });
+  });
+  it('retains committed multi-block files and permits a subsequent import', () => {
+    const directory = temporaryDirectory();
+    writeFileSync(join(directory, 'first.cif'), text + '\n' + text.replace('data_synthetic_test', 'data_second'));
+    writeFileSync(join(directory, 'next.cif'), text);
+    let cancel = false;
+    const batches: EntryWriteItem[][] = [];
+    const result = importCifFolder(directory, { writeBatch: items => { batches.push(items); cancel = true; return []; } }, undefined, () => cancel);
+    expect(result).toMatchObject({ cancelled: true, discoveryComplete: true, total: 2, processed: 1, unattempted: 1, importedCount: 2 });
+    expect(batches[0]).toHaveLength(2);
+    expect(importCifFolder(directory, { writeBatch: () => [] })).toMatchObject({ cancelled: false, processed: 2, importedCount: 3 });
+  });
+});
+
+it('skips junction cycles and duplicate aliases without traversing them', () => {
+  const directory = temporaryDirectory();
+  const real = join(directory, 'real'); mkdirSync(real);
+  writeFileSync(join(real, 'file.cif'), readFileSync(join(fixtureDirectory, 'synthetic-test.cif')));
+  symlinkSync(directory, join(real, 'cycle'), process.platform === 'win32' ? 'junction' : 'dir');
+  symlinkSync(real, join(directory, 'alias'), process.platform === 'win32' ? 'junction' : 'dir');
+  expect(importCifFolder(directory, { writeBatch: () => [] })).toMatchObject({ total: 1, importedCount: 1, skippedLinks: 2, failures: [] });
 });

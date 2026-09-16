@@ -8,6 +8,10 @@ import type {
 } from '../shared/types';
 
 const api: CifApi = {
+  traceMilestone: (name) => ipcRenderer.invoke('cif:traceMilestone', name),
+  cancelImport: () => ipcRenderer.invoke('cif:cancelImport'),
+  getStartupRefresh: () => ipcRenderer.invoke('cif:getStartupRefresh'),
+  setStartupRefresh: (enabled) => ipcRenderer.invoke('cif:setStartupRefresh', enabled),
   relinkSource: (entryId) => ipcRenderer.invoke('cif:relinkSource', entryId),
   backupProfile: (layout) => ipcRenderer.invoke('cif:backupProfile', layout),
   getPreservedLayout: () => ipcRenderer.invoke('cif:getPreservedLayout'),
@@ -15,6 +19,7 @@ const api: CifApi = {
   getEntryCount: () => ipcRenderer.invoke('cif:getEntryCount'),
   getAtomSites: (entryId: number) => ipcRenderer.invoke('cif:getAtomSites', entryId),
   getDiffractionInput: (entryId: number) => ipcRenderer.invoke('cif:getDiffractionInput', entryId),
+  getDataAuthors: (entryId) => ipcRenderer.invoke('cif:getDataAuthors', entryId),
   getPublAuthors: (entryId: number) => ipcRenderer.invoke('cif:getPublAuthors', entryId),
   getViewerSource: (entryId: number) => ipcRenderer.invoke('cif:getViewerSource', entryId),
   getImportFolder: () => ipcRenderer.invoke('cif:getImportFolder'),

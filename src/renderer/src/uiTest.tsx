@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ResultsWorkspace from './components/ResultsWorkspace';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
-import type { EntryRow, SearchPageRequest, SearchPageResult } from '../../shared/types';
+import type { EntryRow, SearchPageRequest, SearchPageResult, ImportProgress, ImportResult } from '../../shared/types';
 import syntheticCif from '../../parser/__fixtures__/synthetic-test.cif?raw';
 import './index.css';
 
@@ -40,6 +40,10 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
 }));
 
 window.cifApi = {
+  traceMilestone: async () => {},
+  cancelImport: async () => true,
+  getStartupRefresh: async () => false,
+  setStartupRefresh: async () => {},
   relinkSource: async () => false,
   backupProfile: async () => false,
   getPreservedLayout: async () => ({}),
@@ -84,6 +88,7 @@ window.cifApi = {
       operation_xyz: 'x, y, z'
     }]
   }),
+  getDataAuthors: async (entryId) => [{ id: entryId, entry_id: entryId, author_order: 0, name: 'Data depositor', address: 'Synthetic institute' }],
   getPublAuthors: async (entryId) => [
     { id: entryId, entry_id: entryId, author_order: 0, name: 'Doe, J.', address: 'Department of Chemistry, Example University, Springfield' },
     { id: entryId + 1, entry_id: entryId, author_order: 1, name: 'Roe, A.', address: null }
@@ -125,10 +130,18 @@ function UiTestApp() {
 const appRegressionMode = new URLSearchParams(location.search).has('app-regression');
 if (appRegressionMode) {
   const regression = {
+    progress: (_value: ImportProgress) => {},
+    finishImport: (_value: ImportResult) => {},
+    cancelled: false,
     requests: [] as SearchPageRequest[],
     pending: [] as Array<() => void>
   };
   Object.assign(window, { appRegression: regression });
+  window.cifApi.onImportProgress = listener => { regression.progress = listener; return () => { regression.progress = () => {}; }; };
+  window.cifApi.importCifFolder = () => new Promise(resolve => { regression.finishImport = resolve; });
+  window.cifApi.cancelImport = async () => { regression.cancelled = true; return true; };
+  window.cifApi.getStartupRefresh = async () => localStorage.getItem('test-startup-refresh') === 'true';
+  window.cifApi.setStartupRefresh = async enabled => { localStorage.setItem('test-startup-refresh', String(enabled)); };
   window.cifApi.searchPage = async (request) => {
     regression.requests.push(request);
     const result = { rows: gridRows.slice(request.offset, request.offset + request.limit), total: 1000 };

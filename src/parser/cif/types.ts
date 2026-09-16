@@ -71,6 +71,7 @@ export interface CifEntry {
   radiationType: string | null;
   radiationWavelengthAngstrom: number | null;
   publAuthors: ParsedPublAuthor[];
+  dataAuthors?: ParsedPublAuthor[];
   atomSites: ParsedAtomSite[];
   symmetryOperations: ParsedSymmetryOperation[];
   atomSiteAnisotropic: ParsedAtomSiteAnisotropic[];
@@ -81,6 +82,7 @@ export interface RawCif {
   hasAnisoLabel: boolean;
   atomSites: ParsedAtomSite[];
   publAuthors: ParsedPublAuthor[];
+  dataAuthors?: ParsedPublAuthor[];
   symmetryOperations: ParsedSymmetryOperation[];
   atomSiteAnisotropic: ParsedAtomSiteAnisotropic[];
 }

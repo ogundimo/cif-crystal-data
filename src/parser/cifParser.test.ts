@@ -381,14 +381,14 @@ describe('buildReference - missing components', () => {
     expect(buildReference(m)).toBe('Inorg. Mater., 1986, 23-27');
   });
 
-  it('omits the pages cleanly when either page bound is missing', () => {
+  it('preserves the first page when the end page is missing', () => {
     const m1 = new Map(base);
     m1.set('_journal_page_first', '?');
     expect(buildReference(m1)).toBe('Inorg. Mater., 1986, 22');
 
     const m2 = new Map(base);
     m2.delete('_journal_page_last');
-    expect(buildReference(m2)).toBe('Inorg. Mater., 1986, 22');
+    expect(buildReference(m2)).toBe('Inorg. Mater., 1986, 22, 23');
   });
 });
 

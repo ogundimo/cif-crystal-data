@@ -1,163 +1,103 @@
-import type { RawCif, ParsedAtomSite, ParsedPublAuthor, ParsedSymmetryOperation, ParsedAtomSiteAnisotropic } from './types';
+import type { RawCif } from './types';
 import { parseAtomSiteRows, parsePublAuthorRows, parseSymmetryOperationRows, parseAtomSiteAnisotropicRows } from './loops';
+import { getClean } from './values';
 
-function tokenizeLoopLine(line: string): string[] {
-  const tokens: string[] = [];
-  const isWhitespace = (character: string): boolean => /\s/.test(character);
-  let index = 0;
-
-  while (index < line.length) {
-    while (index < line.length && isWhitespace(line[index])) index++;
-    if (index >= line.length || line[index] === '#') break;
-
-    const openingQuote = line[index];
-    if (openingQuote === "'" || openingQuote === '"') {
-      index++;
-      let value = '';
-      while (index < line.length) {
-        const character = line[index];
-        // In CIF, a matching quote closes a value only at a token boundary.
-        // An apostrophe followed by another word character is literal text.
-        if (
-          character === openingQuote &&
-          (index + 1 === line.length || isWhitespace(line[index + 1]))
-        ) {
-          index++;
-          break;
-        }
-        value += character;
-        index++;
-      }
-      tokens.push(value);
-      continue;
-    }
-
-    const start = index;
-    while (index < line.length && !isWhitespace(line[index])) index++;
-    tokens.push(line.slice(start, index));
-  }
-
-  return tokens;
-}
-
-/**
- * Low-level scan of a CIF file's text into a flat tag->value map, plus a flag
- * for whether any loop_ block declares an _atom_site_aniso_label column.
- *
- * Handles: multi-line semicolon-delimited text blocks (content skipped so
- * tags cannot be accidentally matched inside them), '?' / '.' nulls,
- * single/double-quoted scalar values, and loop_ blocks in general.
- */
-export function scanCif(text: string): RawCif {
+interface Token { value: string; quoted: boolean }
+function tokenize(text: string): Token[] {
   const lines = text.split(/\r\n|\n|\r/);
-  const tags = new Map<string, string>();
-  let hasAnisoLabel = false;
-  const atomSites: ParsedAtomSite[] = [];
-  const publAuthors: ParsedPublAuthor[] = [];
-  const symmetryOperations: ParsedSymmetryOperation[] = [];
-  const atomSiteAnisotropic: ParsedAtomSiteAnisotropic[] = [];
-  let i = 0;
-
-  // idx points at the opening ';' line (already confirmed). Reads until (and
-  // including) the line starting with the closing ';'.
-  const readTextBlock = (idx: number): { text: string; next: number } => {
-    const contentLines: string[] = [];
-    let j = idx + 1;
-    while (j < lines.length && !lines[j].startsWith(';')) {
-      contentLines.push(lines[j]);
-      j++;
+  const result: Token[] = [];
+  for (let line = 0; line < lines.length; line++) {
+    let value = lines[line];
+    if (value.startsWith(';')) {
+      const content = [value.slice(1)];
+      while (++line < lines.length && !lines[line].startsWith(';')) content.push(lines[line]);
+      if (line === lines.length) throw new Error('Unterminated CIF text field');
+      result.push({ value: content.join(' ').trim(), quoted: true });
+      value = lines[line].slice(1);
     }
-    return { text: contentLines.join(' ').trim(), next: j + 1 };
-  };
-
-  const skipTextBlock = (idx: number): number => readTextBlock(idx).next;
-
-  while (i < lines.length) {
-    const raw = lines[i];
-    const trimmed = raw.trim();
-
-    if (trimmed === '' || trimmed.startsWith('#')) {
-      i++;
-      continue;
-    }
-
-    if (raw.startsWith(';')) {
-      // Stray/unowned text block at top level; skip its content entirely.
-      i = skipTextBlock(i);
-      continue;
-    }
-
-    if (trimmed === 'loop_') {
-      i++;
-      const headers: string[] = [];
-      while (i < lines.length && lines[i].trim().startsWith('_')) {
-        headers.push(lines[i].trim().split(/\s+/)[0]);
-        i++;
-      }
-      if (headers.some((header) => header.toLowerCase() === '_atom_site_aniso_label')) {
-        hasAnisoLabel = true;
-      }
-      const values: string[] = [];
-      // Consume and tokenize the loop's data rows.
-      while (i < lines.length) {
-        const t = lines[i].trim();
-        if (t === '' || t === 'loop_' || t.startsWith('_') || t.startsWith('data_') || t.startsWith('#')) {
-          break;
-        }
-        if (lines[i].startsWith(';')) {
-          // A ';' block is one column value, so keep it as a single token.
-          const block = readTextBlock(i);
-          values.push(block.text);
-          i = block.next;
-          continue;
-        }
-        values.push(...tokenizeLoopLine(lines[i]));
-        i++;
-      }
-      atomSites.push(...parseAtomSiteRows(headers, values));
-      publAuthors.push(...parsePublAuthorRows(headers, values));
-      symmetryOperations.push(...parseSymmetryOperationRows(headers, values));
-      atomSiteAnisotropic.push(...parseAtomSiteAnisotropicRows(headers, values));
-      // Bibliographic data is commonly a one-row _citation_* loop. Preserve its
-      // first row in the scalar lookup used by the entry summary.
-      headers.forEach((header, index) => {
-        const normalized = header.toLowerCase();
-        if (normalized.startsWith('_citation_') && !tags.has(normalized) && values[index] !== undefined) {
-          tags.set(normalized, values[index]);
-        }
-      });
-      continue;
-    }
-
-    if (trimmed.startsWith('_')) {
-      const spaceIdx = trimmed.search(/\s/);
-      let tag: string;
-      let rest: string;
-      if (spaceIdx === -1) {
-        tag = trimmed;
-        rest = '';
+    let i = 0;
+    while (i < value.length) {
+      while (/\s/.test(value[i] ?? '') && i < value.length) i++;
+      if (i >= value.length || value[i] === '#') break;
+      const quote = value[i];
+      if (quote === "'" || quote === '"') {
+        const start = ++i;
+        while (i < value.length && !(value[i] === quote && (i + 1 === value.length || /\s/.test(value[i + 1])))) i++;
+        if (i === value.length) throw new Error('Unterminated CIF quoted value');
+        result.push({ value: value.slice(start, i++), quoted: true });
       } else {
-        tag = trimmed.slice(0, spaceIdx);
-        rest = trimmed.slice(spaceIdx + 1).trim();
+        const start = i;
+        while (i < value.length && !/\s/.test(value[i])) i++;
+        result.push({ value: value.slice(start, i), quoted: false });
       }
-      i++;
-      if (rest === '') {
-        if (i < lines.length && lines[i].startsWith(';')) {
-          const block = readTextBlock(i);
-          rest = block.text;
-          i = block.next;
-        } else if (i < lines.length) {
-          rest = lines[i].trim();
-          i++;
-        }
-      }
-      tags.set(tag.toLowerCase(), rest);
-      continue;
     }
-
-    // data_ header or anything else we don't care about.
-    i++;
   }
+  return result;
+}
+const control = (token: Token) => !token.quoted && /^(?:_|loop_$|data_|save_|stop_$|global_$)/i.test(token.value);
 
-  return { tags, hasAnisoLabel, atomSites, publAuthors, symmetryOperations, atomSiteAnisotropic };
+/** CIF whitespace/comments do not terminate loops; quoted control words are values. */
+export function scanCif(text: string): RawCif {
+  const tokens = tokenize(text);
+  const tags = new Map<string, string>();
+  const loops: { headers: string[]; values: string[] }[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const token = tokens[i++];
+    if (!token.quoted && token.value.toLowerCase() === 'loop_') {
+      const headers: string[] = [];
+      while (i < tokens.length && !tokens[i].quoted && tokens[i].value.startsWith('_')) headers.push(tokens[i++].value.toLowerCase());
+      if (!headers.length) throw new Error('CIF loop has no columns');
+      const values: string[] = [];
+      while (i < tokens.length && !control(tokens[i])) values.push(tokens[i++].value);
+      if (values.length % headers.length !== 0) throw new Error('Incomplete CIF loop row');
+      loops.push({ headers, values });
+    } else if (!token.quoted && token.value.startsWith('_')) {
+      if (i >= tokens.length || control(tokens[i])) throw new Error(`Missing CIF value for ${token.value}`);
+      tags.set(token.value.toLowerCase(), tokens[i++].value);
+    }
+  }
+  const citations: Map<string, string>[] = [];
+  for (const { headers, values } of loops) {
+    if (!headers.some(h => h.startsWith('_citation_') && !h.startsWith('_citation_author_'))) continue;
+    for (let offset = 0; offset < values.length; offset += headers.length) citations.push(new Map(headers.map((h, n) => [h, values[offset + n]])));
+  }
+  const primary = citations.find(row => getClean(row, '_citation_id')?.toLowerCase() === 'primary') ?? citations[0];
+  if (primary) {
+    // Scalar publication metadata describes the primary citation, never another row.
+    const selectedId = getClean(primary, '_citation_id');
+    if (selectedId?.toLowerCase() !== 'primary' && !(citations.length === 1 && !selectedId)) {
+      for (const name of [...tags.keys()]) if (name.startsWith('_citation_') || name.startsWith('_journal_') || name === '_publ_section_title') tags.delete(name);
+    }
+    for (const [name, value] of primary) tags.set(name, value);
+  }
+  if (primary && getClean(primary, '_citation_id') && getClean(primary, '_citation_id')?.toLowerCase() !== 'primary') {
+    tags.delete('_publ_author_name'); tags.delete('_publ_author_address');
+  }
+  const primaryId = getClean(tags, '_citation_id');
+  const scalarAuthorId = getClean(tags, '_citation_author_citation_id');
+  if (scalarAuthorId && scalarAuthorId !== primaryId) tags.delete('_citation_author_name');
+  const authorLoops = loops.flatMap(({ headers, values }) => {
+    const citationIndex = headers.indexOf('_citation_author_citation_id');
+    if (citationIndex < 0) {
+      if (citations.length > 1 && headers.includes('_citation_author_name')) return [];
+      if (primary && getClean(primary, '_citation_id') && getClean(primary, '_citation_id')?.toLowerCase() !== 'primary' && headers.includes('_publ_author_name')) return [];
+      return parsePublAuthorRows(headers, values);
+    }
+    if (!primaryId) return [];
+    const selected = values.filter((_value, index) => values[Math.floor(index / headers.length) * headers.length + citationIndex] === primaryId);
+    return parsePublAuthorRows(headers, selected);
+  });
+  const dataAuthors = loops.flatMap(({ headers, values }) => parsePublAuthorRows(
+    headers.map(h => h.startsWith('_audit_author_') ? h.replace(/^_audit_author_/, '_publ_author_') : '_ignored' + h), values
+  ).filter(() => headers.includes('_audit_author_name')));
+  const scalarDataName = getClean(tags, '_audit_author_name');
+  if (!dataAuthors.length && scalarDataName) dataAuthors.push({ name: scalarDataName, address: getClean(tags, '_audit_author_address') });
+  return {
+    tags, hasAnisoLabel: loops.some(loop => loop.headers.includes('_atom_site_aniso_label')),
+    atomSites: loops.flatMap(loop => parseAtomSiteRows(loop.headers, loop.values)),
+    publAuthors: authorLoops, dataAuthors,
+    symmetryOperations: loops.flatMap(loop => parseSymmetryOperationRows(loop.headers, loop.values)),
+    atomSiteAnisotropic: loops.flatMap(loop => parseAtomSiteAnisotropicRows(loop.headers, loop.values))
+  };
 }

@@ -362,7 +362,7 @@ async function testCompoundInformationSelection(window) {
     { label: 'Publication link', value: 'Synthetic structure report 2' },
     { label: 'Language', value: 'English' }
   ]);
-  assert.equal(selected.publication[3]?.label, 'Authors');
+  assert.equal(selected.publication[3]?.label, 'Publication authors');
   assert.deepEqual(selected.authorHeadings, ['Name', 'Organization / City']);
   assert.deepEqual(selected.authors, [
     ['Doe, J.', 'Department of Chemistry, Example University, Springfield'],
@@ -505,7 +505,7 @@ async function testImportProgressIndicator(window) {
     })()
   `);
   assert.equal(result.label, 'Import progress: 800 of 1000 files processed');
-  assert.match(result.text, /90 imported, 700 unchanged, 10 failed/);
+  assert.match(result.text, /90 structures imported, 700 unchanged, 10 failed/);
   assert.equal(result.value, 800);
   assert.equal(result.max, 1000);
   console.log('✓ import progress indicator counts and accessibility label');

@@ -3,6 +3,7 @@ import type { ImportProgress, ImportResult } from '../shared/types';
 export interface ImportWorkerData {
   rootDir: string;
   userDataPath: string;
+  cancellation?: SharedArrayBuffer;
 }
 
 export type ImportWorkerMessage =

@@ -26,7 +26,7 @@ try {
       const result = importCifFolder(data.rootDir, undefined, (progress) => {
         const progressMessage: ImportWorkerMessage = { type: 'progress', progress };
         port.postMessage(progressMessage);
-      });
+      }, () => data.cancellation !== undefined && Atomics.load(new Int32Array(data.cancellation), 0) !== 0);
       const message: ImportWorkerMessage = { type: 'result', result };
       port.postMessage(message);
     } catch (error) {
