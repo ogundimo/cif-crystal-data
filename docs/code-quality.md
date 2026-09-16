@@ -128,12 +128,21 @@ duplication do not fail it. Failed tests, parser/tool errors, or missing measure
 the reporting job visibly. The existing application CI remains in place. This new job should
 not be added as a required quality-score status check during initial baseline collection.
 
-Policy and calibrated thresholds belong to [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20).
-The numerical proposals there are not accepted limits. Start by reviewing the findings with
-[#14](https://github.com/ogundimo/cif-crystal-data-public/issues/14) before refactoring #16–#18.
-The [architecture dependency gate](architecture.md) implements #24; the unused-code gate is described below. Mutation testing remains #19;
-it is not required to collect these measurements. No separate service, token, or dashboard
-subscription is needed for these reports.
+The historical policy proposal [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20)
+is closed; its numerical proposals are not accepted limits. Coverage policy now belongs
+to [#44](https://github.com/ogundimo/cif-crystal-data-public/issues/44), cyclomatic complexity
+to [#45](https://github.com/ogundimo/cif-crystal-data-public/issues/45), cognitive complexity
+to [#46](https://github.com/ogundimo/cif-crystal-data-public/issues/46), duplication to
+[#47](https://github.com/ogundimo/cif-crystal-data-public/issues/47), and mutation policy to
+[#48](https://github.com/ogundimo/cif-crystal-data-public/issues/48). The
+[quality-targets record](quality-targets.md) compares the original and current evidence
+and links the remaining test, refactor and measurement work.
+
+The [architecture dependency gate](architecture.md) implements #24; the unused-code
+gate is described below. The [#19 mutation pilot](mutation-testing.md) completed in
+PR #42 and its first hosted run passed. Mutation testing runs separately and is not
+required to collect this report. No separate service, token, or dashboard subscription
+is needed for these reports.
 
 ## Unused-code regression gate (#25)
 

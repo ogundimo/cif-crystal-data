@@ -60,15 +60,16 @@ Always inspect counts alongside it, especially timeouts and invalid mutations.
 The configured 90/70 display bands are presentation defaults, not adopted targets.
 `thresholds.break: 0` intentionally imposes no score gate. Tool failures and failing
 initial tests still fail the command. Numerical policy belongs to
-[#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20).
+[#48](https://github.com/ogundimo/cif-crystal-data-public/issues/48), following the
+historical proposal in closed #20.
 
 ## CI cadence
 
 `.github/workflows/mutation.yml` provides manual dispatch on Windows with Node 22,
-a 30-minute job limit and reports retained for 30 days. After merging this pilot,
+a 30-minute job limit and reports retained for 30 days. The pilot merged in PR #42;
 run it when changing a targeted module or its tests. Keep routine PR checks fast;
 consider a weekly run after several hosted measurements confirm runtime stability.
-Do not make a score threshold required until survivor review and #20 calibration.
+Policy changes, including cadence and score calibration, belong to #48.
 
 ## Initial measurement and follow-up
 
@@ -132,8 +133,32 @@ changed or exported solely to make it easier to mutate. Unit count increased fro
 Local validation also passed the production build, Electron search UI, native
 SQLite/import-worker regressions, JSmol viewer checks, TypeScript/Knip and both
 unused-code and architecture deliberate-regression probes. The architecture scan
-reported 57 inputs and zero violations. Hosted mutation execution is not yet
-verified; manual dispatch becomes available after the workflow reaches main.
+reported 57 inputs and zero violations. Hosted mutation execution was subsequently
+verified on the merged revision, as recorded below.
+
+## First hosted verification
+
+The [manual run](https://github.com/ogundimo/cif-crystal-data-public/actions/runs/35048065514)
+on merged revision `0b4458d79f4f1b96a85341b43831721b599787ee` passed and uploaded
+its reports. It matched the local outcome totals: 442 killed, 94 survived, six
+timeouts, 167 compile errors, and zero uncovered, runtime-error or ignored mutants;
+709 total and an 82.66% score. Its initial run passed 180 relevant tests.
+
+| Measurement | Duration |
+| --- | --- |
+| Dispatch to completion | 17m08s |
+| Queue/start delay | 4s |
+| Job duration | 17m04s |
+| Dependency installation | 1m32s |
+| Mutation command step | 14m52s |
+| Stryker internal execution timer | 14m48s |
+
+GitHub recorded creation at 2026-09-16 02:27:41 UTC, job start at 02:27:45 and
+completion at 02:44:49. The internal Stryker timer is comparable to the local
+21m04s timer; the command-step and total durations also include other work.
+This is one hosted observation, not a guaranteed runtime. The manual cadence and
+30-minute job limit remain unchanged pending #48. The historical local comparison
+and its input hashes remain intact; this hosted run used the corrected lockfile.
 
 ## Dependency exception
 
@@ -154,7 +179,10 @@ The recorded mutation input hashes remain the historical measurement from
 A clean isolated install with Node 22.23.2/npm 10.9.8 passed using
 `npm ci --ignore-scripts`. The full local install passed lockfile validation but
 could not compile SQLite without Visual Studio C++ tools; full install/build
-verification is delegated to the existing hosted checks, with their scripts enabled.
+verification subsequently passed in the
+[PR #42 application checks](https://github.com/ogundimo/cif-crystal-data-public/actions/runs/35045680188)
+and [quality report](https://github.com/ogundimo/cif-crystal-data-public/actions/runs/35045680194),
+with install scripts enabled.
 
 ## Survivor decisions
 
@@ -178,7 +206,9 @@ handling, and reflection/profile loop bounds need further domain-specific
 review. Some alter work performed without changing ordinary returned values. The
 pilot deliberately leaves these visible instead of adding private-helper tests,
 weakening production checks or suppressing operators merely to improve the score.
-Use these findings when choosing follow-up tests and calibrating #20; this pilot
+Formula survivors are tracked in [#50](https://github.com/ogundimo/cif-crystal-data-public/issues/50),
+PXRD survivors in [#51](https://github.com/ogundimo/cif-crystal-data-public/issues/51),
+and mutation policy in #48. Use these findings in that work; this pilot
 does not claim that every meaningful survivor has been eliminated.
 
 ## Tool references
