@@ -33,11 +33,7 @@ export default function AboutDialog({ open, onClose }: { open: boolean; onClose:
           <p>It provides searchable structure metadata, atomic-site tables, an interactive JSmol crystal viewer, and simulated powder X-ray diffraction patterns with configurable wavelength and peak broadening.</p>
           <section aria-labelledby="contributors-title">
             <h2 id="contributors-title" className="font-semibold">Contributors</h2>
-            <ul className="mt-1 divide-y divide-stroke border-y border-stroke">
-              <li className="py-1">Abishek Iyer</li>
-              <li className="py-1">Vidyanshu Mishra</li>
-              <li className="py-1">Opeyemi Ogundimu</li>
-            </ul>
+            <p className="mt-1 border-y border-stroke py-1">Opeyemi Ogundimu, Vidyanshu Mishra, Abishek Iyer</p>
           </section>
           <p><strong>Data and calculation note:</strong> metadata is read from the imported CIF source. PXRD patterns are calculated approximations intended for exploration and should not be treated as experimental measurements or a substitute for a full crystallographic refinement package.</p>
           <p><strong>Viewer:</strong> molecular and crystal rendering is powered by JSmol 16.4.15. Element colors follow the viewer’s CPK-style palette.</p>

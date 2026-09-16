@@ -15,6 +15,12 @@ interface Props { entry: EntryRow }
 const MIN_CHART_WIDTH = 220;
 const MIN_CHART_HEIGHT = 180;
 const MARGIN = { left: 52, right: 14, top: 12, bottom: 42 };
+const WAVELENGTH_OPTIONS = [
+  { symbol: 'Cu', wavelength: 1.5406 },
+  { symbol: 'Mo', wavelength: 0.7107 },
+  { symbol: 'Co', wavelength: 1.7902 },
+  { symbol: 'Ag', wavelength: 0.5609 }
+] as const;
 
 export default function PxrdPattern({ entry }: Props) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -34,7 +40,7 @@ export default function PxrdPattern({ entry }: Props) {
   const [input, setInput] = useState<DiffractionInput | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [fwhm, setFwhm] = useState(PXRD_FWHM_TWO_THETA);
-  const [wavelength, setWavelength] = useState(entry.radiation_wavelength_angstrom ?? DEFAULT_WAVELENGTH);
+  const [wavelength, setWavelength] = useState(DEFAULT_WAVELENGTH);
   const [includeHeader, setIncludeHeader] = useState(true);
   const [hoveredPeak, setHoveredPeak] = useState<PxrdPeak | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -52,10 +58,10 @@ export default function PxrdPattern({ entry }: Props) {
   }, [entry.id]);
 
   useEffect(() => {
-    setWavelength(entry.radiation_wavelength_angstrom ?? DEFAULT_WAVELENGTH);
+    setWavelength(DEFAULT_WAVELENGTH);
     setHoveredPeak(null);
     setExportMessage(null);
-  }, [entry.id, entry.radiation_wavelength_angstrom]);
+  }, [entry.id]);
 
   const peaks = useMemo(
     () => input ? simulatePxrd(entry, input.atomSites, input.symmetryOperations, wavelength) : [],
@@ -93,21 +99,23 @@ export default function PxrdPattern({ entry }: Props) {
         <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
           <label className="flex items-center gap-1 whitespace-nowrap font-medium">
             λ
-            <input
+            <select
               aria-label="PXRD wavelength in angstroms"
-              data-testid="pxrd-wavelength-input"
-              type="number"
-              min="0.1"
-              max="10"
-              step="0.0001"
+              data-testid="pxrd-wavelength-select"
               value={wavelength}
               onChange={(event) => {
-                const value = event.currentTarget.valueAsNumber;
-                if (Number.isFinite(value) && value >= 0.1 && value <= 10) setWavelength(value);
+                setWavelength(Number(event.currentTarget.value));
+                setHoveredPeak(null);
+                setExportMessage(null);
               }}
-              className="h-6 w-20 rounded-sm border border-[#aeb8c2] bg-white px-1 text-right text-xs font-normal text-[#202020] outline-none focus:border-accent"
-            />
-            <span>Å</span>
+              className="h-6 rounded-sm border border-[#aeb8c2] bg-white px-1 text-xs font-normal text-[#202020] outline-none focus:border-accent"
+            >
+              {WAVELENGTH_OPTIONS.map((option) => (
+                <option key={option.symbol} value={option.wavelength}>
+                  {option.symbol} ({option.wavelength.toFixed(4)} Å)
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex items-center gap-1 whitespace-nowrap font-medium">
             FWHM (2θ)
