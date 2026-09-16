@@ -37,6 +37,15 @@ panel supports a per-pattern wavelength, configurable peak broadening, reflectio
 and two-column `.xy` export with an optional header. Files containing multiple `data_` blocks
 are indexed as separate structures while retaining their shared physical source file.
 
+Use **Import experimental** beside **Export .xy** to overlay a two-column `.xy`, `.txt`,
+or `.csv` scan (2θ in degrees, then intensity). Whitespace and comma separators, optional
+2theta/intensity headers, and comment lines are supported. The experimental curve is red
+and normalized to a maximum of 100 on the same axes as the blue simulated curve; the
+display remains limited to 5–80° 2θ. Files must be smaller than 10 MB. Import another file
+to replace the overlay, or use **Remove experimental** to clear it. The overlay is held
+in the current chart session; it is not stored in the database or included in simulated
+`.xy` exports.
+
 The parser is regression-tested against the current PCD, ICSD, and CCDC/CSD corpus. It
 accepts CCDC moiety formulas when a sum formula is absent, resolves the corpus's symbol-only
 space groups, and stores CCDC deposition numbers, CSD refcodes, ICSD identifiers, and DOI

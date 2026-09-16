@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { normalizeExperimentalPxrd, parseExperimentalPxrd } from '../experimentalPxrd';
 import type { DiffractionInput, EntryRow } from '../../../shared/types';
 import {
   createPxrdProfile,
@@ -7,7 +8,8 @@ import {
   PXRD_RANGE,
   serializePxrdProfile,
   simulatePxrd,
-  type PxrdPeak
+  type PxrdPeak,
+  type PxrdProfilePoint
 } from '../pxrd';
 
 interface Props { entry: EntryRow }
@@ -23,6 +25,11 @@ const WAVELENGTH_OPTIONS = [
 ] as const;
 
 export default function PxrdPattern({ entry }: Props) {
+  const experimentalFileRef = useRef<HTMLInputElement>(null);
+  const clipId = useId();
+  const [experimental, setExperimental] = useState<{ name: string; points: PxrdProfilePoint[] } | null>(null);
+  const [importingExperimental, setImportingExperimental] = useState(false);
+  const [experimentalError, setExperimentalError] = useState<string | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: MIN_CHART_WIDTH, height: MIN_CHART_HEIGHT });
   useEffect(() => {
@@ -78,6 +85,26 @@ export default function PxrdPattern({ entry }: Props) {
   const profilePath = profile.map((point, index) =>
     `${index === 0 ? 'M' : 'L'}${x(point.twoTheta).toFixed(2)},${y(point.intensity).toFixed(2)}`
   ).join(' ');
+  const experimentalPath = useMemo(() => experimental?.points.map((point, index) =>
+    `${index === 0 ? 'M' : 'L'}${(MARGIN.left + (point.twoTheta - PXRD_RANGE.min) / (PXRD_RANGE.max - PXRD_RANGE.min) * plotWidth).toFixed(2)},${(MARGIN.top + plotHeight * (1 - point.intensity / 100)).toFixed(2)}`
+  ).join(' ') ?? '', [experimental, plotWidth, plotHeight]);
+
+  async function importExperimental(file: File): Promise<void> {
+    setImportingExperimental(true);
+    setExperimentalError(null);
+    try {
+      if (file.size > 10_000_000) throw new Error('Please select a file smaller than 10 MB.');
+      const points = normalizeExperimentalPxrd(parseExperimentalPxrd(await file.text()));
+      if (points[points.length - 1].twoTheta < PXRD_RANGE.min || points[0].twoTheta > PXRD_RANGE.max) {
+        throw new Error(`The experimental data does not overlap the ${PXRD_RANGE.min}–${PXRD_RANGE.max}° plot range.`);
+      }
+      setExperimental({ name: file.name, points });
+    } catch (error) {
+      setExperimentalError(error instanceof Error ? error.message : 'Could not import experimental data.');
+    } finally {
+      setImportingExperimental(false);
+    }
+  }
 
   async function exportPattern(): Promise<void> {
     setExporting(true);
@@ -142,15 +169,38 @@ export default function PxrdPattern({ entry }: Props) {
           <button className="btn-w32 h-6 px-2 py-0" disabled={profile.length === 0 || exporting} onClick={() => void exportPattern()}>
             {exporting ? 'Exporting…' : 'Export .xy'}
           </button>
+          <input
+            ref={experimentalFileRef}
+            type="file"
+            accept=".xy,.txt,.csv"
+            aria-label="Experimental PXRD file"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = '';
+              if (file) void importExperimental(file);
+            }}
+          />
+          <button className="btn-w32 h-6 px-2 py-0" disabled={importingExperimental} onClick={() => experimentalFileRef.current?.click()}>
+            {importingExperimental ? 'Importing…' : 'Import experimental'}
+          </button>
           {exportMessage && <span className="max-w-40 truncate text-[10px] text-[#2f6f3e]" title={exportMessage}>{exportMessage}</span>}
         </div>
       </div>
+      {experimental && (
+        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-stroke px-2 py-1 text-[10px]">
+          <span className="text-[#0000ff]">— Simulated</span>
+          <span className="min-w-0 flex-1 truncate text-[#dc2626]" title={experimental.name}>— Experimental: {experimental.name} (maximum = 100; displayed 5–80°)</span>
+          <button className="btn-w32 h-6 px-2 py-0" disabled={importingExperimental} onClick={() => { setExperimental(null); setExperimentalError(null); }}>Remove experimental</button>
+        </div>
+      )}
+      {experimentalError && <p role="alert" className="shrink-0 px-2 py-1 text-xs text-[#c42b1c]">{experimentalError}</p>}
       <div ref={chartRef} data-testid="pxrd-chart" className="relative min-h-0 min-w-0 flex-1 overflow-auto">
-        {status === 'loading' ? (
+        {status === 'loading' && !experimental ? (
           <div className="flex h-full items-center justify-center text-xs text-text-dim">Calculating diffraction pattern…</div>
-        ) : status === 'error' ? (
+        ) : status === 'error' && !experimental ? (
           <div className="flex h-full items-center justify-center text-xs text-[#c42b1c]">Could not load diffraction data.</div>
-        ) : peaks.length === 0 ? (
+        ) : peaks.length === 0 && !experimental ? (
           <div className="flex h-full items-center justify-center px-5 text-center text-xs text-text-dim">A pattern cannot be calculated because cell or atomic-position data is unavailable.</div>
         ) : (
           <div className="relative" style={{ width: WIDTH, height: HEIGHT }}>
@@ -159,10 +209,11 @@ export default function PxrdPattern({ entry }: Props) {
           height={HEIGHT}
           className="block"
           role="img"
-          aria-label={`Simulated PXRD pattern with ${peaks.length} reflections`}
+          aria-label={`Simulated PXRD pattern with ${peaks.length} reflections${experimental ? ' and experimental pattern in red' : ''}`}
           onPointerLeave={() => setHoveredPeak(null)}
         >
           <rect x={MARGIN.left} y={MARGIN.top} width={plotWidth} height={plotHeight} fill="#fbfcfd" />
+          <defs><clipPath id={clipId}><rect x={MARGIN.left} y={MARGIN.top} width={plotWidth} height={plotHeight} /></clipPath></defs>
           {intensityTicks.map((value) => (
             <g key={value}>
               <line x1={MARGIN.left} x2={WIDTH - MARGIN.right} y1={y(value)} y2={y(value)} stroke="#e7ebef" vectorEffect="non-scaling-stroke" />
@@ -178,6 +229,7 @@ export default function PxrdPattern({ entry }: Props) {
           <line x1={MARGIN.left} x2={WIDTH - MARGIN.right} y1={MARGIN.top + plotHeight} y2={MARGIN.top + plotHeight} stroke="#687786" vectorEffect="non-scaling-stroke" />
           <line x1={MARGIN.left} x2={MARGIN.left} y1={MARGIN.top} y2={MARGIN.top + plotHeight} stroke="#687786" vectorEffect="non-scaling-stroke" />
           <path data-role="pxrd-profile" d={profilePath} fill="none" stroke="#0000FF" strokeWidth="1.0" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          {experimental && <path data-role="pxrd-experimental-profile" d={experimentalPath} clipPath={`url(#${clipId})`} fill="none" stroke="#dc2626" strokeWidth="1.2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />}
           {peaks.map((peak, index) => (
             <line
               key={`${peak.hkl}-${index}`}
