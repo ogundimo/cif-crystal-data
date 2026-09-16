@@ -8,7 +8,16 @@ import { getDb } from './connection';
 import { readStoredCif } from './sources';
 
 const TABLES = ['entries', 'entry_elements', 'app_settings', 'atom_sites', 'publ_authors',
-  'symmetry_operations', 'atom_site_anisotropic', 'source_contents', 'imported_files'] as const;
+  'symmetry_operations', 'atom_site_anisotropic', 'source_contents', 'imported_files', 'sqlite_sequence'] as const;
+
+// SQLite retains formatting in sqlite_master. Ignore formatting,
+// while preserving string literals, constraints, column order and every SQL token.
+function schemaTokens(sql: string | null): string[] | null {
+  return sql?.match(/'(?:''|[^'])*'|"(?:""|[^"])*"|`(?:``|[^`])*`|\[[^\]]*\]|[A-Za-z_][A-Za-z_0-9]*|[^\s]/g)?.map(token => {
+    if (/^['"`\[]/.test(token)) return token;
+    return token.toLowerCase();
+  }) ?? null;
+}
 
 function tableHashes(database: Database.Database): Record<string, string> {
   return Object.fromEntries(TABLES.map(table => {
@@ -65,8 +74,10 @@ export function backupProfile(destination: string, database: Database.Database =
 
 function validateArchive(archive: Database.Database, database: Database.Database): void {
   // Never execute SQL supplied by an archive. Reject schema additions and alterations.
-  const schema = (db: Database.Database) => db.prepare(`SELECT type, name, tbl_name, sql FROM sqlite_master
-    WHERE name NOT LIKE 'sqlite_%' AND name != 'backup_manifest' ORDER BY type, name`).all();
+  const schema = (db: Database.Database) => (db.prepare(`SELECT type, name, tbl_name, sql FROM sqlite_master
+    WHERE (name NOT LIKE 'sqlite_%' OR name = 'sqlite_sequence') AND name != 'backup_manifest' ORDER BY type, name`).all() as
+    { type: string; name: string; tbl_name: string; sql: string | null }[])
+    .map(row => ({ ...row, sql: schemaTokens(row.sql) }));
   if (JSON.stringify(schema(archive)) !== JSON.stringify(schema(database))) throw new Error('Incompatible or unexpected backup schema.');
   const manifestSchema = archive.prepare("SELECT sql FROM sqlite_master WHERE name = 'backup_manifest'").get() as { sql: string } | undefined;
   if (manifestSchema?.sql !== 'CREATE TABLE backup_manifest (manifest TEXT NOT NULL)') throw new Error('Invalid backup manifest schema.');
@@ -93,6 +104,9 @@ export function restoreProfile(path: string, database: Database.Database = getDb
       database.transaction(() => {
         for (const table of [...TABLES].reverse()) database.prepare(`DELETE FROM ${table}`).run();
         for (const table of TABLES) {
+          // Explicit-ID inserts have already advanced the destination sequence. Restore
+          // the archive's high-water mark too, including IDs deleted before the backup.
+          if (table === 'sqlite_sequence') database.prepare('DELETE FROM sqlite_sequence').run();
           const columns = (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(row => row.name);
           const insert = database.prepare(`INSERT INTO ${table} (${columns.join(',')}) VALUES (${columns.map(() => '?').join(',')})`);
           for (const row of archive.prepare(`SELECT * FROM ${table} ORDER BY rowid`).iterate() as Iterable<Record<string, unknown>>) {

@@ -16,6 +16,8 @@ function legacyProfile(directory, path) {
   db.exec(`CREATE TABLE entries (id INTEGER PRIMARY KEY, source_filename TEXT UNIQUE, formula TEXT,
     cell_a REAL, cell_b REAL, cell_c REAL, sg_number INTEGER, space_group TEXT, reference TEXT, level_struct_studies TEXT);
     CREATE TABLE entry_elements (entry_id INTEGER REFERENCES entries(id) ON DELETE CASCADE, element TEXT, count REAL);
+    CREATE INDEX idx_entry_elements_element ON entry_elements(element);
+    CREATE INDEX idx_entry_elements_entry_id ON entry_elements(entry_id);
     CREATE TABLE app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE imported_files (source_filename TEXT PRIMARY KEY REFERENCES entries(source_filename) ON DELETE CASCADE,
       source_path TEXT NOT NULL, source_mtime_ms REAL NOT NULL, source_size INTEGER NOT NULL);
@@ -131,6 +133,8 @@ module.exports = async function runPreservation(chunks, runWorker, workerUrl) {
     // Backup never consults external paths, including changed and unavailable originals.
     api.setImportFolder(input, db);
     db.prepare("INSERT INTO app_settings VALUES ('example_setting', 'retained')").run();
+    db.prepare("INSERT INTO entries (id, source_filename) VALUES (10000, 'removed.cif')").run();
+    db.prepare('DELETE FROM entries WHERE id = 10000').run();
     const backup = join(root, 'portable.cifbackup');
     const snapshotPrepare = db.prepare.bind(db);
     db.prepare = sql => {
@@ -148,13 +152,18 @@ module.exports = async function runPreservation(chunks, runWorker, workerUrl) {
     assert.equal(api.getImportFolder(restored), null);
     assert.equal(restored.prepare("SELECT value FROM app_settings WHERE key = 'example_setting'").get().value, 'retained');
     for (const row of rows()) assert.equal(api.readStoredCif(row.id, restored), api.readStoredCif(row.id, db));
+    const next = restored.prepare("INSERT INTO entries (source_filename) VALUES ('next.cif')").run();
+    assert.ok(Number(next.lastInsertRowid) > 10000, 'restore must not reuse a previously deleted ID');
+    restored.prepare('DELETE FROM entries WHERE id = ?').run(next.lastInsertRowid);
     const restoredRows = restored.prepare('SELECT * FROM entries ORDER BY id').all();
     for (const [name, mutate] of [
       ['checksum', archive => archive.exec("UPDATE entries SET formula = 'tampered'")],
       ['missing', archive => archive.exec('DELETE FROM source_contents')],
       ['schema', archive => archive.pragma('user_version = 999')],
       ['manifest', archive => archive.exec('DELETE FROM backup_manifest')],
-      ['unexpected', archive => archive.exec('CREATE TABLE unexpected (value TEXT)')]
+      ['unexpected', archive => archive.exec('CREATE TABLE unexpected (value TEXT)')],
+      ['column', archive => archive.exec('ALTER TABLE entries ADD COLUMN unexpected TEXT')],
+      ['sequence', archive => archive.exec('UPDATE sqlite_sequence SET seq = 0')]
     ]) {
       const bad = join(root, `${name}.cifbackup`); fs.copyFileSync(backup, bad);
       const archive = new Database(bad); archive.pragma('foreign_keys = OFF'); try { mutate(archive); } finally { archive.close(); }
@@ -199,6 +208,10 @@ module.exports = async function runPreservation(chunks, runWorker, workerUrl) {
     assert.equal((await runWorker(workerUrl, dirname(b), legacy)).result.importedCount, 1);
     assert.equal(migrated.prepare('SELECT id FROM entries').get().id, 71);
     assert.match(api.readStoredCif(71, migrated), /Fe1 O1/);
+    const legacyPortable = join(root, 'legacy-portable.cifbackup');
+    api.backupProfile(legacyPortable, migrated);
+    api.restoreProfile(legacyPortable, reopened);
+    assert.equal(api.readStoredCif(71, reopened), api.readStoredCif(71, migrated));
     const migrationBackups = fs.readdirSync(legacy).filter(name => name.includes('pre-migration'));
     assert.ok(migrationBackups.length >= 2);
     const original = new Database(join(legacy, migrationBackups[0]), { readonly: true });

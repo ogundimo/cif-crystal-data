@@ -22,7 +22,7 @@ in different directories cannot replace each other's records.
 Labels compare case-insensitively. Changing a label from unique to repeated (or back)
 changes its identity scheme. Whitespace at the outer block edges is ignored for ambiguous
 identity; other byte changes, including inter-block comments, count as edits. Identical
-repeated blocks remain separate occurrences. Entry IDs are not reused after deletion.
+repeated blocks remain separate occurrences. Entry IDs are not reused after deletion; portable backups retain the ID allocator's high-water mark too.
 Content fingerprints detect copies; they do not claim scientific equivalence or merge
 distinct provenance automatically. Symlink aliases are treated as separate paths.
 
@@ -94,7 +94,7 @@ after the save dialog. A write failure or process interruption can leave an inco
 destination; choose another filename for retry. Restore rejects incomplete archives.
 
 **Restore backup** asks before replacing the current profile's records. Before accepting
-data, it checks the archive format, supported schema, exact expected database schema,
+data, it checks the archive format, supported schema, expected database schema (ignoring SQL formatting),
 table manifest, SQLite integrity, foreign keys, content hashes, and every block association.
 Unexpected objects, incompatible schema, missing payloads, and corrupt checksums are rejected.
 The archive is held in a read transaction throughout validation and transfer, preventing a
