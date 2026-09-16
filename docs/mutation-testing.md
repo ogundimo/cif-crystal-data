@@ -146,6 +146,16 @@ updating Stryker and remove it once the upstream chain resolves a patched versio
 The initial measurement preceded this override; the follow-up includes it. Stryker,
 Vitest, TypeScript, mutation settings and production source remained the same.
 
+PR #42's first hosted runs failed during dependency installation because the
+lockfile omitted optional `@emnapi/core` and `@emnapi/runtime` 1.11.3 entries.
+The follow-up restores those entries without changing existing package versions.
+The recorded mutation input hashes remain the historical measurement from
+`3ac5b93`; the corrected lockfile is not presented as a new mutation measurement.
+A clean isolated install with Node 22.23.2/npm 10.9.8 passed using
+`npm ci --ignore-scripts`. The full local install passed lockfile validation but
+could not compile SQLite without Visual Studio C++ tools; full install/build
+verification is delegated to the existing hosted checks, with their scripts enabled.
+
 ## Survivor decisions
 
 Mutant IDs refer to this pinned toolchain and unchanged target source; they may
