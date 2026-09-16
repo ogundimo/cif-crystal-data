@@ -24,39 +24,32 @@ afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) rmSync(directory, { recursive: true, force: true });
 });
 
-describe('import recovery and refresh cleanup', () => {
+describe('import recovery', () => {
   const text = readFileSync(join(fixtureDirectory, 'synthetic-test.cif'), 'utf8');
 
-  it('retains retryable source metadata and skips stale cleanup after a sibling parse failure', () => {
+  it('retains the entire previous source after a sibling parse failure', () => {
     const directory = temporaryDirectory();
     const path = join(directory, 'partial.cif');
     writeFileSync(path, `${text.replace('data_synthetic_test', 'data_good')}\ndata_bad\n_cell_length_a 1\n`);
     const written: EntryWriteItem[] = [];
-    const cleaned: string[] = [];
     const writer: EntryWriter = {
-      writeBatch: items => { written.push(...items); return []; },
-      removeStaleSourceEntries: source => { cleaned.push(source); }
+      writeBatch: items => { written.push(...items); return []; }
     };
     const result = importCifFolder(directory, writer);
-    expect(result).toMatchObject({ total: 1, importedCount: 1, skippedCount: 0,
+    expect(result).toMatchObject({ total: 1, importedCount: 0, skippedCount: 0,
       failures: [{ filename: 'partial.cif#2-bad', reason: 'Missing chemical formula' }] });
-    expect(written).toHaveLength(1);
-    expect(written[0]).toMatchObject({ sourcePath: path, dataBlockIndex: 0, recordFingerprint: false });
-    expect(cleaned).toEqual([]);
+    expect(written).toHaveLength(0);
   });
 
-  it('cleans stale blocks only for files whose writes all succeeded', () => {
+  it('reports a file write failure while counting its successful sibling', () => {
     const directory = temporaryDirectory();
     writeFileSync(join(directory, 'bad.cif'), text);
     writeFileSync(join(directory, 'good.cif'), text);
-    const cleaned: Array<[string, string[]]> = [];
     const result = importCifFolder(directory, {
-      writeBatch: items => [{ item: items.find(item => item.sourceFilename === 'bad.cif')!, error: 'disk full' }],
-      removeStaleSourceEntries: (source, names) => { cleaned.push([source, names]); }
+      writeBatch: items => [{ item: items.find(item => item.sourceFilename === 'bad.cif')!, error: 'disk full' }]
     });
     expect(result).toEqual({ total: 2, importedCount: 1, skippedCount: 0,
       failures: [{ filename: 'bad.cif', reason: 'disk full' }] });
-    expect(cleaned).toEqual([[join(directory, 'good.cif'), ['good.cif']]]);
   });
 
   it('reports a file disappearing after discovery and continues with its sibling', () => {

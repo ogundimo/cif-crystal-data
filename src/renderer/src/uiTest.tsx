@@ -40,6 +40,10 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
 }));
 
 window.cifApi = {
+  relinkSource: async () => false,
+  backupProfile: async () => false,
+  getPreservedLayout: async () => ({}),
+  restoreProfile: async () => false,
   getEntryCount: async () => 0,
   getAtomSites: async (entryId) => [{
     id: entryId,

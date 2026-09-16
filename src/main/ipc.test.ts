@@ -6,7 +6,7 @@ const doubles = vi.hoisted(() => ({
   handlers: new Map<string, Handler>(), windowOptions: vi.fn(),
   readFile: vi.fn(), stat: vi.fn(), writeFile: vi.fn(),
   save: vi.fn(), open: vi.fn(), confirm: vi.fn(), error: vi.fn(), worker: vi.fn(),
-  db: { initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
+  db: { readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
     searchEntriesPage: vi.fn(), getImportFolder: vi.fn(), setImportFolder: vi.fn(), clearAllEntries: vi.fn() }
 }));
 vi.mock('electron', () => ({
@@ -50,6 +50,7 @@ beforeEach(async () => {
   doubles.handlers.clear();
   doubles.stat.mockResolvedValue({ isFile: () => true, isDirectory: () => true });
   doubles.readFile.mockResolvedValue(first + second);
+  doubles.db.readStoredCif.mockReturnValue(second);
   doubles.save.mockResolvedValue({ canceled: false, filePath: destination });
   doubles.db.getCifExportSource.mockReturnValue(source);
   doubles.db.getCifViewerSourceRecord.mockReturnValue({ ...source, source_filename: 'combined.cif#2-second' });
@@ -60,6 +61,44 @@ beforeEach(async () => {
 });
 
 describe('main-process IPC contracts', () => {
+  it('cancels relink and restore without changing the profile', async () => {
+    doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
+    await expect(invoke('cif:relinkSource', 1)).resolves.toBe(false);
+    await expect(invoke('cif:restoreProfile')).resolves.toBe(false);
+    expect(doubles.db.relinkSource).not.toHaveBeenCalled();
+    expect(doubles.db.restoreProfile).not.toHaveBeenCalled();
+  });
+
+  it('requires restore confirmation and releases the operation lock on rejection', async () => {
+    doubles.open.mockResolvedValue({ canceled: false, filePaths: ['backup.cifbackup'] });
+    doubles.confirm.mockResolvedValueOnce({ response: 0 });
+    await expect(invoke('cif:restoreProfile')).resolves.toBe(false);
+    doubles.confirm.mockResolvedValue({ response: 1 });
+    doubles.db.restoreProfile.mockImplementationOnce(() => { throw new Error('checksum mismatch'); });
+    await expect(invoke('cif:restoreProfile')).rejects.toThrow('checksum mismatch');
+    await expect(invoke('cif:restoreProfile')).resolves.toBe(true);
+    expect(doubles.db.restoreProfile).toHaveBeenCalledTimes(2);
+  });
+
+  it('prevents a concurrent import while a backup dialog is pending and supports cancellation', async () => {
+    let cancel!: (result: { canceled: boolean }) => void;
+    doubles.save.mockImplementationOnce(() => new Promise(resolve => { cancel = resolve; }));
+    const backup = invoke('cif:backupProfile');
+    await expect(invoke('cif:importCifFolder')).rejects.toThrow('already in progress');
+    cancel({ canceled: true });
+    await expect(backup).resolves.toBe(false);
+    expect(doubles.db.backupProfile).not.toHaveBeenCalled();
+    doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
+    await expect(invoke('cif:importCifFolder')).resolves.toBeNull();
+  });
+
+  it('passes only bounded layout preferences into the backup', async () => {
+    await expect(invoke('cif:backupProfile', { unrelated: 'value' })).rejects.toThrow('Invalid layout');
+    const layout = { 'cif-layout-v1:columns': '{}' };
+    await expect(invoke('cif:backupProfile', layout)).resolves.toBe(true);
+    expect(doubles.db.backupProfile).toHaveBeenCalledWith(destination, undefined, layout);
+  });
+
   it('creates an isolated renderer with a preload boundary', () => {
     expect(doubles.windowOptions).toHaveBeenCalledWith(expect.objectContaining({
       webPreferences: expect.objectContaining({ contextIsolation: true, nodeIntegration: false,
@@ -69,7 +108,7 @@ describe('main-process IPC contracts', () => {
 
   it('exports only the selected block and returns the destination filename', async () => {
     await expect(invoke('cif:exportCif', 2)).resolves.toEqual({ exported: true, fileName: 'selected.cif' });
-    expect(doubles.writeFile).toHaveBeenCalledExactlyOnceWith(destination, second, 'utf8');
+    expect(doubles.writeFile).toHaveBeenCalledExactlyOnceWith(destination, second, { encoding: 'utf8', flag: 'wx' });
     expect(doubles.save).toHaveBeenCalledWith(expect.objectContaining({ defaultPath: expect.stringMatching(/Fe1O1_1\.cif$/) }));
   });
 
@@ -85,19 +124,17 @@ describe('main-process IPC contracts', () => {
     expect(doubles.writeFile).not.toHaveBeenCalled();
   });
 
-  it('reports a removed data block and refuses to export unrelated content', async () => {
-    doubles.readFile.mockResolvedValue(first);
-    await expect(invoke('cif:exportCif', 2)).rejects.toThrow('data block 2 is no longer available');
+  it('reports a stored block integrity error before opening an export dialog', async () => {
+    doubles.db.readStoredCif.mockImplementationOnce(() => { throw new Error('Stored CIF block integrity check failed'); });
+    await expect(invoke('cif:exportCif', 2)).rejects.toThrow('integrity check failed');
     expect(doubles.writeFile).not.toHaveBeenCalled();
   });
 
-  it('rejects missing source records and missing files before opening an export dialog', async () => {
+  it('rejects missing source records and unverified legacy sources before opening an export dialog', async () => {
     doubles.db.getCifExportSource.mockReturnValueOnce(null);
     await expect(invoke('cif:exportCif', 2)).rejects.toThrow('no longer in the database');
-    doubles.db.getCifExportSource.mockReturnValueOnce({ ...source, source_path: null });
-    await expect(invoke('cif:exportCif', 2)).rejects.toThrow('location is unavailable');
-    doubles.stat.mockRejectedValueOnce(new Error('ENOENT'));
-    await expect(invoke('cif:exportCif', 2)).rejects.toThrow('could not be found');
+    doubles.db.readStoredCif.mockImplementationOnce(() => { throw new Error('Reimport the original CIF folder'); });
+    await expect(invoke('cif:exportCif', 2)).rejects.toThrow('Reimport');
     expect(doubles.save).not.toHaveBeenCalled();
     expect(doubles.writeFile).not.toHaveBeenCalled();
   });
@@ -114,7 +151,7 @@ describe('main-process IPC contracts', () => {
     expect(doubles.save).not.toHaveBeenCalled();
     const xy = '2theta\tintensity\n22.2000\t100.000000\n';
     await expect(invoke('cif:exportPxrd', 2, xy)).resolves.toMatchObject({ exported: true });
-    expect(doubles.writeFile).toHaveBeenCalledExactlyOnceWith(destination, xy, 'utf8');
+    expect(doubles.writeFile).toHaveBeenCalledExactlyOnceWith(destination, xy, { encoding: 'utf8', flag: 'wx' });
   });
 
   it.each(['cif:exportCif', 'cif:exportPxrd', 'cif:getViewerSource', 'cif:getDiffractionInput'])('rejects invalid entry ids for %s', async channel => {

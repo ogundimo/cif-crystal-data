@@ -75,6 +75,7 @@ export interface ImportFailure {
 }
 
 export interface ImportResult {
+  outcomes?: { created: number; updated: number; duplicate: number };
   importedCount: number;
   skippedCount: number;
   failures: ImportFailure[];
@@ -186,11 +187,15 @@ export interface PublicationResolutionResult {
 
 export interface CifViewerSource {
   fileName: string;
-  /** Original UTF-8 CIF text read from the imported source file without rewriting. */
+  /** Verified imported UTF-8 CIF block text read from managed storage without rewriting. */
   text: string;
 }
 
 export interface CifApi {
+  relinkSource: (entryId: number) => Promise<boolean>;
+  backupProfile: (layout?: Record<string, string>) => Promise<boolean>;
+  getPreservedLayout: () => Promise<Record<string, string>>;
+  restoreProfile: () => Promise<boolean>;
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
   getDiffractionInput: (entryId: number) => Promise<DiffractionInput>;

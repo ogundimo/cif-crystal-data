@@ -48,6 +48,7 @@ async function run() {
   mkdirSync(rootDir);
   writeFileSync(join(rootDir, 'synthetic-test.cif'), diffractionFixtureText);
   const workerUrl = pathToFileURL(join(chunksDirectory, workerFilename));
+  await require('./preservation-regressions.cjs')(chunksDirectory, runWorker, workerUrl);
 
   const legacyUserDataPath = mkdtempSync(join(tmpdir(), 'cif-legacy-migration-'));
   try {
@@ -79,7 +80,7 @@ async function run() {
           source_size INTEGER NOT NULL
         );
         INSERT INTO entries VALUES (1, 'synthetic-test.cif', 'Stale', 1, 1, 1, 1, 'P1', '', 'Cell');
-        INSERT INTO imported_files VALUES ('synthetic-test.cif', 'stale-path', 1, 1);
+        INSERT INTO imported_files VALUES ('synthetic-test.cif', '${join(legacyInput, 'synthetic-test.cif').replaceAll("'", "''")}', 1, 1);
         PRAGMA user_version = 1;
       `);
     } finally {
@@ -90,10 +91,10 @@ async function run() {
     assert.equal(migrationImport.result.importedCount, 1);
     legacyDatabase = new Database(legacyDatabasePath);
     try {
-      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 8);
+      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 9);
       assert.equal(
         legacyDatabase.prepare("SELECT value FROM app_settings WHERE key = 'schema_version'").get().value,
-        '8'
+        '9'
       );
       assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Cl1Na1');
       assert.ok(
@@ -133,7 +134,7 @@ async function run() {
 
   try {
     const firstImport = await runWorker(workerUrl, rootDir, userDataPath);
-    assert.deepEqual(firstImport.result, { importedCount: 1, skippedCount: 0, failures: [], total: 1 });
+    assert.deepEqual(firstImport.result, { outcomes: { created: 1, updated: 0, duplicate: 0 }, importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     assert.deepEqual(firstImport.messages.filter((message) => message.type === 'progress'), [
       {
         type: 'progress',
@@ -204,7 +205,7 @@ async function run() {
       `${diffractionFixtureText}\n# modified for refresh test\n`
     );
     const updateImport = await runWorker(workerUrl, rootDir, userDataPath);
-    assert.deepEqual(updateImport.result, { importedCount: 1, skippedCount: 0, failures: [], total: 1 });
+    assert.deepEqual(updateImport.result, { outcomes: { created: 0, updated: 1, duplicate: 0 }, importedCount: 1, skippedCount: 0, failures: [], total: 1 });
     database = new Database(databasePath);
     try {
       assert.equal(database.prepare('SELECT COUNT(*) AS count FROM entries').get().count, 1);
@@ -278,8 +279,8 @@ async function run() {
     const multiPath = join(multiInput, 'multi.cif');
     writeFileSync(multiPath, `${goodBlock}\n${badBlock}`);
     const partialWrite = await runWorker(workerUrl, multiInput, userDataPath);
-    assert.equal(partialWrite.result.importedCount, 1);
-    assert.equal(partialWrite.result.failures.length, 1);
+    assert.equal(partialWrite.result.importedCount, 0);
+    assert.equal(partialWrite.result.failures.length, 2);
     database = new Database(databasePath);
     database.exec('DROP TRIGGER fail_na_element');
     database.close();
@@ -304,21 +305,20 @@ async function run() {
 
     writeFileSync(multiPath, `${goodBlock.replace('data_good', 'data_new')}\ndata_invalid\n_cell_length_a 1\n`);
     const partialParse = await runWorker(workerUrl, multiInput, userDataPath);
-    assert.equal(partialParse.result.importedCount, 1);
+    assert.equal(partialParse.result.importedCount, 0);
     assert.equal(partialParse.result.failures.length, 1);
     database = new Database(databasePath);
-    const source = database.prepare("SELECT * FROM imported_files WHERE source_filename = 'multi.cif#1-new'").get();
-    assert.equal(source.source_path, multiPath, 'valid blocks retain viewer/export paths after a sibling parse failure');
+    const source = database.prepare("SELECT * FROM imported_files WHERE source_filename = 'multi.cif'").get();
+    assert.equal(source.source_path, multiPath, 'previous complete source retains viewer/export paths after a sibling parse failure');
     assert.equal(source.data_block_index, 0);
-    assert.equal(source.source_mtime_ms, -1);
-    database.pragma('user_version = 6');
+    assert.ok(source.content_hash, 'previous complete version must remain available');
     database.close();
 
     const emptyInput = join(userDataPath, 'empty-input');
     mkdirSync(emptyInput);
     await runWorker(workerUrl, emptyInput, userDataPath);
     database = new Database(databasePath);
-    assert.equal(database.prepare("SELECT source_path FROM imported_files WHERE source_filename = 'multi.cif#1-new'").get().source_path, multiPath,
+    assert.equal(database.prepare("SELECT source_path FROM imported_files WHERE source_filename = 'multi.cif'").get().source_path, multiPath,
       'migration must preserve source paths outside the folder being refreshed');
     database.close();
     assert.equal((await runWorker(workerUrl, multiInput, userDataPath)).result.skippedCount, 0);

@@ -45,15 +45,21 @@ for the same development command.
 ## Importing CIF files
 
 Click **Import CIFs...** in the toolbar, then choose a folder in the native folder picker.
-The app recursively scans the folder for `*.cif` files, parses each one, and upserts it
-into the local SQLite database (deduped by filename: reimporting a file with the same name
-updates the existing row instead of duplicating it). Files that fail to parse are reported,
-with filename and reason, in a dismissible results panel, without aborting the rest of the
-batch.
+The app recursively scans the folder for `*.cif` files and keeps a managed copy of the
+original bytes with the indexed metadata. Equal filenames in different folders remain
+separate structures. Refresh hashes each file, skips unchanged sources, and reports new
+structures, updates, identical copies kept separately, and failures. A failed block leaves
+the entire previous version of that file intact.
 
-The selected folder is remembered. Click **Refresh CIFs** to scan that folder again without
-choosing it again. The refresh compares each file's path, modification time, and size, so
-unchanged files are skipped while new or modified CIFs are parsed and upserted.
+The selected folder is remembered and scanned at startup. **Refresh CIFs** scans it again.
+A changed file updates structures with the same unique data-block labels. Renamed or copied
+files remain separate unless you explicitly relink the existing source to an identical copy.
+
+Use **Sources & backups** to save a portable backup, restore one, or relink the selected
+source. Viewing and export use the managed imported version even after the original is
+moved, edited, or deleted. Backup and export require a new destination filename.
+See [Data preservation](docs/data-preservation.md) for identity, migration, legacy-source,
+relinking, backup, and recovery policies.
 
 The import preserves the inputs used by the simulated powder-diffraction view: unit-cell
 lengths in ångströms, formula units per cell, radiation type and wavelength, symmetry

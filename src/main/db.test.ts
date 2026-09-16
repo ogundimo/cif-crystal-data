@@ -204,7 +204,7 @@ describe('periodic-table selection query', () => {
 
     expect(clearAllEntries(database)).toBe(3);
     expect(transactionRan).toBe(true);
-    expect(statements).toEqual(['DELETE FROM entries']);
+    expect(statements).toEqual(['DELETE FROM entries', 'DELETE FROM source_contents']);
   });
 
   it('loads only the entry count for the startup database summary', () => {
@@ -285,7 +285,7 @@ describe('periodic-table selection query', () => {
     } as unknown as Database.Database;
 
     const writer = createEntryWriter(database);
-    expect(preparedSql).toHaveLength(18);
+    expect(preparedSql).toHaveLength(21);
     expect(
       writer.writeBatch([
         { sourceFilename: 'one.cif', entry: sampleEntry },
@@ -295,7 +295,7 @@ describe('periodic-table selection query', () => {
     expect(transactionExecutions).toBe(3); // one outer batch plus two per-entry savepoints
 
     expect(writer.writeBatch([{ sourceFilename: 'three.cif', entry: sampleEntry }])).toEqual([]);
-    expect(preparedSql).toHaveLength(18);
+    expect(preparedSql).toHaveLength(21);
     expect(transactionExecutions).toBe(5);
   });
 });

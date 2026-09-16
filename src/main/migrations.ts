@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import type Database from 'better-sqlite3';
 
-const CURRENT_SCHEMA_VERSION = 8;
+export const CURRENT_SCHEMA_VERSION = 9;
 
 function hasColumn(database: Database.Database, table: string, column: string): boolean {
   return (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
@@ -186,6 +186,42 @@ function migration8(database: Database.Database): void {
   database.exec('UPDATE imported_files SET source_mtime_ms = -1');
 }
 
+function migration9(database: Database.Database): void {
+  // Rebuild only the parent and source map; dependent rows retain their entry IDs.
+  const schema = (database.prepare("SELECT sql FROM sqlite_master WHERE name = 'entries'").get() as { sql: string }).sql;
+  database.exec(schema.replace('CREATE TABLE entries', 'CREATE TABLE entries_new').replace('source_filename TEXT UNIQUE', 'source_filename TEXT').replace('id INTEGER PRIMARY KEY,', 'id INTEGER PRIMARY KEY AUTOINCREMENT,'));
+  database.exec(`CREATE TEMP TABLE legacy_sources AS SELECT entries.id AS entry_id, imported_files.*
+      FROM imported_files JOIN entries USING(source_filename);
+    INSERT INTO entries_new SELECT * FROM entries;
+    DROP TABLE imported_files;
+    DROP TABLE entries;
+    ALTER TABLE entries_new RENAME TO entries;
+    ALTER TABLE entries ADD COLUMN source_key TEXT;
+    ALTER TABLE entries ADD COLUMN block_key TEXT;
+    CREATE UNIQUE INDEX idx_entries_identity ON entries(source_key, block_key);
+    CREATE INDEX idx_entries_sg_number ON entries(sg_number);
+    CREATE INDEX idx_entries_cell_a ON entries(cell_a);
+    CREATE INDEX idx_entries_cell_b ON entries(cell_b);
+    CREATE INDEX idx_entries_cell_c ON entries(cell_c);
+    CREATE TABLE source_contents (hash TEXT PRIMARY KEY, content BLOB NOT NULL);
+    CREATE TABLE imported_files (
+      entry_id INTEGER PRIMARY KEY REFERENCES entries(id) ON DELETE CASCADE,
+      source_filename TEXT NOT NULL,
+      source_path TEXT NOT NULL,
+      source_mtime_ms REAL NOT NULL,
+      source_size INTEGER NOT NULL,
+      data_block_index INTEGER NOT NULL DEFAULT 0,
+      content_hash TEXT REFERENCES source_contents(hash),
+      block_hash TEXT
+    );
+    INSERT INTO imported_files(entry_id, source_filename, source_path, source_mtime_ms, source_size, data_block_index)
+      SELECT entry_id, source_filename, source_path, -1, source_size, data_block_index FROM legacy_sources;
+    DROP TABLE legacy_sources;
+    CREATE INDEX idx_imported_files_source_path ON imported_files(source_path);
+    CREATE INDEX idx_imported_files_content_hash ON imported_files(content_hash);
+  `);
+}
+
 const migrations: Record<number, (database: Database.Database) => void> = {
   1: migration1,
   2: migration2,
@@ -194,7 +230,8 @@ const migrations: Record<number, (database: Database.Database) => void> = {
   5: migration5,
   6: migration6,
   7: migration7,
-  8: migration8
+  8: migration8,
+  9: migration9
 };
 
 function createMigrationBackup(
@@ -236,13 +273,18 @@ export function migrateDatabase(
   const backupPath = databaseExisted
     ? createMigrationBackup(database, databasePath, fromVersion)
     : null;
-  database.transaction(() => {
-    for (let version = fromVersion + 1; version <= CURRENT_SCHEMA_VERSION; version++) {
-      const migration = migrations[version];
-      if (!migration) throw new Error(`Missing database migration ${version}`);
-      migration(database);
-      database.pragma(`user_version = ${version}`);
-    }
-  })();
+  const foreignKeys = database.pragma('foreign_keys', { simple: true });
+  database.pragma('foreign_keys = OFF');
+  try {
+    database.transaction(() => {
+      for (let version = fromVersion + 1; version <= CURRENT_SCHEMA_VERSION; version++) {
+        const migration = migrations[version];
+        if (!migration) throw new Error(`Missing database migration ${version}`);
+        migration(database);
+        database.pragma(`user_version = ${version}`);
+      }
+      if ((database.pragma('foreign_key_check') as unknown[]).length) throw new Error('Migration foreign-key validation failed');
+    })();
+  } finally { database.pragma(`foreign_keys = ${foreignKeys ? 'ON' : 'OFF'}`); }
   return { fromVersion, toVersion: CURRENT_SCHEMA_VERSION, backupPath };
 }

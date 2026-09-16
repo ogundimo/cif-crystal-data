@@ -8,6 +8,10 @@ import type {
 } from '../shared/types';
 
 const api: CifApi = {
+  relinkSource: (entryId) => ipcRenderer.invoke('cif:relinkSource', entryId),
+  backupProfile: (layout) => ipcRenderer.invoke('cif:backupProfile', layout),
+  getPreservedLayout: () => ipcRenderer.invoke('cif:getPreservedLayout'),
+  restoreProfile: () => ipcRenderer.invoke('cif:restoreProfile'),
   getEntryCount: () => ipcRenderer.invoke('cif:getEntryCount'),
   getAtomSites: (entryId: number) => ipcRenderer.invoke('cif:getAtomSites', entryId),
   getDiffractionInput: (entryId: number) => ipcRenderer.invoke('cif:getDiffractionInput', entryId),
