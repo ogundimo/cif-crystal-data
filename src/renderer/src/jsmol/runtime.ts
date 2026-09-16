@@ -73,9 +73,27 @@ export function jsmolAssetUrls(base = document.baseURI): { script: string; j2s: 
   };
 }
 
+let runtimeLoading: Promise<JmolApi> | null = null;
 function loadLocalJSmol(): Promise<JmolApi> {
   if (window.Jmol) return Promise.resolve(window.Jmol);
-  return Promise.reject(new Error('The packaged JSmol runtime was not loaded before the application started.'));
+  if (runtimeLoading) return runtimeLoading;
+  runtimeLoading = new Promise<JmolApi>((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = jsmolAssetUrls().script;
+    script.async = true;
+    const fail = () => {
+      script.remove();
+      reject(new Error('The local JSmol runtime could not load. Reload the workspace to retry.'));
+    };
+    const timer = window.setTimeout(fail, 30_000);
+    script.onerror = () => { window.clearTimeout(timer); fail(); };
+    script.onload = () => {
+      window.clearTimeout(timer);
+      if (window.Jmol) resolve(window.Jmol); else fail();
+    };
+    document.head.append(script);
+  }).catch(error => { runtimeLoading = null; throw error; });
+  return runtimeLoading;
 }
 
 function message(error: unknown): string {
@@ -83,6 +101,7 @@ function message(error: unknown): string {
 }
 
 export class CrystalViewerRuntime {
+  private disposed = false;
   private jmol: JmolApi | null = null;
   private applet: unknown = null;
   private commandToken = 1_000_000;
@@ -125,6 +144,7 @@ export class CrystalViewerRuntime {
 
   async initialize(onRuntimeReady: () => void): Promise<void> {
     this.jmol = await loadLocalJSmol();
+    if (this.disposed) return;
     this.jmol._tracker = null;
     this.jmol._serverUrl = '';
     const { j2s } = jsmolAssetUrls();
@@ -143,6 +163,7 @@ export class CrystalViewerRuntime {
         script: 'set platformSpeed 8;set antialiasDisplay true;set autobond false;',
         readyFunction: () => {
           window.clearTimeout(timeout);
+          if (this.disposed) { resolve(); return; }
           this.observeHostSize();
           onRuntimeReady();
           resolve();
@@ -307,6 +328,7 @@ export class CrystalViewerRuntime {
   }
 
   dispose(): void {
+    this.disposed = true;
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     if (this.resizeFrame !== null) window.cancelAnimationFrame(this.resizeFrame);

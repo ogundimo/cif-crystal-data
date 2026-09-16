@@ -568,8 +568,27 @@ async function run() {
 
   await require('./quick-search-lifecycle.cjs')(window, testUrl, waitForRenderer);
 
+  // Hold the real renderer entry to check feedback before its dependency graph loads.
+  let releaseEntry;
+  window.webContents.session.webRequest.onBeforeRequest({ urls: ['*://*/src/main.tsx*'] }, (_details, callback) => {
+    releaseEntry = callback;
+  });
+  const startupLoad = window.loadURL(testUrl.replace('ui-test.html', 'index.html'));
+  await waitForRenderer(window, "document.body.textContent.includes('Starting CIF Crystal Data')", 'early startup feedback');
+  const entryDeadline = Date.now() + 5000;
+  while (!releaseEntry && Date.now() < entryDeadline) await pause(20);
+  assert.ok(releaseEntry, 'renderer entry request must be intercepted');
+  releaseEntry({ cancel: true });
+  await startupLoad;
+  await waitForRenderer(window, "document.querySelector('[role=alert]')?.textContent.includes('could not start')", 'renderer-load failure feedback');
+  assert.equal(await window.webContents.executeJavaScript("document.querySelector('button').textContent"), 'Reload workspace');
+  window.webContents.session.webRequest.onBeforeRequest(null);
+  console.log('✓ startup feedback precedes renderer loading and a failed entry offers reload');
+
   await window.loadURL(testUrl + '?app-regression');
   await pause(300);
+  assert.equal(await window.webContents.executeJavaScript('Boolean(window.Jmol)'), false, 'empty workspace must not load JSmol');
+  assert.equal(await window.webContents.executeJavaScript("performance.getEntriesByType('resource').some(e => e.name.includes('CompoundInfoPanel'))"), false, 'empty workspace must not fetch structure details');
   const clickButton = async (text) => {
     await window.webContents.executeJavaScript(`(() => { const button = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes(${JSON.stringify(text)})); button.focus(); button.click(); })()`);
     await pause(100);
@@ -592,6 +611,15 @@ async function run() {
     })()`);
     await pause(100);
   };
+  window.webContents.session.webRequest.onBeforeRequest({ urls: ['*://*/src/components/CompoundInfoPanel.tsx*'] }, (_details, callback) => callback({ cancel: true }));
+  await search();
+  await waitForRenderer(window, "document.querySelector('[role=alert]')?.textContent.includes('Could not load structure details')", 'details-load error boundary');
+  assert.ok(await window.webContents.executeJavaScript("document.querySelectorAll('tbody tr').length > 0"), 'results remain available after a details chunk failure');
+  assert.ok(await window.webContents.executeJavaScript("[...document.querySelectorAll('button')].some(b => b.textContent.includes('Quick search') && !b.disabled)"));
+  window.webContents.session.webRequest.onBeforeRequest(null);
+  await window.loadURL(testUrl + '?app-regression');
+  await waitForRenderer(window, "[...document.querySelectorAll('button')].some(b => b.textContent.includes('Quick search'))", 'reloaded workspace');
+  console.log('✓ a failed deferred details module preserves results and search');
   await search();
   await scrollToEnd();
   assert.equal(await window.webContents.executeJavaScript('window.appRegression.pending.length'), 1);

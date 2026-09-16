@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
+import React, { Component, lazy, Suspense, useRef } from 'react';
 import type { EntryRow, SearchSortColumn } from '../../../shared/types';
 import { usePanelSize, usePanePercentage } from '../layoutPreferences';
-import CompoundInfoPanel from './CompoundInfoPanel';
 import DataGrid, { type EmptyResultsMessage } from './DataGrid';
 
 interface Props {
@@ -19,6 +18,17 @@ interface Props {
 
 const MIN_PANEL_HEIGHT = 112;
 const MIN_RESULTS_HEIGHT = 128;
+const CompoundInfoPanel = lazy(() => import('./CompoundInfoPanel'));
+
+class DetailsBoundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    return this.state.failed
+      ? <div role="alert" className="p-4">Could not load structure details. <button onClick={() => window.location.reload()}>Reload workspace</button></div>
+      : this.props.children;
+  }
+}
 
 export default function ResultsWorkspace({ emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -101,7 +111,11 @@ export default function ResultsWorkspace({ emptyMessage, rows, selectedId, onSel
         onPointerUp={finishResize}
         onPointerCancel={finishResize}
       />
-      <CompoundInfoPanel entry={selectedEntry} />
+      <DetailsBoundary>
+        <Suspense fallback={<div role="status" className="p-4">Loading structure details…</div>}>
+          <CompoundInfoPanel entry={selectedEntry} />
+        </Suspense>
+      </DetailsBoundary>
     </div>
   );
 }
