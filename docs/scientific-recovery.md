@@ -38,6 +38,8 @@ synthetic workloads. The application shows loading immediately and disables
 export while calculating. A worker error or failed data load offers Retry.
 Selection, wavelength and FWHM changes terminate the prior worker; render-time
 identity checks also prevent a prior result appearing before effect cleanup.
+Refreshing metadata for the same entry ID reloads its atom data and recalculates;
+the UI regression covers an unsupported refresh followed by successful recovery.
 Export captures the current completed result and does not report an old export's
 completion as belonging to a newly selected structure.
 
@@ -47,6 +49,8 @@ against the browser worker, checks identical numerical results, samples an 8 ms
 renderer timer and retains `reports/scientific/renderer-performance.json`.
 The suite applies the 100 ms budget to the maximum observed timer delay in each
 sample. This is a responsiveness proxy, not physical keyboard-to-display latency.
+An additional sample per workload measures the actual React panel through result
+rendering, including data retrieval and worker completion.
 
 Workloads are fixed, shareable P1 synthetic cells with deterministic C/O sites:
 
@@ -119,8 +123,9 @@ The [scientific contract](scientific-validity.md) and
   The [sanitized packaged report](baselines/scientific-packaged-validation.json)
   records archive/executable hashes and the tested export/recovery outcomes.
 
-The final retained renderer run measured 2,268–2,499 ms synchronous demanding-case
-work and at most 10.5 ms timer delay across all worker cases. Concurrent validation
+The final retained renderer run measured 1,883–2,159 ms synchronous demanding-case
+work and at most 13.4 ms timer delay across isolated worker cases. Actual panel
+samples observed at most 78 ms delay, within the same 100 ms budget. Concurrent validation
 explains why absolute calculation times vary between runs; all samples remain in
 the retained report. No percentile or whole-app peak-memory claim is made.
 
@@ -133,3 +138,11 @@ checks visible resolved it, and the full suite passed twice afterward.
 Unrun: native save/open-dialog interaction, installer installation, OS-cold startup,
 real Windows ACL failure injection, physical-input latency and experimental or
 licensed external-corpus validation. None is implied by the synthetic passes.
+
+One UI rerun logged a JSmol `setScreenDimension` null-reference exception during
+the transition from the viewer fixture to the separate grid fixture. The new
+page and every subsequent assertion passed; the dedicated viewer suite also
+passed. This is scoped as a non-blocking teardown investigation, not evidence of
+a reproduced ordinary-workspace crash or a claim that teardown is fully correct.
+A focused follow-up draft retains the trigger, evidence and reproduction criteria;
+external tracking awaits publication authorization along with the milestone PR.

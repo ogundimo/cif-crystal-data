@@ -58,3 +58,19 @@ The final model's mutation measurement uses the same toolchain but targets
 `pxrd.ts` and the new `scattering.ts`; it has a different denominator and must not
 be compared as a score improvement over the unchanged-source run. Its raw output
 is `reports/scientific/mutation-current.{json,html}`.
+
+That run completed in 28m44s: 891 generated mutants, 503 killed, 13 timeouts,
+200 survived, seven uncovered and 168 compile errors (71.37% score). The
+[retained report](baselines/pxrd-mutation-current.json) records configuration,
+source/input hashes, counts and every surviving or uncovered replacement.
+No mutants were ignored. The larger validation and diagnostic surface introduces
+new mutation opportunities; the score is advisory and does not certify these
+200 survivors as equivalent. Exhaustive classification of this new population
+is separate from the 78 historical decisions above.
+
+The seven uncovered replacements concern the integer-rotation guard, legacy
+nanometre fallback inside symmetry metric validation, and three diagnostic
+strings. Some guards repeat prior validation; that alone does not establish all
+replacements as equivalent. A focused follow-up draft scopes the new population's
+triage, including boundary/diagnostic assertions, without changing tolerances or
+suppressing mutants. External tracking awaits publication authorization.
