@@ -5,6 +5,39 @@ It records a specific development-startup protocol, not a universal speed target
 Keep this original record; future bug fixes and features should compare against it
 without silently replacing it.
 
+Recorded on 2026-09-16 at clean revision `f4e6304` using benchmark protocol v1:
+
+| Metric | Minimum | Median | Maximum |
+| --- | ---: | ---: | ---: |
+| React controls readiness | 6.519 s | 10.167 s | 10.339 s |
+| First contentful paint | 3.167 s | 10.607 s | 10.645 s |
+| Quick Search paint probe | 92.7 ms | 104.9 ms | 113.3 ms |
+| Empty search observation | 13 ms | 15 ms | 17 ms |
+| Initial resources | 34 | 34 | 34 |
+
+These are the first completed clean-revision reference samples, not selected fastest
+samples. Paint can be delayed by Windows suppression and the harness restore step;
+it must not be interpreted as natural foreground launch timing independent of that
+intervention. The earlier investigation's timings used a different harness and launch
+point and are not the benchmark v1 reference.
+
+Runner-development attempts were retained locally but excluded as reference runs:
+`cif-startup-benchmark-DxXkCd` overlapped a quality check; `cif-startup-benchmark-sSZSsH`
+failed visibility validation; `cif-startup-benchmark-EYZ878` exposed an inspector
+evaluation race before Electron initialized. Those failures led to the restore and
+initialization guards. The completed reference traces/logs are retained under
+`cif-startup-benchmark-7UHadi` in the Windows temporary directory. Only the sanitized
+summary is stored in this repository.
+
+The [unchanged-application repeat](baselines/startup-dev-v1-repeat.json) verifies the
+documented comparison command. Its controls-readiness samples were 6.066 / 9.602 /
+6.538 seconds (median 6.538 seconds); Quick Search paint median was 192.3 ms. The
+app and benchmark code were unchanged, and resource counts/bytes were identical.
+These sizeable timing differences are observed environmental/measurement variability,
+not evidence of another optimization. That is why timings are advisory and repeat
+runs are required before attributing a regression to a feature or fix. The repeat's
+dirty flag reflects the baseline/docs/test additions pending at measurement time.
+
 ## Repeat the measurement
 
 Use Node 22.13+ on the Node 22 line and the locked dependencies (`npm ci`). Close

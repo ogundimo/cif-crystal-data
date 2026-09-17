@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { compare, metrics, protocol, summarize } from './results.mjs';
 const sample = value => Object.fromEntries(metrics.map(key => [key, value]));
 test('preserves samples and outliers and calculates odd/even medians', () => {
@@ -18,4 +19,14 @@ test('comparison rejects different protocols and flags machine/tool changes', ()
   assert.throws(() => compare(current, { ...base, protocol: 'different' }));
   assert.throws(() => compare(current, { ...base, status: 'failed' }));
   assert.equal(compare(current, { ...base, samples: [0, 0, 0].map(sample) }).metrics.mainMs.percent, null);
+});
+
+test('recorded baseline is complete and its summary matches all retained samples', () => {
+  const baseline = JSON.parse(readFileSync(new URL('../../docs/baselines/startup-dev-v1.json', import.meta.url), 'utf8'));
+  assert.equal(baseline.status, 'passed');
+  assert.equal(baseline.source.dirty, false);
+  assert.deepEqual(summarize(baseline.samples), baseline.summary);
+  const comparison = compare(baseline, baseline);
+  assert.deepEqual(comparison.changedConditions, []);
+  assert.ok(Object.values(comparison.metrics).every(metric => metric.change === 0));
 });
