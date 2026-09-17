@@ -1,0 +1,1427 @@
+{
+  "measuredOn": "2026-09-17",
+  "node": "22.23.2",
+  "stryker": "10.0.0",
+  "durationSeconds": 1187,
+  "sourceSha256": "d344ea26461bf59c6991cb63eb2aabfba363df193c0a998e1b44dd7148a95728",
+  "comparableSource": true,
+  "scope": "Same three files, 709 generated mutants; only analytic tests added before model changes",
+  "before": {
+    "Killed": 273,
+    "CompileError": 107,
+    "Survived": 78,
+    "Timeout": 5
+  },
+  "after": {
+    "Killed": 290,
+    "CompileError": 107,
+    "Survived": 61,
+    "Timeout": 5
+  },
+  "reviews": [
+    {
+      "id": "148",
+      "location": {
+        "end": {
+          "column": 36,
+          "line": 25
+        },
+        "start": {
+          "column": 11,
+          "line": 25
+        }
+      },
+      "replacement": "a[1] * b[2] + a[2] * b[1]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent on reachable bases",
+      "reason": "The first product or the second product in this cross component is zero for the triangular direct-cell vectors used by reciprocalBasis; changing its sign leaves the component unchanged."
+    },
+    {
+      "id": "151",
+      "location": {
+        "end": {
+          "column": 63,
+          "line": 25
+        },
+        "start": {
+          "column": 38,
+          "line": 25
+        }
+      },
+      "replacement": "a[2] * b[0] + a[0] * b[2]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "154",
+      "location": {
+        "end": {
+          "column": 90,
+          "line": 25
+        },
+        "start": {
+          "column": 65,
+          "line": 25
+        }
+      },
+      "replacement": "a[0] * b[1] + a[1] * b[0]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "173",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 39
+        },
+        "start": {
+          "column": 25,
+          "line": 39
+        }
+      },
+      "replacement": "compact.split('+')",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent numeric result",
+      "reason": "An empty additive term parses as Number(\"\") = 0, so retaining empty split terms changes no coordinate."
+    },
+    {
+      "id": "194",
+      "location": {
+        "end": {
+          "column": 60,
+          "line": 45
+        },
+        "start": {
+          "column": 7,
+          "line": 45
+        }
+      },
+      "replacement": "value -= coefficient * point['xyz'.indexOf(variable)]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "missing assertion",
+      "reason": "Negating rotation or translation terms can alter a non-centrosymmetric orbit. Existing powder averages can conceal differences; these are not certified equivalent. Current independent mixed-site/symmetry references exercise the new validated grammar."
+    },
+    {
+      "id": "200",
+      "location": {
+        "end": {
+          "column": 47,
+          "line": 48
+        },
+        "start": {
+          "column": 22,
+          "line": 48
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "missing assertion; contract replaced",
+      "reason": "Removing the absent-denominator branch rejects integer translations. The current strict operation parser and independent full-space-group references replace this permissive grammar; this old survivor is not equivalent."
+    },
+    {
+      "id": "206",
+      "location": {
+        "end": {
+          "column": 22,
+          "line": 50
+        },
+        "start": {
+          "column": 7,
+          "line": 50
+        }
+      },
+      "replacement": "value -= number",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "missing assertion",
+      "reason": "Negating rotation or translation terms can alter a non-centrosymmetric orbit. Existing powder averages can conceal differences; these are not certified equivalent. Current independent mixed-site/symmetry references exercise the new validated grammar."
+    },
+    {
+      "id": "208",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 53
+        },
+        "start": {
+          "column": 11,
+          "line": 53
+        }
+      },
+      "replacement": "value % 1 - 1",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "numerical equivalence with a boundary caveat",
+      "reason": "Integer lattice translations preserve complex reflection phases for integer hkl. Removing canonical wrapping can change the per-site deduplication keys at translated special positions; current periodic-key behavior is tested separately, so this is not global equivalence."
+    },
+    {
+      "id": "209",
+      "location": {
+        "end": {
+          "column": 21,
+          "line": 53
+        },
+        "start": {
+          "column": 12,
+          "line": 53
+        }
+      },
+      "replacement": "value * 1",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "numerical equivalence with a boundary caveat",
+      "reason": "Integer lattice translations preserve complex reflection phases for integer hkl. Removing canonical wrapping can change the per-site deduplication keys at translated special positions; current periodic-key behavior is tested separately, so this is not global equivalence."
+    },
+    {
+      "id": "220",
+      "location": {
+        "end": {
+          "column": 65,
+          "line": 60
+        },
+        "start": {
+          "column": 51,
+          "line": 60
+        }
+      },
+      "replacement": "true",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "unsupported/malformed-input gap",
+      "reason": "These mutations admit unusable symmetry results or bypass element rejection. The current contract rejects invalid sites/operations before enumeration; missing/unknown/non-finite regressions cover that policy."
+    },
+    {
+      "id": "240",
+      "location": {
+        "end": {
+          "column": 19,
+          "line": 71
+        },
+        "start": {
+          "column": 10,
+          "line": 71
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "unsupported/malformed-input gap",
+      "reason": "These mutations admit unusable symmetry results or bypass element rejection. The current contract rejects invalid sites/operations before enumeration; missing/unknown/non-finite regressions cover that policy."
+    },
+    {
+      "id": "272",
+      "location": {
+        "end": {
+          "column": 80,
+          "line": 86
+        },
+        "start": {
+          "column": 77,
+          "line": 86
+        }
+      },
+      "replacement": "\"\"",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "missing deduplication assertion addressed in current suite",
+      "reason": "Removing the colon separator permits collisions between concatenated integer coordinate keys. This is not equivalent; the current suite explicitly compares keys [1,23456,7] and [12,3456,7] against expanded positions."
+    },
+    {
+      "id": "305",
+      "location": {
+        "end": {
+          "column": 70,
+          "line": 107
+        },
+        "start": {
+          "column": 7,
+          "line": 107
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "306",
+      "location": {
+        "end": {
+          "column": 70,
+          "line": 107
+        },
+        "start": {
+          "column": 7,
+          "line": 107
+        }
+      },
+      "replacement": "![a, b, c, alpha, beta, gamma].every(Number.isFinite) && a <= 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "308",
+      "location": {
+        "end": {
+          "column": 60,
+          "line": 107
+        },
+        "start": {
+          "column": 8,
+          "line": 107
+        }
+      },
+      "replacement": "[a, b, c, alpha, beta, gamma].some(Number.isFinite)",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "309",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 107
+        },
+        "start": {
+          "column": 8,
+          "line": 107
+        }
+      },
+      "replacement": "[]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "310",
+      "location": {
+        "end": {
+          "column": 70,
+          "line": 107
+        },
+        "start": {
+          "column": 64,
+          "line": 107
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "311",
+      "location": {
+        "end": {
+          "column": 70,
+          "line": 107
+        },
+        "start": {
+          "column": 64,
+          "line": 107
+        }
+      },
+      "replacement": "a < 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "314",
+      "location": {
+        "end": {
+          "column": 80,
+          "line": 107
+        },
+        "start": {
+          "column": 74,
+          "line": 107
+        }
+      },
+      "replacement": "b < 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "316",
+      "location": {
+        "end": {
+          "column": 90,
+          "line": 107
+        },
+        "start": {
+          "column": 84,
+          "line": 107
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "317",
+      "location": {
+        "end": {
+          "column": 90,
+          "line": 107
+        },
+        "start": {
+          "column": 84,
+          "line": 107
+        }
+      },
+      "replacement": "c < 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "319",
+      "location": {
+        "end": {
+          "column": 126,
+          "line": 107
+        },
+        "start": {
+          "column": 94,
+          "line": 107
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "320",
+      "location": {
+        "end": {
+          "column": 126,
+          "line": 107
+        },
+        "start": {
+          "column": 94,
+          "line": 107
+        }
+      },
+      "replacement": "Math.abs(Math.sin(gamma)) <= 1e-8",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "numerical boundary difference",
+      "reason": "Changing strictness at the 1e-8 degeneracy threshold affects only exactly-on-threshold cells. Those cases are outside independently validated well-conditioned structures; preserve the guard and document rather than certify equivalence."
+    },
+    {
+      "id": "325",
+      "location": {
+        "end": {
+          "column": 61,
+          "line": 109
+        },
+        "start": {
+          "column": 42,
+          "line": 109
+        }
+      },
+      "replacement": "b / Math.sin(gamma)",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "327",
+      "location": {
+        "end": {
+          "column": 88,
+          "line": 111
+        },
+        "start": {
+          "column": 14,
+          "line": 111
+        }
+      },
+      "replacement": "c * (Math.cos(alpha) - Math.cos(beta) * Math.cos(gamma)) * Math.sin(gamma)",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "334",
+      "location": {
+        "end": {
+          "column": 21,
+          "line": 113
+        },
+        "start": {
+          "column": 7,
+          "line": 113
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "335",
+      "location": {
+        "end": {
+          "column": 21,
+          "line": 113
+        },
+        "start": {
+          "column": 7,
+          "line": 113
+        }
+      },
+      "replacement": "czSquared < 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "339",
+      "location": {
+        "end": {
+          "column": 30,
+          "line": 116
+        },
+        "start": {
+          "column": 7,
+          "line": 116
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "invalid-input or numerical-degeneracy guard",
+      "reason": "Some invalid/zero cells are rejected later or produce no finite reflections without this guard. That does not prove equivalence: current explicit unsupported status and finite positive-cell tests protect the public contract."
+    },
+    {
+      "id": "340",
+      "location": {
+        "end": {
+          "column": 30,
+          "line": 116
+        },
+        "start": {
+          "column": 7,
+          "line": 116
+        }
+      },
+      "replacement": "Math.abs(volume) <= 1e-8",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "numerical boundary difference",
+      "reason": "Changing strictness at the 1e-8 degeneracy threshold affects only exactly-on-threshold cells. Those cases are outside independently validated well-conditioned structures; preserve the guard and document rather than certify equivalence."
+    },
+    {
+      "id": "351",
+      "location": {
+        "end": {
+          "column": 66,
+          "line": 128
+        },
+        "start": {
+          "column": 44,
+          "line": 128
+        }
+      },
+      "replacement": "wavelengthOverride >= 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent old fallback",
+      "reason": "The preceding truthiness test already excludes zero. New explicit invalid-wavelength rejection supersedes the fallback contract."
+    },
+    {
+      "id": "357",
+      "location": {
+        "end": {
+          "column": 85,
+          "line": 130
+        },
+        "start": {
+          "column": 46,
+          "line": 130
+        }
+      },
+      "replacement": "entry.radiation_wavelength_angstrom >= 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent old fallback",
+      "reason": "The preceding truthiness test already excludes zero. New explicit invalid-wavelength rejection supersedes the fallback contract."
+    },
+    {
+      "id": "363",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 133
+        },
+        "start": {
+          "column": 17,
+          "line": 133
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent returned peaks; extra work",
+      "reason": "With zero expanded atoms all structure factors are zero and no reflection survives. Removing the early empty-atoms return changes work, not returned peaks."
+    },
+    {
+      "id": "366",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 134
+        },
+        "start": {
+          "column": 20,
+          "line": 134
+        }
+      },
+      "replacement": "MAX_TWO_THETA * DEG * 2",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "search-bound completeness gap",
+      "reason": "Changed d_min or index bounds can miss supported reflections, especially near the cap or for long cells. These are not equivalent. Current completeness diagnostics, resource bounds and independent larger-cell references protect the replacement contract."
+    },
+    {
+      "id": "368",
+      "location": {
+        "end": {
+          "column": 53,
+          "line": 135
+        },
+        "start": {
+          "column": 16,
+          "line": 135
+        }
+      },
+      "replacement": "wavelength * (2 * Math.sin(thetaMax))",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "search-bound completeness gap",
+      "reason": "Changed d_min or index bounds can miss supported reflections, especially near the cap or for long cells. These are not equivalent. Current completeness diagnostics, resource bounds and independent larger-cell references protect the replacement contract."
+    },
+    {
+      "id": "369",
+      "location": {
+        "end": {
+          "column": 52,
+          "line": 135
+        },
+        "start": {
+          "column": 30,
+          "line": 135
+        }
+      },
+      "replacement": "2 / Math.sin(thetaMax)",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "search-bound completeness gap",
+      "reason": "Changed d_min or index bounds can miss supported reflections, especially near the cap or for long cells. These are not equivalent. Current completeness diagnostics, resource bounds and independent larger-cell references protect the replacement contract."
+    },
+    {
+      "id": "380",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 137
+        },
+        "start": {
+          "column": 67,
+          "line": 137
+        }
+      },
+      "replacement": "Math.ceil(length / dMin) - 1",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "search-bound completeness gap",
+      "reason": "Changed d_min or index bounds can miss supported reflections, especially near the cap or for long cells. These are not equivalent. Current completeness diagnostics, resource bounds and independent larger-cell references protect the replacement contract."
+    },
+    {
+      "id": "381",
+      "location": {
+        "end": {
+          "column": 90,
+          "line": 137
+        },
+        "start": {
+          "column": 77,
+          "line": 137
+        }
+      },
+      "replacement": "length * dMin",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "search-bound completeness gap",
+      "reason": "Changed d_min or index bounds can miss supported reflections, especially near the cap or for long cells. These are not equivalent. Current completeness diagnostics, resource bounds and independent larger-cell references protect the replacement contract."
+    },
+    {
+      "id": "385",
+      "location": {
+        "end": {
+          "column": 42,
+          "line": 139
+        },
+        "start": {
+          "column": 28,
+          "line": 139
+        }
+      },
+      "replacement": "h < limits[0]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent for uncapped domain; incomplete-domain boundary",
+      "reason": "ceil(length/d_min)+1 is strictly outside the physical sphere, so excluding its final index changes only work when uncapped. At the 36 cap it can omit valid boundary planes; capped results are explicitly incomplete, not certified converged."
+    },
+    {
+      "id": "391",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 140
+        },
+        "start": {
+          "column": 30,
+          "line": 140
+        }
+      },
+      "replacement": "k < limits[1]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent for uncapped domain; incomplete-domain boundary",
+      "reason": "ceil(length/d_min)+1 is strictly outside the physical sphere, so excluding its final index changes only work when uncapped. At the 36 cap it can omit valid boundary planes; capped results are explicitly incomplete, not certified converged."
+    },
+    {
+      "id": "397",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 141
+        },
+        "start": {
+          "column": 32,
+          "line": 141
+        }
+      },
+      "replacement": "l < limits[2]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent for uncapped domain; incomplete-domain boundary",
+      "reason": "ceil(length/d_min)+1 is strictly outside the physical sphere, so excluding its final index changes only work when uncapped. At the 36 cap it can omit valid boundary planes; capped results are explicitly incomplete, not certified converged."
+    },
+    {
+      "id": "406",
+      "location": {
+        "end": {
+          "column": 53,
+          "line": 142
+        },
+        "start": {
+          "column": 13,
+          "line": 142
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "407",
+      "location": {
+        "end": {
+          "column": 53,
+          "line": 142
+        },
+        "start": {
+          "column": 13,
+          "line": 142
+        }
+      },
+      "replacement": "h === 0 && k === 0 && l === 0 && h < 0",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "408",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 142
+        },
+        "start": {
+          "column": 14,
+          "line": 142
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent returned peaks",
+      "reason": "These change only origin handling: removing the explicit origin exclusion or changing l<0 to l<=0 when h=k=0. The origin is also rejected by the q=0 condition; other planes are unchanged."
+    },
+    {
+      "id": "418",
+      "location": {
+        "end": {
+          "column": 53,
+          "line": 142
+        },
+        "start": {
+          "column": 48,
+          "line": 142
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "423",
+      "location": {
+        "end": {
+          "column": 65,
+          "line": 142
+        },
+        "start": {
+          "column": 58,
+          "line": 142
+        }
+      },
+      "replacement": "true",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "434",
+      "location": {
+        "end": {
+          "column": 98,
+          "line": 142
+        },
+        "start": {
+          "column": 91,
+          "line": 142
+        }
+      },
+      "replacement": "true",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "437",
+      "location": {
+        "end": {
+          "column": 107,
+          "line": 142
+        },
+        "start": {
+          "column": 102,
+          "line": 142
+        }
+      },
+      "replacement": "l <= 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent returned peaks",
+      "reason": "These change only origin handling: removing the explicit origin exclusion or changing l<0 to l<=0 when h=k=0. The origin is also rejected by the q=0 condition; other planes are unchanged."
+    },
+    {
+      "id": "440",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 144
+        },
+        "start": {
+          "column": 11,
+          "line": 144
+        }
+      },
+      "replacement": "h * basis[0][0] + k * basis[1][0] - l * basis[2][0]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent on triangular reciprocal basis",
+      "reason": "The changed terms multiply components that are identically zero: c* has only z and b* has no x in this constructed basis. This is basis-specific, not a general reciprocal-vector identity."
+    },
+    {
+      "id": "441",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 144
+        },
+        "start": {
+          "column": 11,
+          "line": 144
+        }
+      },
+      "replacement": "h * basis[0][0] - k * basis[1][0]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent on triangular reciprocal basis",
+      "reason": "The changed terms multiply components that are identically zero: c* has only z and b* has no x in this constructed basis. This is basis-specific, not a general reciprocal-vector identity."
+    },
+    {
+      "id": "445",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 145
+        },
+        "start": {
+          "column": 11,
+          "line": 145
+        }
+      },
+      "replacement": "h * basis[0][1] + k * basis[1][1] - l * basis[2][1]",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent on triangular reciprocal basis",
+      "reason": "The changed terms multiply components that are identically zero: c* has only z and b* has no x in this constructed basis. This is basis-specific, not a general reciprocal-vector identity."
+    },
+    {
+      "id": "446",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 145
+        },
+        "start": {
+          "column": 11,
+          "line": 145
+        }
+      },
+      "replacement": "h * basis[0][1] - k * basis[1][1]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "450",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 146
+        },
+        "start": {
+          "column": 11,
+          "line": 146
+        }
+      },
+      "replacement": "h * basis[0][2] + k * basis[1][2] - l * basis[2][2]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "451",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 146
+        },
+        "start": {
+          "column": 11,
+          "line": 146
+        }
+      },
+      "replacement": "h * basis[0][2] - k * basis[1][2]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "458",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 150
+        },
+        "start": {
+          "column": 13,
+          "line": 150
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent finite output; redundant guard",
+      "reason": "qLength is nonnegative. sinTheta=0 or 1 gives 0 or 180 degrees and is removed by the range filter; >1 produces NaN, which never passes the positive-intensity test. Keeping the early guard avoids invalid intermediate arithmetic."
+    },
+    {
+      "id": "459",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 150
+        },
+        "start": {
+          "column": 13,
+          "line": 150
+        }
+      },
+      "replacement": "sinTheta <= 0 && sinTheta >= 1",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent finite output; redundant guard",
+      "reason": "qLength is nonnegative. sinTheta=0 or 1 gives 0 or 180 degrees and is removed by the range filter; >1 produces NaN, which never passes the positive-intensity test. Keeping the early guard avoids invalid intermediate arithmetic."
+    },
+    {
+      "id": "460",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 150
+        },
+        "start": {
+          "column": 13,
+          "line": 150
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent finite output; redundant guard",
+      "reason": "qLength is nonnegative. sinTheta=0 or 1 gives 0 or 180 degrees and is removed by the range filter; >1 produces NaN, which never passes the positive-intensity test. Keeping the early guard avoids invalid intermediate arithmetic."
+    },
+    {
+      "id": "461",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 150
+        },
+        "start": {
+          "column": 13,
+          "line": 150
+        }
+      },
+      "replacement": "sinTheta < 0",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent finite output; redundant guard",
+      "reason": "qLength is nonnegative. sinTheta=0 or 1 gives 0 or 180 degrees and is removed by the range filter; >1 produces NaN, which never passes the positive-intensity test. Keeping the early guard avoids invalid intermediate arithmetic."
+    },
+    {
+      "id": "463",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 150
+        },
+        "start": {
+          "column": 30,
+          "line": 150
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent finite output; redundant guard",
+      "reason": "qLength is nonnegative. sinTheta=0 or 1 gives 0 or 180 degrees and is removed by the range filter; >1 produces NaN, which never passes the positive-intensity test. Keeping the early guard avoids invalid intermediate arithmetic."
+    },
+    {
+      "id": "464",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 150
+        },
+        "start": {
+          "column": 30,
+          "line": 150
+        }
+      },
+      "replacement": "sinTheta > 1",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent finite output; redundant guard",
+      "reason": "qLength is nonnegative. sinTheta=0 or 1 gives 0 or 180 degrees and is removed by the range filter; >1 produces NaN, which never passes the positive-intensity test. Keeping the early guard avoids invalid intermediate arithmetic."
+    },
+    {
+      "id": "471",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 153
+        },
+        "start": {
+          "column": 13,
+          "line": 153
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "missing lower-range assertion",
+      "reason": "Removing the 5-degree bound admits low-angle peaks in long cells. The current larger-cell independent references and range tests cover this behavior."
+    },
+    {
+      "id": "472",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 153
+        },
+        "start": {
+          "column": 13,
+          "line": 153
+        }
+      },
+      "replacement": "twoTheta <= MIN_TWO_THETA",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "inclusive-range boundary difference",
+      "reason": "Equality changes admission at exactly 5 or 80 degrees. Preserve the documented inclusive range; floating-point construction at an exact boundary is not evidence of global equivalence."
+    },
+    {
+      "id": "475",
+      "location": {
+        "end": {
+          "column": 65,
+          "line": 153
+        },
+        "start": {
+          "column": 41,
+          "line": 153
+        }
+      },
+      "replacement": "twoTheta >= MAX_TWO_THETA",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "inclusive-range boundary difference",
+      "reason": "Equality changes admission at exactly 5 or 80 degrees. Preserve the documented inclusive range; floating-point construction at an exact boundary is not evidence of global equivalence."
+    },
+    {
+      "id": "486",
+      "location": {
+        "end": {
+          "column": 106,
+          "line": 160
+        },
+        "start": {
+          "column": 40,
+          "line": 160
+        }
+      },
+      "replacement": "h * atom.position[0] + k * atom.position[1] - l * atom.position[2]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "487",
+      "location": {
+        "end": {
+          "column": 83,
+          "line": 160
+        },
+        "start": {
+          "column": 40,
+          "line": 160
+        }
+      },
+      "replacement": "h * atom.position[0] - k * atom.position[1]",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "493",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 162
+        },
+        "start": {
+          "column": 11,
+          "line": 162
+        }
+      },
+      "replacement": "real -= amplitude * Math.cos(phase)",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent",
+      "reason": "Negating the complete real or imaginary sum leaves its square unchanged."
+    },
+    {
+      "id": "495",
+      "location": {
+        "end": {
+          "column": 51,
+          "line": 163
+        },
+        "start": {
+          "column": 11,
+          "line": 163
+        }
+      },
+      "replacement": "imaginary -= amplitude * Math.sin(phase)",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent",
+      "reason": "Negating the complete real or imaginary sum leaves its square unchanged."
+    },
+    {
+      "id": "506",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 167
+        },
+        "start": {
+          "column": 13,
+          "line": 167
+        }
+      },
+      "replacement": "intensity >= 1e-8",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "numerical threshold boundary difference",
+      "reason": "Equality admits an intensity exactly 1e-8. This is not mathematically equivalent; the threshold is an absolute numerical-noise policy, far below the reference relative-intensity tolerance for the fixtures."
+    },
+    {
+      "id": "517",
+      "location": {
+        "end": {
+          "column": 34,
+          "line": 174
+        },
+        "start": {
+          "column": 32,
+          "line": 174
+        }
+      },
+      "replacement": "+1",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "522",
+      "location": {
+        "end": {
+          "column": 72,
+          "line": 175
+        },
+        "start": {
+          "column": 21,
+          "line": 175
+        }
+      },
+      "replacement": "Math.abs(previous.twoTheta - peak.twoTheta) <= 0.025",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "retired approximation",
+      "reason": "The 0.025-degree merge was replaced by 1e-7 degeneracy grouping; distinct nearby reflections now broaden independently. Equality at the old merge tolerance is no longer the scientific contract."
+    },
+    {
+      "id": "524",
+      "location": {
+        "end": {
+          "column": 63,
+          "line": 175
+        },
+        "start": {
+          "column": 30,
+          "line": 175
+        }
+      },
+      "replacement": "previous.twoTheta + peak.twoTheta",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "525",
+      "location": {
+        "end": {
+          "column": 6,
+          "line": 180
+        },
+        "start": {
+          "column": 74,
+          "line": 175
+        }
+      },
+      "replacement": "{}",
+      "before": "Survived",
+      "after": "Killed",
+      "category": "missing assertion now detected",
+      "reason": "The added triclinic interference/multiplicity tests kill this mutant in the comparable unchanged-source run."
+    },
+    {
+      "id": "527",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 177
+        },
+        "start": {
+          "column": 11,
+          "line": 177
+        }
+      },
+      "replacement": "true",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "retired label policy",
+      "reason": "The old strongest-versus-accumulated label comparison was not a reliable representative-selection rule. The new documented label is the deterministic first enumerated family member; numerical intensity is independently tested."
+    },
+    {
+      "id": "529",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 177
+        },
+        "start": {
+          "column": 11,
+          "line": 177
+        }
+      },
+      "replacement": "peak.intensity >= previous.intensity",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "retired label policy",
+      "reason": "The old strongest-versus-accumulated label comparison was not a reliable representative-selection rule. The new documented label is the deterministic first enumerated family member; numerical intensity is independently tested."
+    },
+    {
+      "id": "530",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 177
+        },
+        "start": {
+          "column": 11,
+          "line": 177
+        }
+      },
+      "replacement": "peak.intensity <= previous.intensity",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "retired label policy",
+      "reason": "The old strongest-versus-accumulated label comparison was not a reliable representative-selection rule. The new documented label is the deterministic first enumerated family member; numerical intensity is independently tested."
+    },
+    {
+      "id": "541",
+      "location": {
+        "end": {
+          "column": 23,
+          "line": 185
+        },
+        "start": {
+          "column": 10,
+          "line": 185
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent",
+      "reason": "No retained peaks means mapping an empty merged array returns [] regardless of the zero-maximum branch."
+    },
+    {
+      "id": "554",
+      "location": {
+        "end": {
+          "column": 25,
+          "line": 194
+        },
+        "start": {
+          "column": 7,
+          "line": 194
+        }
+      },
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "performance-only",
+      "reason": "An empty profile accumulates zeros and subsequently returns [] even without this early return; removing it allocates unnecessary work."
+    },
+    {
+      "id": "576",
+      "location": {
+        "end": {
+          "column": 41,
+          "line": 201
+        },
+        "start": {
+          "column": 27,
+          "line": 201
+        }
+      },
+      "replacement": "pointCount + 1",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "equivalent typed-array output; extra work",
+      "reason": "Writes beyond a Float64Array boundary are ignored; the extra loop iterations do not change in-range samples. Keep the bound to avoid wasted work."
+    },
+    {
+      "id": "581",
+      "location": {
+        "end": {
+          "column": 42,
+          "line": 202
+        },
+        "start": {
+          "column": 29,
+          "line": 202
+        }
+      },
+      "replacement": "index < last",
+      "before": "Survived",
+      "after": "Survived",
+      "category": "missing upper-tail assertion",
+      "reason": "Dropping the last index can remove an in-range endpoint sample (not only negligible far tails). Current full-grid independent references and the explicit upper-boundary profile test address it."
+    }
+  ]
+}
