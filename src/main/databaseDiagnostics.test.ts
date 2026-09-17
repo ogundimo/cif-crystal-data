@@ -10,7 +10,10 @@ describe('buildDatabaseInitializationMessage', () => {
 
     expect(message).toContain('C:\\Users\\Example\\AppData\\cif-local.db');
     expect(message).toContain('Close any other running copies');
-    expect(message).toContain('rename cif-local.db to cif-local.db.backup');
+    expect(message).toContain('copy of the entire profile');
+    expect(message).toContain('-wal/-shm');
+    expect(message).toContain('compatible application version');
+    expect(message).not.toContain('rename cif-local.db');
     expect(message).toContain('database is locked');
   });
 

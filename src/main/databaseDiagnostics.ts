@@ -4,7 +4,8 @@ export function buildDatabaseInitializationMessage(databasePath: string, error: 
     'The local CIF database could not be opened.',
     `Database location: ${databasePath}`,
     'Close any other running copies of CIF Crystal Data and confirm that this location is writable.',
-    'If the problem persists, close the app and rename cif-local.db to cif-local.db.backup, then reopen the app to create a fresh database.',
+    'Before recovery, close every copy of the app and preserve a copy of the entire profile, including cif-local.db, any -wal/-shm files, and migration/restore snapshots. Do not delete or replace individual files in an open profile.',
+    'For a newer schema, reopen with a compatible application version. For corruption, keep the original profile and recover from a verified portable backup or migration snapshot in a separate profile.',
     `Technical reason: ${reason}`
   ].join('\n\n');
 }

@@ -34,6 +34,30 @@ async function verifyVisibleBibliography() {
   assert.ok(visible, 'publication and data authors must be displayed separately');
   assert.ok(await run.ui("document.querySelector('[data-testid=compound-info-panel]').textContent.includes('Publication authors')"));
 }
+async function verifyScientificRenderingAndExport(destination) {
+  // Structural status text belongs to expanded controls. Inspect the actual
+  // runtime in the compact view without hiding the PXRD/export panel.
+  const modelReady = `(() => { try { const applet=Object.values(window.Jmol._applets)[0]; const atoms=window.Jmol.getPropertyAsArray(applet,'atomInfo','(*)'); const cell=window.Jmol.getPropertyAsArray(applet,'unitcellInfo'); return Array.isArray(atoms) && atoms.length>=2 && Array.isArray(cell?.params) && cell.params.slice(0,6).every(Number.isFinite); } catch { return false; } })()`;
+  for(let i=0;i<900;i++) {
+    if(await run.ui(`!!document.querySelector('[data-role=pxrd-profile]') && ${modelReady}`)) break;
+    await new Promise(resolve=>setTimeout(resolve,100));
+  }
+  assert.ok(await run.ui("!!document.querySelector('[aria-label=\"Crystal structure viewer\"] canvas')"),'packaged JSmol canvas');
+  assert.ok(await run.ui(modelReady),'packaged JSmol model ready');
+  assert.equal(await run.ui("document.querySelector('[data-testid=pxrd-pattern]').dataset.calculationStatus"),'complete');
+  assert.ok(await run.ui("!!document.querySelector('[data-role=pxrd-profile]')"),'packaged worker-generated PXRD');
+  await run.main(`__smoke.electron.dialog.showSaveDialog=async()=>({canceled:false,filePath:${JSON.stringify(destination)}});true`);
+  await run.ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Export .xy').click()");
+  for(let i=0;i<200;i++) {
+    if(await run.ui("document.querySelector('[data-testid=pxrd-toolbar]').textContent.includes('Exported')")) break;
+    await new Promise(resolve=>setTimeout(resolve,50));
+  }
+  const text=await readFile(destination,'utf8');
+  assert.match(text,/# model=IT92-neutral-v1/); assert.match(text,/wavelength_A=1.54056/);
+  const samples=text.split(/\r?\n/).filter(line=>line && !line.startsWith('#') && !line.startsWith('2theta')).map(line=>line.split('\t').map(Number));
+  assert.equal(samples.length,3751);
+  assert.ok(samples.every(([angle,intensity],i)=>Number.isFinite(intensity) && intensity>=0 && intensity<=100 && (!i || angle>samples[i-1][0])));
+}
 try {
   run = await launch();
   assert.equal(await run.ui('window.cifApi.getStartupRefresh()'), false);
@@ -51,10 +75,7 @@ try {
   assert.ok((await run.ui(`window.cifApi.getViewerSource(${id})`)).text.includes('data_synthetic_test'));
   assert.ok((await run.ui(`window.cifApi.getDiffractionInput(${id})`)).atomSites.length);
   assert.equal((await run.ui(`window.cifApi.exportCif(${id})`)).exported, true);
-  const pxrd = join(profile, 'pattern.xy');
-  await run.main(`__smoke.electron.dialog.showSaveDialog=async()=>({canceled:false,filePath:${JSON.stringify(pxrd)}});true`);
-  assert.equal((await run.ui(`window.cifApi.exportPxrd(${id}, ${JSON.stringify('10 0\n20 100\n')})`)).exported, true);
-  // The API accepts exported profile text; viewer/PXRD rendering has its separate real UI suite.
+  await verifyScientificRenderingAndExport(join(profile,'pattern.xy'));
   await run.ui('window.cifApi.setStartupRefresh(true)');
   await run.stop(); run = null;
   // Downgrade only this stopped synthetic profile to model the bibliography upgrade.
@@ -67,6 +88,7 @@ try {
   assert.equal((await run.ui(`window.cifApi.getDataAuthors(${id})`))[0].name, 'Synthetic depositor');
   assert.equal((await run.ui(`window.cifApi.searchPage(${JSON.stringify(request)})`)).rows[0].reference, first.rows[0].reference);
   await verifyVisibleBibliography();
+  await verifyScientificRenderingAndExport(join(profile,'pattern-after-upgrade.xy'));
   // Wait until startup's worker releases its mutation lock.
   for (let i = 0; i < 200; i++) {
     if (await run.ui("[...document.querySelectorAll('button')].some(b=>b.textContent.includes('Refresh CIFs')&&!b.disabled)")) break;
@@ -87,7 +109,8 @@ try {
   const report = { commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
     dirty: execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0,
     executable: exe, os: release(), cpu: cpus()[0]?.model, timings, events,
-    limitations: ['Not cold-cache evidence; inspector pause and GPU-disabled harness affect timings.', 'Export API uses synthetic XY text; separate viewer suite validates simulation/rendering.', 'No real research corpus was imported.'] };
+    scientificRenderingAndExport:true,
+    limitations: ['Not cold-cache evidence; inspector pause and GPU-disabled harness affect timings.', 'Native file dialogs are replaced with explicit temporary destinations.', 'No real research corpus was imported.'] };
   await writeFile(join(root, 'report.json'), JSON.stringify(report, null, 2));
   console.log('Packaged reliability report:', join(root, 'report.json'));
 } finally { if (run) await run.stop(); }

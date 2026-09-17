@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { Worker } = require('node:worker_threads');
 const Database = require('better-sqlite3');
 const { app } = require('electron');
+app.setPath('userData', mkdtempSync(join(tmpdir(), 'cif-worker-shell-')));
 const runDatabaseQueryRegressions = require('./database-query-regressions.cjs');
 
 const root = dirname(dirname(__filename));

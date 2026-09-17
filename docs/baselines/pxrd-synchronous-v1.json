@@ -1,0 +1,105 @@
+{
+  "node": "v22.23.2",
+  "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+  "os": "10.0.26200",
+  "kind": "Synchronous Node calculation and event-loop delay; not renderer interaction",
+  "memory": {
+    "rss": 215158784,
+    "heapTotal": 160301056,
+    "heapUsed": 123813240,
+    "external": 4706132,
+    "arrayBuffers": 586929
+  },
+  "cases": [
+    {
+      "name": "ordinary",
+      "cellAngstrom": [
+        5.64,
+        5.64,
+        5.64
+      ],
+      "atomCount": 8,
+      "operations": 1,
+      "samples": [
+        {
+          "calculationMs": 3.3210000000000264,
+          "eventLoopDelayMs": 3.369100000000003,
+          "peaks": 20,
+          "status": "complete"
+        },
+        {
+          "calculationMs": 1.8427000000000362,
+          "eventLoopDelayMs": 1.867900000000077,
+          "peaks": 20,
+          "status": "complete"
+        },
+        {
+          "calculationMs": 2.114599999999996,
+          "eventLoopDelayMs": 2.1440000000000055,
+          "peaks": 20,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "name": "demanding",
+      "cellAngstrom": [
+        24,
+        24,
+        24
+      ],
+      "atomCount": 256,
+      "operations": 1,
+      "samples": [
+        {
+          "calculationMs": 675.3363999999999,
+          "eventLoopDelayMs": 675.7837,
+          "peaks": 335,
+          "status": "complete"
+        },
+        {
+          "calculationMs": 693.2479999999998,
+          "eventLoopDelayMs": 693.7209,
+          "peaks": 335,
+          "status": "complete"
+        },
+        {
+          "calculationMs": 674.3247000000001,
+          "eventLoopDelayMs": 674.6491000000001,
+          "peaks": 335,
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "name": "large-cell",
+      "cellAngstrom": [
+        60,
+        60,
+        60
+      ],
+      "atomCount": 2,
+      "operations": 1,
+      "samples": [
+        {
+          "calculationMs": 312.3188,
+          "eventLoopDelayMs": 312.46259999999984,
+          "peaks": 2053,
+          "status": "incomplete"
+        },
+        {
+          "calculationMs": 298.5205000000001,
+          "eventLoopDelayMs": 298.6572000000001,
+          "peaks": 2053,
+          "status": "incomplete"
+        },
+        {
+          "calculationMs": 315.5,
+          "eventLoopDelayMs": 317.3099000000002,
+          "peaks": 2053,
+          "status": "incomplete"
+        }
+      ]
+    }
+  ]
+}

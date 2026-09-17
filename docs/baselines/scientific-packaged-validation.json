@@ -1,0 +1,89 @@
+{
+  "date": "2026-09-17",
+  "applicationArchiveSha256": "7dff2b37cfa7ee787f40612f2f54462766146974e96b32637c11d4dfbc9ca4a7",
+  "executableSha256": "65212f173a3abccb1f0f6c1c51330c2d1507895c0c1f355e18ed6927de3de7a7",
+  "reliability": {
+    "commit": "9fcacea336553f615c658420f6239205c0f97312",
+    "dirty": true,
+    "os": "10.0.26200",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "timings": [
+      {
+        "kind": "instrumented process start; caches uncontrolled",
+        "elapsedMs": 1284.68
+      },
+      {
+        "kind": "instrumented process start; caches uncontrolled",
+        "elapsedMs": 1294.1233999999995
+      },
+      {
+        "kind": "instrumented process start; caches uncontrolled",
+        "elapsedMs": 1220.1077999999998
+      }
+    ],
+    "events": [
+      "main.loaded",
+      "app.ready",
+      "renderer.loaded",
+      "cif:traceMilestone.start",
+      "renderer.controls-ready",
+      "cif:traceMilestone.complete",
+      "renderer.controls-restored",
+      "cif:getEntryCount.start",
+      "database.ready.start",
+      "database.ready.complete",
+      "cif:getEntryCount.complete",
+      "cif:getImportFolder.start",
+      "cif:getImportFolder.complete",
+      "cif:getStartupRefresh.start",
+      "cif:getStartupRefresh.complete",
+      "cif:importCifFolder.start",
+      "worker.started",
+      "import.discovery.start",
+      "import.discovery.complete",
+      "import.complete",
+      "worker.exited",
+      "cif:importCifFolder.complete",
+      "cif:refreshCifFolder.start",
+      "cif:refreshCifFolder.complete",
+      "cif:searchPage.start",
+      "cif:searchPage.complete",
+      "renderer.search-results",
+      "cif:getDiffractionInput.start",
+      "cif:getDiffractionInput.complete",
+      "cif:getAtomSites.start",
+      "cif:getAtomSites.complete",
+      "cif:getDataAuthors.start",
+      "cif:getDataAuthors.complete",
+      "cif:getPublAuthors.start",
+      "cif:getPublAuthors.complete",
+      "cif:getViewerSource.start",
+      "cif:getViewerSource.complete",
+      "cif:exportCif.start",
+      "cif:exportCif.complete",
+      "cif:exportPxrd.start",
+      "cif:exportPxrd.complete",
+      "cif:setStartupRefresh.start",
+      "cif:setStartupRefresh.complete",
+      "cif:refreshCifFolder.error"
+    ],
+    "scientificRenderingAndExport": true,
+    "limitations": [
+      "Not cold-cache evidence; inspector pause and GPU-disabled harness affect timings.",
+      "Native file dialogs are replaced with explicit temporary destinations.",
+      "No real research corpus was imported."
+    ]
+  },
+  "preservation": {
+    "entries": 2,
+    "restoredIntoFreshProfile": true,
+    "restarted": true,
+    "originalFolderUnavailable": true,
+    "exportMatchesImportedVersion": true
+  },
+  "exports": {
+    "profileBeforeUpgradeSha256": "a20f7a979779ff87036923dd9486918b5f5da22f70015165f7ea029ab2d4fd93",
+    "profileAfterUpgradeSha256": "a20f7a979779ff87036923dd9486918b5f5da22f70015165f7ea029ab2d4fd93"
+  },
+  "note": "Absolute local paths removed; original reports remain in the isolated temporary profiles. Commit identifies base; dirty=true records uncommitted milestone implementation."
+}

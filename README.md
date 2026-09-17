@@ -81,6 +81,13 @@ panel supports a per-pattern wavelength, configurable peak broadening, reflectio
 and two-column `.xy` export with an optional header. Files containing multiple `data_` blocks
 are indexed as separate structures while retaining their shared physical source file.
 
+PXRD uses neutral-atom IT92 X-ray form factors and runs in a cancellable local worker.
+The assumptions panel reports defaults, unsupported inputs and incomplete reflection
+searches. Header-enabled exports record the model and calculation settings; plain
+two-column output remains available. See [Scientific validity](docs/scientific-validity.md)
+for reference comparisons and limits, and [Recovery and responsiveness](docs/scientific-recovery.md)
+for failure and packaged-workflow verification.
+
 The parser is regression-tested against the current PCD, ICSD, and CCDC/CSD corpus. It
 accepts CCDC moiety formulas when a sum formula is absent, resolves the corpus's symbol-only
 space groups, and stores CCDC deposition numbers, CSD refcodes, ICSD identifiers, and DOI

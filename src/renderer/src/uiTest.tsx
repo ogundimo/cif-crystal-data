@@ -5,6 +5,7 @@ import QuickSearchDialog from './components/QuickSearchDialog';
 import ResultsWorkspace from './components/ResultsWorkspace';
 import DataGrid from './components/DataGrid';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
+import PxrdPattern from './components/PxrdPattern';
 import type { EntryRow, SearchPageRequest, SearchPageResult, ImportProgress, ImportResult } from '../../shared/types';
 import syntheticCif from '../../parser/__fixtures__/synthetic-test.cif?raw';
 import './index.css';
@@ -141,6 +142,12 @@ function GridShortcutTest() {
 }
 
 const appRegressionMode = new URLSearchParams(location.search).has('app-regression');
+const pxrdRegressionMode = new URLSearchParams(location.search).has('pxrd-regression');
+function PxrdRegression() {
+  const [entry,setEntry] = React.useState({...gridRows[0],cell_a_angstrom:5.64,cell_b_angstrom:5.64,cell_c_angstrom:5.64});
+  Object.assign(window,{pxrdHarness:{entry,setEntry}});
+  return <div className="grid h-screen"><PxrdPattern entry={entry}/></div>;
+}
 const gridShortcutMode = new URLSearchParams(location.search).has('grid-shortcut');
 if (appRegressionMode) {
   const regression = {
@@ -163,4 +170,4 @@ if (appRegressionMode) {
     return new Promise<SearchPageResult>((resolve) => regression.pending.push(() => resolve(result)));
   };
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);
+ReactDOM.createRoot(document.getElementById('root')!).render(pxrdRegressionMode ? <PxrdRegression/> : gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);

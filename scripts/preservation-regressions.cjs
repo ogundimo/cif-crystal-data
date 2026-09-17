@@ -62,6 +62,36 @@ module.exports = async function runPreservation(chunks, runWorker, workerUrl) {
   let db;
   const opened = [];
   try {
+    const future = join(root, 'future'); fs.mkdirSync(future);
+    const futurePath = join(future, 'cif-local.db');
+    const futureDb = new Database(futurePath);
+    futureDb.exec('CREATE TABLE future_data(value TEXT); INSERT INTO future_data VALUES (\'preserve me\'); PRAGMA user_version=999');
+    futureDb.close();
+    const futureBytes = fs.readFileSync(futurePath);
+    assert.throws(()=>api.initDb(future), /newer than supported/);
+    assert.deepEqual(fs.readFileSync(futurePath), futureBytes, 'future database changed before rejection');
+    const broken = join(root, 'broken'); fs.mkdirSync(broken);
+    const brokenPath = join(broken, 'cif-local.db');
+    fs.writeFileSync(brokenPath, 'synthetic corrupt SQLite file');
+    const brokenBytes = fs.readFileSync(brokenPath);
+    assert.throws(()=>api.initDb(broken), /Could not initialize.*not a database/);
+    assert.deepEqual(fs.readFileSync(brokenPath),brokenBytes);
+    // Renaming after failure also verifies the connection was closed on Windows.
+    fs.renameSync(brokenPath,join(broken,'corrupt-preserved.db'));
+    const repaired = api.initDb(broken); repaired.close();
+    // Engine-enforced read-only mode, independent of elevated CI account ACLs.
+    const readOnly = join(root,'readonly'); fs.mkdirSync(readOnly);
+    const writable = api.initDb(readOnly); writable.close();
+    const pragma = Database.prototype.pragma;
+    const openedCandidates = [];
+    Database.prototype.pragma = function(sql, options) {
+      if (!openedCandidates.includes(this)) { openedCandidates.push(this); pragma.call(this,'query_only=ON'); }
+      return pragma.call(this,sql,options);
+    };
+    try { assert.throws(()=>api.initDb(readOnly), /readonly|read-only/i); }
+    finally { Database.prototype.pragma = pragma; }
+    assert.ok(openedCandidates.every(candidate=>!candidate.open),'failed read-only initialization leaked a handle');
+    const retried = api.initDb(readOnly); retried.close();
     const a = write('a/sample.cif', block('a'));
     const b = write('b/sample.cif', block('b', 'Fe1 O1'));
     assert.equal((await scan()).importedCount, 2);
@@ -219,6 +249,7 @@ module.exports = async function runPreservation(chunks, runWorker, workerUrl) {
     console.log('✓ identity collisions, hashes, case, block reorder, relink and preserved bytes');
     console.log('✓ portable restore, manifest/schema corruption, write failure and process interruption');
     console.log('✓ migration backup, rollback, process interruption, retry and stable legacy IDs');
+    console.log('✓ corrupt/future/read-only database rejection, handle cleanup and retry');
   } catch (error) { console.error(error); throw error; } finally {
     for (const database of opened) if (database.open) database.close();
     // All paths are descendants of the test-created temporary root.

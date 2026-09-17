@@ -333,6 +333,7 @@ async function testCompoundInformationSelection(window) {
   assert.ok(resizeAfter.infoWidth > resizeBefore.infoWidth + 20, 'information/viewer divider did not resize its columns');
   assert.ok(resizeAfter.viewerHeight > resizeBefore.viewerHeight + 10, 'viewer/lower-panel divider did not resize its rows');
   await pause(50);
+  await waitForRenderer(window,"!!document.querySelector('[data-role=pxrd-profile]')",'PXRD worker result');
   const selected = await window.webContents.executeJavaScript(`
     (() => {
       const panel = document.querySelector('[data-testid="compound-info-panel"]');
@@ -406,6 +407,7 @@ async function testCompoundInformationSelection(window) {
     })()
   `);
   await pause(50);
+  await waitForRenderer(window,"!!document.querySelector('[data-role=pxrd-profile]')",'broadened PXRD worker result');
   const updatedPxrd = await window.webContents.executeJavaScript(`({
     fwhm: Number(document.querySelector('[data-testid="pxrd-fwhm-input"]')?.value),
     path: document.querySelector('[data-testid="pxrd-pattern"] svg path[data-role="pxrd-profile"]')?.getAttribute('d')
@@ -528,6 +530,7 @@ async function run() {
   window.webContents.on('console-message', (details) => {
     if (details.level === 'error') console.error('Renderer:', details.message);
   });
+  await require('./pxrd-ui-regressions.cjs')(window,testUrl);
   await window.loadURL(testUrl);
   await runScenario(window, {
     name: 'minimum application viewport',
@@ -566,6 +569,9 @@ async function run() {
   await testCompoundInformationSelection(window);
   await testLargeGridVirtualization(window);
   await testImportProgressIndicator(window);
+  // Chromium can suppress requestAnimationFrame for a never-shown window on
+  // Windows. The following keyboard/layout checks require rendered frames.
+  window.showInactive();
   await require('./grid-selection-shortcut.cjs')(window, testUrl, waitForRenderer);
 
   await require('./quick-search-lifecycle.cjs')(window, testUrl, waitForRenderer);

@@ -1,0 +1,108 @@
+{
+  "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+  "os": "10.0.26200",
+  "electron": "44.1.0",
+  "context": "Electron renderer; hidden test window; GPU disabled; event-loop timers, not physical input latency",
+  "cases": [
+    {
+      "name": "ordinary",
+      "cellAngstrom": 5.64,
+      "atoms": 8,
+      "symmetry": 1,
+      "samples": [
+        {
+          "synchronousMs": 11.699999988079071,
+          "synchronousDelayMs": 11.799999997019768,
+          "workerElapsedMs": 51.400000005960464,
+          "workerCalculationMs": 15.099999994039536,
+          "maximumTimerDelayMs": 3.3999999910593033,
+          "ticks": 5
+        },
+        {
+          "synchronousMs": 9.299999997019768,
+          "synchronousDelayMs": 9.399999991059303,
+          "workerElapsedMs": 57.20000000298023,
+          "workerCalculationMs": 14.900000005960464,
+          "maximumTimerDelayMs": 6.200000002980232,
+          "ticks": 5
+        },
+        {
+          "synchronousMs": 1.5,
+          "synchronousDelayMs": 1.5999999940395355,
+          "workerElapsedMs": 62.599999994039536,
+          "workerCalculationMs": 14,
+          "maximumTimerDelayMs": 9.199999988079071,
+          "ticks": 5
+        }
+      ]
+    },
+    {
+      "name": "demanding",
+      "cellAngstrom": 24,
+      "atoms": 256,
+      "symmetry": 1,
+      "samples": [
+        {
+          "synchronousMs": 2493.6000000089407,
+          "synchronousDelayMs": 2496.9000000059605,
+          "workerElapsedMs": 2464.8999999910593,
+          "workerCalculationMs": 2438.8999999910593,
+          "maximumTimerDelayMs": 8.699999988079071,
+          "ticks": 157
+        },
+        {
+          "synchronousMs": 2498.5,
+          "synchronousDelayMs": 2499,
+          "workerElapsedMs": 3837.5999999940395,
+          "workerCalculationMs": 3746,
+          "maximumTimerDelayMs": 8.599999994039536,
+          "ticks": 246
+        },
+        {
+          "synchronousMs": 2267.6000000089407,
+          "synchronousDelayMs": 2267.9000000059605,
+          "workerElapsedMs": 3520.6000000089407,
+          "workerCalculationMs": 3450.1000000089407,
+          "maximumTimerDelayMs": 8.5,
+          "ticks": 227
+        }
+      ]
+    },
+    {
+      "name": "large-cell",
+      "cellAngstrom": 60,
+      "atoms": 2,
+      "symmetry": 1,
+      "samples": [
+        {
+          "synchronousMs": 554.7000000029802,
+          "synchronousDelayMs": 554.8999999910593,
+          "workerElapsedMs": 1108.2000000029802,
+          "workerCalculationMs": 902.5,
+          "maximumTimerDelayMs": 10.5,
+          "ticks": 74
+        },
+        {
+          "synchronousMs": 487.79999999701977,
+          "synchronousDelayMs": 488.09999999403954,
+          "workerElapsedMs": 818.5,
+          "workerCalculationMs": 746,
+          "maximumTimerDelayMs": 8.099999994039536,
+          "ticks": 55
+        },
+        {
+          "synchronousMs": 457.09999999403954,
+          "synchronousDelayMs": 457.29999999701977,
+          "workerElapsedMs": 737.4000000059605,
+          "workerCalculationMs": 671.6999999880791,
+          "maximumTimerDelayMs": 8.100000008940697,
+          "ticks": 50
+        }
+      ]
+    }
+  ],
+  "memory": {
+    "usedJSHeapSize": 11243097,
+    "totalJSHeapSize": 94842773
+  }
+}
