@@ -102,6 +102,18 @@ npm run package   # builds + runs electron-builder for Windows
 `npm run package` produces a `release/win-unpacked` folder (runnable directly) plus an NSIS
 installer and a portable executable, targeting Windows x64.
 
+For installation-free use without extraction on every launch, run
+`npm run package:zip -- --publish never`. Extract the resulting Windows ZIP once
+into its own folder and launch `CIF Crystal Data.exe` from that folder. Keep all
+files together; do not run the executable from inside the ZIP viewer. This avoids
+the self-extracting portable EXE's repeated extraction cost. Both forms use the
+normal Windows application-data location; installation-free does not mean that
+the database travels with the application folder. Use portable backup/restore
+when moving data between computers.
+
+See [packaged startup verification](docs/packaged-startup.md) for repeatable
+measurements and the remaining cold-start acceptance requirements under #40.
+
 ## Local crystal viewer
 
 The compound details workspace includes a reusable JSmol 16.4.15 HTML5 viewer.
