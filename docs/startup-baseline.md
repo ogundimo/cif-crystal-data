@@ -1,0 +1,96 @@
+# Startup baseline and regression comparisons
+
+The machine-readable baseline is [startup-dev-v1.json](baselines/startup-dev-v1.json).
+It records a specific development-startup protocol, not a universal speed target.
+Keep this original record; future bug fixes and features should compare against it
+without silently replacing it.
+
+## Repeat the measurement
+
+Use Node 22.13+ on the Node 22 line and the locked dependencies (`npm ci`). Close
+other app/dev-server instances, finish builds/tests, connect to the same power state,
+and let the desktop become idle. Do not type into or close the benchmark windows.
+The runner opens and focuses three windows in sequence, then closes its own processes.
+Do not run other checks alongside it. Record changes to antivirus, storage, power
+mode or other environmental conditions separately when interpreting results.
+
+```powershell
+npm run benchmark:startup -- --baseline docs/baselines/startup-dev-v1.json
+```
+
+Default: three samples. For a longer comparison:
+
+```powershell
+npm run benchmark:startup -- --samples 5 --baseline docs/baselines/startup-dev-v1.json --output .dist/startup-comparison.json
+```
+
+The output destination must not already exist. Without `--output`, a unique temporary
+directory holds the report, per-sample IPC traces and process logs. The final console
+message gives those paths. Raw logs can contain local filesystem paths; inspect and
+sanitize them before publishing. The summary JSON contains no profile/source paths.
+
+The run fails on missing readiness events, unavailable/hidden UI, absent contentful
+paint, unsuccessful Quick Search opening or empty search, invalid samples, incompatible
+protocol, or an application/diagnostic failure. Partial samples and the error remain
+in the report. Never promote a failed report to a baseline.
+
+## What is held constant
+
+- Windows development launch through the repository's `electron-vite dev` command.
+  The timer begins at the Node child launch, excluding the outer npm command overhead.
+- A new **empty synthetic profile** and **fresh Vite dependency cache** for every sample.
+  The normal profile, research CIFs and normal Vite cache are not used.
+- The normal renderer configuration, plus a benchmark-only Vite cache directory.
+- GPU remains enabled. A local main-process inspector shows/focuses the window;
+  the renderer diagnostic endpoint reads timings and drives Quick Search. Opt-in
+  IPC tracing is enabled. CPU profiling is disabled.
+- Filesystem/OS caches are uncontrolled. These are not reboot-cold measurements.
+
+Run from a graphical desktop; do not replace missing visibility/paint with zero or
+claim a hidden/headless result is equivalent. The test is not part of ordinary hosted
+CI timing gates. CI tests the statistics/comparison logic; the existing Electron UI
+suite protects early feedback, deferred loading and failure recovery.
+
+## Metrics and interpretation
+
+| Metric | Meaning |
+| --- | --- |
+| `mainMs` | Child invocation to application main-code trace |
+| `firstContentfulPaintMs` | Child invocation to Chromium first-contentful paint (initial loading feedback) |
+| `controlsReadyMs` | Child invocation to the first React readiness IPC event |
+| `databaseReadyMs` | Child invocation to database initialization completion |
+| `quickSearchPaintMs` | Click to two animation frames with a visible Quick Search dialog |
+| `emptySearchMs` | Submit to observed empty search result; includes polling resolution |
+| `resourceCount`, `decodedBytes` | Initial completed resource entries before opening Quick Search |
+
+First-contentful paint can be the loading message; it is not application readiness.
+The Quick Search probe checks a real dialog, and the search probe submits space-group
+number 1 against the empty database. Two animation frames are a practical render
+check, not a video-measured physical-display latency. Resource counts exclude requests
+made after the initial snapshot; they are useful structural evidence, not timing budgets.
+
+Every sample is retained. Reports provide minimum, median and maximum, not p95/p99
+from three observations. Comparisons show absolute/percentage median changes and flag
+changes in machine, OS, runtime/tool versions or harness hash. Treat comparisons with
+changed conditions as contextual evidence; use matched runs to attribute regressions.
+The app commit, dirty flag, diff hash, lockfile hash and benchmark hash identify the run.
+For an official release comparison, use a clean checkout and retain both reports.
+
+Timing changes are **advisory**: no arbitrary performance budget or automatic baseline
+ratchet is introduced. Investigate material increases, especially first paint/readiness
+and interaction delays. If a regression is intentional, explain its user benefit and
+cost in the PR. Baseline updates require an explicit reason, the old/new reports and
+review; use a new baseline filename to preserve history. Change the protocol version
+when workload, start point or measurement semantics change.
+
+## Coverage limits
+
+This baseline covers the reported development launch path. It does not cover a
+populated profile, source refresh, migration, first structure/JSmol initialization,
+packaged launch/extraction, or actual OS-cold startup. Changes affecting those paths
+still require their corresponding checks. In particular, deferred startup work must
+also be checked against first search/structure viewing, as documented in the
+[startup investigation](startup-investigation.md). Use the separate
+[cold-start protocol](cold-start-protocol.md) for issue #40's packaged acceptance.
+
+Benchmark comparison tests: `npm run test:startup-benchmark`.

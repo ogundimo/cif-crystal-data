@@ -42,6 +42,10 @@ npm start
 This starts the Electron app with a live-reloading renderer. `npm run dev` is an alias
 for the same development command.
 
+For repeatable startup measurements and comparisons with the recorded baseline, see
+[the startup benchmark](docs/startup-baseline.md). Run `npm run benchmark:startup`
+on an idle Windows desktop using Node 22.13+ on the Node 22 line.
+
 ## Importing CIF files
 
 Click **Import CIFs...** in the toolbar, then choose a folder in the native folder picker.

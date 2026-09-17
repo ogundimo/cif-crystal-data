@@ -22,6 +22,8 @@
     "test:packaged-preservation": "node scripts/packaged-preservation-smoke.mjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
+    "benchmark:startup": "node scripts/startup/benchmark.mjs",
+    "test:startup-benchmark": "node --test scripts/startup/results.test.mjs",
     "benchmark:database:api": "npm run build && electron scripts/database-api-benchmark.cjs",
     "package": "npm run build && electron-builder",
     "quality:baseline": "node scripts/quality/baseline.mjs",
