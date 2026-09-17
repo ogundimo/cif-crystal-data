@@ -1,0 +1,75 @@
+{
+  "date": "2026-09-17",
+  "reference": "Gemmi 0.7.5",
+  "node": "v22.23.2",
+  "tolerances": {
+    "positionDegrees": 0.000001,
+    "intensityPercent": 0.002,
+    "profilePercent": 0.003
+  },
+  "inputs": {
+    "src/renderer/src/pxrd.ts": "de12761e05b3250fab890ba7bf23e372b25112b49d503f325ab287d18d8adfa9",
+    "src/renderer/src/scattering.ts": "06c1398b010731ff0086e08c0308aa457a364ddf9fcda824f71a45256390f369",
+    "src/shared/it92.json": "30929d70b204f683f443b99b19c528ae856429325bcaddcddc0a2df9b51ae75c",
+    "src/renderer/src/__fixtures__/pxrd-reference.json": "b1de06a00ca77e21be9de593dbcc6779b4bfa903e9606f7c35e55737ef6353fa",
+    "scripts/scientific-reference.py": "6e644a1f0f28830f07b559549adf50e5a22cf5fec2266939a96212e19006f7e2"
+  },
+  "cases": [
+    {
+      "name": "cubic-NaCl",
+      "peaks": 8,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 1.4210854715202004e-14,
+      "maximumIntensityErrorPercent": 0.000003907956809712232,
+      "maximumProfileErrorPercent": 0.000020579987023893923
+    },
+    {
+      "name": "bcc-Fe",
+      "peaks": 2,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 1.4210854715202004e-14,
+      "maximumIntensityErrorPercent": 3.9911661531277787e-7,
+      "maximumProfileErrorPercent": 0.00002501911100433941
+    },
+    {
+      "name": "hexagonal-Mg",
+      "peaks": 27,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 2.842170943040401e-14,
+      "maximumIntensityErrorPercent": 0.0000024681157100303608,
+      "maximumProfileErrorPercent": 0.000024994510440393744
+    },
+    {
+      "name": "tetragonal-mixed",
+      "peaks": 41,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 2.842170943040401e-14,
+      "maximumIntensityErrorPercent": 0.0000018885339603258444,
+      "maximumProfileErrorPercent": 0.000025899685976524343
+    },
+    {
+      "name": "monoclinic-mixed",
+      "peaks": 106,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 2.842170943040401e-14,
+      "maximumIntensityErrorPercent": 0.000025742280030272013,
+      "maximumProfileErrorPercent": 0.000026093112808212027
+    },
+    {
+      "name": "triclinic-mixed",
+      "peaks": 160,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 4.263256414560601e-14,
+      "maximumIntensityErrorPercent": 0.000013616177511721617,
+      "maximumProfileErrorPercent": 0.000015891995009432385
+    },
+    {
+      "name": "large-orthorhombic",
+      "peaks": 2588,
+      "status": "complete",
+      "maximumPositionErrorDegrees": 4.263256414560601e-14,
+      "maximumIntensityErrorPercent": 0.00001037108989976332,
+      "maximumProfileErrorPercent": 0.000012916358503354832
+    }
+  ]
+}
