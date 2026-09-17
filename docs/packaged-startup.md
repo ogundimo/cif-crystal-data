@@ -58,6 +58,62 @@ infer tail percentiles from three samples. Reports and raw logs contain local pa
 review and sanitize them before publication. Do not substitute these runs for cold
 acceptance or a physical-display measurement.
 
+## Cache-reset samples without restarting Windows
+
+Download [RAMMap from Microsoft](https://learn.microsoft.com/en-us/sysinternals/downloads/rammap)
+and extract it outside tracked source. The helper verifies its Microsoft signature.
+The snapshot parser currently supports RAMMap 1.63 amd64 only. From a **normal,
+unelevated** terminal, run a pilot:
+
+```powershell
+npm run benchmark:packaged -- .dist/my-startup-kit ".dist/my-startup-kit/app/CIF Crystal Data.exe" --cache-reset .dist/cache-reset-tools/rammap/RAMMap64.exe --case fresh --samples 1
+```
+
+Omit `--case fresh --samples 1` for three samples of every workload. Each reset
+helper requests Windows UAC elevation; the application remains unelevated. The
+helper accepts RAMMap's bundled license for this invocation. It performs **Empty
+System Working Set** (`-Es`) then **Empty Standby List** (`-Et`), waits two seconds,
+and repeats that pair to evict pages released during the first pass. It does not trim
+other applications' working sets, delete files, disable antivirus/prefetch, or reboot.
+System-wide cache eviction can temporarily slow other applications; avoid concurrent
+builds or disk-heavy work while measuring.
+
+Each sample retains RAMMap before/after `.rmp` snapshots, tool version/hash, command
+exit codes, memory counters, reset-to-launch delay and startup timings. Those files
+can be large and include unrelated private file paths: keep them local. All profile
+copying, SQLite inspection and executable hashing precede the reset. Snapshot analysis
+runs after measurement so it does not delay the launch or read the app's files.
+
+The analyzer checks the snapshot format and reconciles all PFN records with its
+page-list totals. It requires positive target-file residency before reset and **zero
+target-file pages** afterward, including active, standby and modified pages, for the
+app directory, isolated profile and relevant synthetic input directory. Residual pages
+mark that sample invalid and the matrix continues; the final command exits with a
+failure if any cold condition failed. Unsupported snapshots or failed reset commands
+stop the run. All collected timings are retained; do not select only passing samples.
+The parser's Windows layouts are documented in [System Informer's memory definitions](https://github.com/winsiderss/systeminformer/blob/master/phnt/include/ntmmapi.h)
+and [PFN request definitions](https://github.com/winsiderss/systeminformer/blob/master/phnt/include/ntpfapi.h).
+
+This establishes **target-file cache-cold at the prelaunch snapshot**, not a freshly
+booted OS. Shared Windows DLLs, hardware caches and background reads after the snapshot
+remain uncontrolled. Report the reset-to-launch interval; saving the post-reset
+snapshot itself takes time. Never pool these samples with restart-based or uncontrolled
+launches. [PCMark also uses cache flushing for cold app-start tests](https://support.benchmarks.ul.com/support/solutions/articles/44002160654-app-start-up),
+but that does not establish equivalence between its implementation and this protocol.
+
+For a visible sample without inspectors, use the manual launcher instead:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/startup/launch-packaged.ps1 -Kit .dist/my-startup-kit -Case fresh -Sample 1 -Condition cache-reset -RamMap .dist/cache-reset-tools/rammap/RAMMap64.exe
+```
+
+Record the same visible search endpoint and operator delay described below. The
+launcher captures evidence but does **not** automatically validate its snapshots;
+review them before classifying a manual sample as cache-cold. Use `-Condition repeat`
+for its matching repeat launch. A new cache-reset sample needs a fresh reset and
+unused prepared profile, not a reboot. A repeat after migration measures current-schema
+startup. Portable extraction remains part of elapsed startup when testing that launcher.
+
 ## Restart-based visible samples
 
 After preparing the kit, save work and use Windows **Restart**. Let Windows settle;
@@ -80,7 +136,8 @@ GPU override. It refuses overwrites and a second recorded cold launch in the sam
 boot. Boot timestamps cannot prove that other software did not read files: record
 startup programs, antivirus activity and interference. A fresh boot has not been
 automatically arranged or verified simply by preparing the kit. No helper reboots
-the workstation or clears OS caches. The execution-policy override is process-local.
+the workstation. Cache eviction occurs only with explicit `-Condition cache-reset`.
+The execution-policy override is process-local.
 
 The optional `-Distribution portable` requires placing the matching portable EXE
 in the kit before restarting; its versioned name comes from the manifest. Results
@@ -88,6 +145,45 @@ for one distribution cannot establish another's performance. This does not insta
 an application or modify the user's normal database.
 
 ## Completion
+
+### Cache-reset baseline on 2026-09-17
+
+The [complete sanitized baseline](baselines/packaged-cache-reset-2026-09-17.json)
+retains all 18 samples from the two-pass reset matrix. All functional search,
+structure, refresh and unavailable-folder assertions passed. No window required
+diagnostic restore/focus in this matrix. Launch-to-search results were:
+
+| Case | Samples (s) | Median (s) | Validated cache-cold samples |
+| --- | --- | ---: | ---: |
+| Fresh | 1.313, 1.130, 1.136 | 1.136 | 1/3 |
+| 168 entries, refresh off | 1.472, 1.516, 1.505 | 1.505 | 0/3 |
+| 168 entries, refresh on | 1.733, 1.811, 1.384 | 1.733 | 0/3 |
+| Unavailable source folder | 1.504, 1.463, 1.424 | 1.463 | 0/3 |
+| Bibliography upgrade | 1.520, 1.349, 1.475 | 1.475 | 0/3 |
+| 1000 entries | 1.401, 1.207, 1.189 | 1.207 | 0/3 |
+
+These are **cache-reset attempts, not a completed cold-start acceptance matrix**.
+Seventeen samples retained 107–2165 target-file pages (about 0.42–8.46 MiB), so the
+runner correctly exited with `failed-cache-validation`. One had zero remaining
+pages. Launch followed the final reset by 5.071–7.572 seconds, including the time to
+save the post-reset snapshot; background repopulation remains possible. The cause of residual
+pages has not been attributed. Keep the strict condition failures visible rather than
+relaxing the check to obtain a pass. This run does not demonstrate a reboot equivalent.
+
+Earlier pilot evidence remains local: `cif-packaged-visible-b51fIo` (one-pass reset,
+1.545 s; 59886 target pages before, zero after); `cif-packaged-visible-NiIwIy` (1.903 s
+with zero pages, then 1.824 s with 1528 residual pages); and `cif-packaged-visible-qWAwwW`
+(two-pass pilot, 1.319 s with 102 residual pages). An initial invocation failed on an
+inherited PowerShell module path before any reset or application launch; the helper
+now selects its own host's inbox modules. The complete matrix's raw snapshots remain
+in local temporary evidence `cif-packaged-visible-Cu3cdm`; do not publish those files.
+
+Validation: eight startup comparison/parser tests pass, including rejected malformed
+snapshots, active/standby/modified residual pages and empty evidence scopes. The
+remaining #40 work includes a consistently validated cache condition, physical-display
+and instrumentation-overhead assessment, agreed workload budgets and the distribution
+decision. Development startup stays deferred under #72. The self-extracting portable
+EXE is unchanged by these measurements of the extracted ZIP application.
 
 ### ZIP validation on 2026-09-17
 

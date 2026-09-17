@@ -25,7 +25,7 @@
     "benchmark:startup": "node scripts/startup/benchmark.mjs",
     "benchmark:packaged": "node scripts/startup/packaged.mjs",
     "prepare:packaged-startup": "node scripts/startup/prepare-packaged.mjs",
-    "test:startup-benchmark": "node --test scripts/startup/results.test.mjs",
+    "test:startup-benchmark": "node --test scripts/startup/results.test.mjs scripts/startup/cache-evidence.test.mjs",
     "benchmark:database:api": "npm run build && electron scripts/database-api-benchmark.cjs",
     "package": "npm run build && electron-builder",
     "package:zip": "npm run build && electron-builder --win zip",
