@@ -56,6 +56,12 @@ module.exports = async function(window,testUrl) {
   await ui("window.finishOldExport({exported:true,fileName:'older-selection.xy'});");
   await new Promise(resolve=>setTimeout(resolve,50));
   assert.equal(await ui("document.querySelector('[data-testid=pxrd-toolbar]').textContent.includes('older-selection')"),false);
+  // A refreshed record can preserve its ID while replacing its atomic data.
+  await ui('window.cifApi.getDiffractionInput=async()=>({atomSites:[],symmetryOperations:[]}); window.pxrdHarness.setEntry({...window.pxrdHarness.entry});');
+  await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='unsupported'");
+  assert.equal(await ui("!!document.querySelector('[data-role=pxrd-profile]')"),false);
+  await ui('window.cifApi.getDiffractionInput=window.originalInput; window.pxrdHarness.setEntry({...window.pxrdHarness.entry});');
+  await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='complete'");
 
   const measurements=await ui(`(async()=> {
     const {calculatePxrd}=await import('/src/pxrd.ts');
@@ -83,9 +89,30 @@ module.exports = async function(window,testUrl) {
     }
     return {cases,memory:performance.memory?{usedJSHeapSize:performance.memory.usedJSHeapSize,totalJSHeapSize:performance.memory.totalJSHeapSize}:null};
   })()`);
+  // Also include the real React panel's result commit, not only worker transport.
+  const panelSamples=await ui(`(async()=> {
+    const samples=[];
+    for(const [name,length,count,id] of [['ordinary',5.64,8,101],['demanding',24,256,102],['large-cell',60,2,103]]) {
+      window.cifApi.getDiffractionInput=async()=>({symmetryOperations:[],atomSites:Array.from({length:count},(_,i)=>({type_symbol:i%2?'O':'C',fract_x:(i*.137)%1,fract_y:(i*.237)%1,fract_z:(i*.317)%1,occupancy:1,b_iso_or_equiv:.5,u_iso_or_equiv:null}))});
+      const start=performance.now();let previous=start,maximumDelay=0,ticks=0;
+      const timer=setInterval(()=>{const now=performance.now();maximumDelay=Math.max(maximumDelay,now-previous-8);previous=now;ticks++;},8);
+      window.pxrdHarness.setEntry({...window.pxrdHarness.entry,id,cell_a_angstrom:length,cell_b_angstrom:length,cell_c_angstrom:length});
+      try {
+        while(window.pxrdHarness.entry.id!==id || !document.querySelector('[data-role=pxrd-profile]')) {
+          if(performance.now()-start>15000) throw new Error('Panel calculation timed out');
+          await new Promise(resolve=>setTimeout(resolve,10));
+        }
+        await new Promise(resolve=>setTimeout(resolve,100));
+        samples.push({name,atoms:count,cellAngstrom:length,elapsedThroughCommitMs:performance.now()-start-100,maximumTimerDelayMs:maximumDelay,ticks});
+      } finally { clearInterval(timer); }
+    }
+    return samples;
+  })()`);
+  measurements.panelSamples=panelSamples;
   mkdirSync('reports/scientific',{recursive:true});
   writeFileSync('reports/scientific/renderer-performance.json',JSON.stringify({cpu:cpus()[0]?.model,os:release(),electron:process.versions.electron,
     context:'Electron renderer; hidden test window; GPU disabled; event-loop timers, not physical input latency',...measurements},null,2));
   for(const fixture of measurements.cases) for(const sample of fixture.samples) assert.ok(sample.maximumTimerDelayMs<100,`${fixture.name} renderer delay ${sample.maximumTimerDelayMs} ms`);
+  for(const sample of panelSamples) assert.ok(sample.maximumTimerDelayMs<100,`${sample.name} panel commit delay ${sample.maximumTimerDelayMs} ms`);
   console.log('✓ PXRD diagnostics, source/worker failure retry, stale data, wavelength/export and measured renderer responsiveness');
 };

@@ -31,9 +31,9 @@ export default function PxrdPattern({ entry }: Props) {
     return () => observer.disconnect();
   }, []);
   const { width: WIDTH, height: HEIGHT } = size;
-  const [source, setSource] = useState<{ entryId:number; input:DiffractionInput } | null>(null);
-  const [sourceStatus, setSourceStatus] = useState<{entryId:number; value:'loading'|'ready'|'error'}>({entryId:entry.id,value:'loading'});
-  const status = sourceStatus.entryId === entry.id ? sourceStatus.value : 'loading';
+  const [source, setSource] = useState<{ entry:EntryRow; input:DiffractionInput } | null>(null);
+  const [sourceStatus, setSourceStatus] = useState<{entry:EntryRow; value:'loading'|'ready'|'error'}>({entry,value:'loading'});
+  const status = sourceStatus.entry === entry ? sourceStatus.value : 'loading';
   const [fwhm, setFwhm] = useState(PXRD_FWHM_TWO_THETA);
   const [wavelength, setWavelength] = useState(entry.radiation_wavelength_angstrom ?? DEFAULT_WAVELENGTH);
   const [includeHeader, setIncludeHeader] = useState(true);
@@ -42,18 +42,18 @@ export default function PxrdPattern({ entry }: Props) {
   const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [calculation, setCalculation] = useState<{ request:PxrdRequest; response?:PxrdResponse; error?:string } | null>(null);
   const [retry, setRetry] = useState(0);
-  const input = source?.entryId === entry.id ? source.input : null;
+  const input = source?.entry === entry ? source.input : null;
 
   useEffect(() => {
     let active = true;
     setSource(null);
-    setSourceStatus({entryId:entry.id,value:'loading'});
+    setSourceStatus({entry,value:'loading'});
     window.cifApi.getDiffractionInput(entry.id).then(
-      (value) => { if (active) { setSource({entryId:entry.id,input:value}); setSourceStatus({entryId:entry.id,value:'ready'}); } },
-      () => { if (active) setSourceStatus({entryId:entry.id,value:'error'}); }
+      (value) => { if (active) { setSource({entry,input:value}); setSourceStatus({entry,value:'ready'}); } },
+      () => { if (active) setSourceStatus({entry,value:'error'}); }
     );
     return () => { active = false; };
-  }, [entry.id,retry]);
+  }, [entry,retry]);
 
   useEffect(() => {
     setWavelength(entry.radiation_wavelength_angstrom ?? DEFAULT_WAVELENGTH);

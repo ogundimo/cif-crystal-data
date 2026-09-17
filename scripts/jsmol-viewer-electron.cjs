@@ -2,7 +2,10 @@ const assert = require('node:assert/strict');
 const { createHash } = require('node:crypto');
 const { mkdir, readFile, writeFile } = require('node:fs/promises');
 const { join } = require('node:path');
+const { mkdtempSync } = require('node:fs');
+const { tmpdir } = require('node:os');
 const { app, BrowserWindow } = require('electron');
+app.setPath('userData', mkdtempSync(join(tmpdir(), 'cif-viewer-tests-')));
 
 app.commandLine.appendSwitch('disable-gpu');
 const testUrl = process.env.CIF_UI_TEST_URL;

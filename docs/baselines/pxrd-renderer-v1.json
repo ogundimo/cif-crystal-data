@@ -11,28 +11,28 @@
       "symmetry": 1,
       "samples": [
         {
-          "synchronousMs": 11.699999988079071,
-          "synchronousDelayMs": 11.799999997019768,
-          "workerElapsedMs": 51.400000005960464,
-          "workerCalculationMs": 15.099999994039536,
-          "maximumTimerDelayMs": 3.3999999910593033,
-          "ticks": 5
+          "synchronousMs": 14.299999997019768,
+          "synchronousDelayMs": 14.299999997019768,
+          "workerElapsedMs": 49.69999998807907,
+          "workerCalculationMs": 19.700000002980232,
+          "maximumTimerDelayMs": 3.8999999910593033,
+          "ticks": 4
         },
         {
-          "synchronousMs": 9.299999997019768,
-          "synchronousDelayMs": 9.399999991059303,
-          "workerElapsedMs": 57.20000000298023,
-          "workerCalculationMs": 14.900000005960464,
-          "maximumTimerDelayMs": 6.200000002980232,
-          "ticks": 5
+          "synchronousMs": 3.5999999940395355,
+          "synchronousDelayMs": 3.7000000029802322,
+          "workerElapsedMs": 43.29999999701977,
+          "workerCalculationMs": 19.700000002980232,
+          "maximumTimerDelayMs": 11.799999997019768,
+          "ticks": 3
         },
         {
-          "synchronousMs": 1.5,
-          "synchronousDelayMs": 1.5999999940395355,
-          "workerElapsedMs": 62.599999994039536,
-          "workerCalculationMs": 14,
-          "maximumTimerDelayMs": 9.199999988079071,
-          "ticks": 5
+          "synchronousMs": 1.699999988079071,
+          "synchronousDelayMs": 1.699999988079071,
+          "workerElapsedMs": 40,
+          "workerCalculationMs": 16.600000008940697,
+          "maximumTimerDelayMs": 10.699999988079071,
+          "ticks": 3
         }
       ]
     },
@@ -43,28 +43,28 @@
       "symmetry": 1,
       "samples": [
         {
-          "synchronousMs": 2493.6000000089407,
-          "synchronousDelayMs": 2496.9000000059605,
-          "workerElapsedMs": 2464.8999999910593,
-          "workerCalculationMs": 2438.8999999910593,
-          "maximumTimerDelayMs": 8.699999988079071,
-          "ticks": 157
-        },
-        {
-          "synchronousMs": 2498.5,
-          "synchronousDelayMs": 2499,
-          "workerElapsedMs": 3837.5999999940395,
-          "workerCalculationMs": 3746,
-          "maximumTimerDelayMs": 8.599999994039536,
-          "ticks": 246
-        },
-        {
-          "synchronousMs": 2267.6000000089407,
-          "synchronousDelayMs": 2267.9000000059605,
-          "workerElapsedMs": 3520.6000000089407,
-          "workerCalculationMs": 3450.1000000089407,
+          "synchronousMs": 2158.9000000059605,
+          "synchronousDelayMs": 2161.4000000059605,
+          "workerElapsedMs": 2170.2000000029802,
+          "workerCalculationMs": 2136.800000011921,
           "maximumTimerDelayMs": 8.5,
-          "ticks": 227
+          "ticks": 142
+        },
+        {
+          "synchronousMs": 1979.1000000089407,
+          "synchronousDelayMs": 1979.9000000059605,
+          "workerElapsedMs": 2088.9000000059605,
+          "workerCalculationMs": 2063.5,
+          "maximumTimerDelayMs": 9.800000011920929,
+          "ticks": 132
+        },
+        {
+          "synchronousMs": 1882.9000000059605,
+          "synchronousDelayMs": 1883,
+          "workerElapsedMs": 1950.7000000029802,
+          "workerCalculationMs": 1926.0999999940395,
+          "maximumTimerDelayMs": 10.299999997019768,
+          "ticks": 124
         }
       ]
     },
@@ -75,34 +75,60 @@
       "symmetry": 1,
       "samples": [
         {
-          "synchronousMs": 554.7000000029802,
-          "synchronousDelayMs": 554.8999999910593,
-          "workerElapsedMs": 1108.2000000029802,
-          "workerCalculationMs": 902.5,
-          "maximumTimerDelayMs": 10.5,
-          "ticks": 74
+          "synchronousMs": 454.69999998807907,
+          "synchronousDelayMs": 455,
+          "workerElapsedMs": 718.5999999940395,
+          "workerCalculationMs": 683.4000000059605,
+          "maximumTimerDelayMs": 13.400000005960464,
+          "ticks": 46
         },
         {
-          "synchronousMs": 487.79999999701977,
-          "synchronousDelayMs": 488.09999999403954,
-          "workerElapsedMs": 818.5,
-          "workerCalculationMs": 746,
-          "maximumTimerDelayMs": 8.099999994039536,
-          "ticks": 55
+          "synchronousMs": 470,
+          "synchronousDelayMs": 470.20000000298023,
+          "workerElapsedMs": 807.7999999970198,
+          "workerCalculationMs": 756.7999999970198,
+          "maximumTimerDelayMs": 8.299999997019768,
+          "ticks": 54
         },
         {
-          "synchronousMs": 457.09999999403954,
-          "synchronousDelayMs": 457.29999999701977,
-          "workerElapsedMs": 737.4000000059605,
-          "workerCalculationMs": 671.6999999880791,
-          "maximumTimerDelayMs": 8.100000008940697,
-          "ticks": 50
+          "synchronousMs": 463.70000000298023,
+          "synchronousDelayMs": 463.79999999701977,
+          "workerElapsedMs": 801.2000000029802,
+          "workerCalculationMs": 742.5,
+          "maximumTimerDelayMs": 8.200000002980232,
+          "ticks": 54
         }
       ]
     }
   ],
   "memory": {
-    "usedJSHeapSize": 11243097,
-    "totalJSHeapSize": 94842773
-  }
+    "usedJSHeapSize": 11069235,
+    "totalJSHeapSize": 96415859
+  },
+  "panelSamples": [
+    {
+      "name": "ordinary",
+      "atoms": 8,
+      "cellAngstrom": 5.64,
+      "elapsedThroughCommitMs": 94,
+      "maximumTimerDelayMs": 13.199999988079071,
+      "ticks": 15
+    },
+    {
+      "name": "demanding",
+      "atoms": 256,
+      "cellAngstrom": 24,
+      "elapsedThroughCommitMs": 3295.9000000059605,
+      "maximumTimerDelayMs": 19.400000005960464,
+      "ticks": 222
+    },
+    {
+      "name": "large-cell",
+      "atoms": 2,
+      "cellAngstrom": 60,
+      "elapsedThroughCommitMs": 697.2000000029802,
+      "maximumTimerDelayMs": 78,
+      "ticks": 49
+    }
+  ]
 }
