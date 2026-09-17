@@ -76,10 +76,15 @@ async function sample(number) {
     main = await connect(mainPort);
     const electron = `process.getBuiltinModule('module').createRequire(process.cwd() + '/package.json')('electron')`;
     await waitFor(() => main.evaluate(`${electron}.BrowserWindow.getAllWindows().length > 0`), 'application window');
-    await main.evaluate(`${electron}.BrowserWindow.getAllWindows().forEach(w => { w.show(); w.focus(); }); true`);
+    await main.evaluate(`${electron}.BrowserWindow.getAllWindows().forEach(w => { if (w.isMinimized()) w.restore(); w.show(); w.focus(); }); true`);
     renderer = await connect(rendererPort);
     const readyEvents = await waitFor(async () => { const rows = await events(); return rows.some(row => row.event === 'cif:getStartupRefresh.complete') ? rows : null; }, 'startup IPC milestones');
     assert.ok(!readyEvents.some(row => row.event === 'worker.started'), 'empty startup must not import');
+    // Windows may initially suppress/minimize a child launched by a background shell.
+    // Restore once more after loading; still require actual renderer visibility/paint.
+    if (!await renderer.evaluate("document.visibilityState === 'visible'")) {
+      await main.evaluate(`${electron}.BrowserWindow.getAllWindows().forEach(w => { if (w.isMinimized()) w.restore(); w.show(); w.focus(); }); true`);
+    }
     await waitFor(() => renderer.evaluate("document.visibilityState === 'visible' && performance.getEntriesByName('first-contentful-paint').length > 0"), 'visible contentful paint');
     const initial = await renderer.evaluate(`({ origin: performance.timeOrigin, paint: performance.getEntriesByName('first-contentful-paint')[0].startTime, resources: performance.getEntriesByType('resource').map(r => ({ bytes: r.decodedBodySize })) })`);
     const quickSearchPaintMs = await renderer.evaluate(`new Promise((resolve,reject) => {

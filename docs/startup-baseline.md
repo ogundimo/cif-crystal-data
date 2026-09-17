@@ -42,6 +42,7 @@ in the report. Never promote a failed report to a baseline.
   The normal profile, research CIFs and normal Vite cache are not used.
 - The normal renderer configuration, plus a benchmark-only Vite cache directory.
 - GPU remains enabled. A local main-process inspector shows/focuses the window;
+  if Windows suppresses the initial child window, it restores it again after loading.
   the renderer diagnostic endpoint reads timings and drives Quick Search. Opt-in
   IPC tracing is enabled. CPU profiling is disabled.
 - Filesystem/OS caches are uncontrolled. These are not reboot-cold measurements.
