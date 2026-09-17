@@ -3,6 +3,7 @@ import App from './App';
 import ReactDOM from 'react-dom/client';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ResultsWorkspace from './components/ResultsWorkspace';
+import DataGrid from './components/DataGrid';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
 import type { EntryRow, SearchPageRequest, SearchPageResult, ImportProgress, ImportResult } from '../../shared/types';
 import syntheticCif from '../../parser/__fixtures__/synthetic-test.cif?raw';
@@ -127,7 +128,20 @@ function UiTestApp() {
   );
 }
 
+function GridShortcutTest() {
+  const [state, setState] = React.useState({ids:gridRows.map(row=>row.id),selectedId:5000 as number|null,totalRows:10000,loadingMore:false});
+  const calls=React.useRef({select:0,load:0,sort:0});
+  Object.assign(window,{gridShortcut:{state,calls:calls.current,update:(next:Partial<typeof state>)=>setState(previous=>({...previous,...next}))}});
+  return <div className="flex h-screen flex-col">
+    <input aria-label="Shortcut scope test" />
+    <DataGrid rows={state.ids.map(id=>gridRows[id-1])} selectedId={state.selectedId} totalRows={state.totalRows} loadingMore={state.loadingMore}
+      onSelect={row=>{calls.current.select++;setState(previous=>({...previous,selectedId:row.id}));}}
+      onLoadMore={()=>{calls.current.load++;}} onSortChange={()=>{calls.current.sort++;}} />
+  </div>;
+}
+
 const appRegressionMode = new URLSearchParams(location.search).has('app-regression');
+const gridShortcutMode = new URLSearchParams(location.search).has('grid-shortcut');
 if (appRegressionMode) {
   const regression = {
     progress: (_value: ImportProgress) => {},
@@ -149,4 +163,4 @@ if (appRegressionMode) {
     return new Promise<SearchPageResult>((resolve) => regression.pending.push(() => resolve(result)));
   };
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(appRegressionMode ? <App /> : <UiTestApp />);
+ReactDOM.createRoot(document.getElementById('root')!).render(gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);

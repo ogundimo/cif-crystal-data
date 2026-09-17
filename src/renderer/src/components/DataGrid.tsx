@@ -100,6 +100,7 @@ export default function DataGrid({
   const [columnSizing, setColumnSizing] = useLayoutPreference<ColumnSizingState>('column-widths', {}, validColumnWidths);
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const revealedScrollTop = useRef<number | null>(null);
 
   const sorting: SortingState = onSortChange
     ? sortColumn ? [{ id: sortColumn, desc: sortDirection === 'desc' }] : []
@@ -110,6 +111,7 @@ export default function DataGrid({
     columns,
     state: { sorting, columnSizing },
     onSortingChange: (updater) => {
+      revealedScrollTop.current = null;
       const next = typeof updater === 'function' ? updater(sorting) : updater;
       setSorting(next);
       const first = next[0];
@@ -139,6 +141,8 @@ export default function DataGrid({
   const measureViewport = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
+    const revealing = revealedScrollTop.current !== null && Math.abs(container.scrollTop - Math.max(0, Math.min(revealedScrollTop.current, container.scrollHeight - container.clientHeight))) < 1;
+    if (!revealing) revealedScrollTop.current = null;
     setViewport((previous) => {
       const next = { scrollTop: container.scrollTop, height: container.clientHeight };
       return previous.scrollTop === next.scrollTop && previous.height === next.height
@@ -146,7 +150,7 @@ export default function DataGrid({
         : next;
     });
     if (
-      onLoadMore &&
+      !revealing && onLoadMore &&
       !loadingMore &&
       rows.length < totalRows &&
       container.scrollTop + container.clientHeight >= container.scrollHeight - ROW_HEIGHT * 20
@@ -154,6 +158,8 @@ export default function DataGrid({
       onLoadMore();
     }
   }, [loadingMore, onLoadMore, rows.length, totalRows]);
+
+  useLayoutEffect(() => { revealedScrollTop.current = null; }, [selectedId, sortColumn, sortDirection]);
 
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
@@ -170,8 +176,26 @@ export default function DataGrid({
       data-testid="data-grid-scroll"
       tabIndex={0}
       role="region"
-      aria-label="Search results. Use Up and Down arrow keys to select a row."
+      aria-label="Search results. Use Up and Down arrow keys to select a row. Control+Shift+Enter shows the selected row."
+      aria-keyshortcuts="Control+Shift+Enter"
       onKeyDown={(event) => {
+        if (event.target === event.currentTarget && event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey && event.key === 'Enter' && !event.nativeEvent.isComposing) {
+          if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+          const index = tableRows.findIndex(row => row.original.id === selectedId);
+          if (index < 0) return;
+          event.preventDefault();
+          const container = event.currentTarget;
+          const headerHeight = container.querySelector('thead')?.getBoundingClientRect().height ?? HEADER_HEIGHT;
+          const target = Math.max(0, Math.min(container.scrollHeight - container.clientHeight,
+            index * ROW_HEIGHT + ROW_HEIGHT / 2 - (container.clientHeight - headerHeight) / 2));
+          if (Math.abs(container.scrollTop - target) >= 1) {
+            container.scrollTop = target;
+            // Revealing an already loaded selection must not request another page.
+            revealedScrollTop.current = container.scrollTop;
+            measureViewport();
+          }
+          return;
+        }
         if (event.target !== event.currentTarget || !onSelect || rows.length === 0 || !['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
         const current = rows.findIndex(row => row.id === selectedId);
@@ -186,6 +210,9 @@ export default function DataGrid({
       className="mx-2 mt-2 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-white"
       style={{ overflowAnchor: 'none' }}
       onScroll={measureViewport}
+      onWheel={(event) => { revealedScrollTop.current = null; if (event.deltaY > 0) measureViewport(); }}
+      onPointerDown={() => { revealedScrollTop.current = null; }}
+      onTouchMove={() => { revealedScrollTop.current = null; }}
     >
       {tableRows.length === 0 ? (
         <div className="flex h-full min-h-[16rem] items-center justify-center text-center">
@@ -253,7 +280,7 @@ export default function DataGrid({
                   <td
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#f0f0f0] border-r border-[#f0f0f0] px-2 py-0.5"
+                    className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#f0f0f0] border-r border-[#f0f0f0] px-2 py-0.5 leading-[15px]"
                     title={
                       typeof cell.getValue() === 'string'
                         ? (cell.getValue() as string)

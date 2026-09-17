@@ -68,7 +68,7 @@ export default function ResultsWorkspace({ emptyMessage, rows, selectedId, onSel
       <div className="flex min-h-0 overflow-hidden">
         <DataGrid
           rows={rows}
-          selectedId={selectedEntry.id}
+          selectedId={selectedId}
           onSelect={onSelect}
           totalRows={totalRows}
           loadingMore={loadingMore}
