@@ -74,6 +74,7 @@ async function sample(number) {
   };
   try {
     main = await connect(mainPort);
+    await waitFor(async () => (await events()).some(row => row.event === 'main.loaded'), 'main initialization before diagnostic evaluation');
     const electron = `process.getBuiltinModule('module').createRequire(process.cwd() + '/package.json')('electron')`;
     await waitFor(() => main.evaluate(`${electron}.BrowserWindow.getAllWindows().length > 0`), 'application window');
     await main.evaluate(`${electron}.BrowserWindow.getAllWindows().forEach(w => { if (w.isMinimized()) w.restore(); w.show(); w.focus(); }); true`);
