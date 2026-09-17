@@ -5,6 +5,23 @@ It records a specific development-startup protocol, not a universal speed target
 Keep this original record; future bug fixes and features should compare against it
 without silently replacing it.
 
+## Relationship to the agreed startup definition
+
+The [startup definition](cold-start-protocol.md#agreed-startup-definition-2026-09-17)
+defines completion as a visibly ready interface and a successful test search measured
+from launch invocation. Development startup is tracked separately in #72 and is
+non-blocking for PR #63 and the import/search milestone; packaged acceptance stays
+under #40.
+
+Version 1's `controlsReadyMs` is an intermediate React signal, not full startup time.
+Its search metrics measure individual interactions; it does not record the agreed
+end-to-end launch-to-search metric, and its origin excludes outer npm overhead.
+Do not relabel existing samples or add separate medians to estimate that metric.
+Preserve both v1 baseline files unchanged. A future runner implementing the full
+definition must version its protocol and establish a new, separately named baseline,
+recording existing versus fresh Vite cache and any visibility intervention. No such
+runner change or new measurement is implied by this documentation update.
+
 Recorded on 2026-09-16 at clean revision `f4e6304` using benchmark protocol v1:
 
 | Metric | Minimum | Median | Maximum |

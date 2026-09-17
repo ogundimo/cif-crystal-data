@@ -4,6 +4,38 @@ Status: **awaiting actual cold samples and agreement on usability budgets**.
 Do not close #40 from warm CI, a new profile, a new Electron process, or the
 instrumented packaged smoke runner. Those do not establish cold filesystem caches.
 
+## Agreed startup definition (2026-09-17)
+
+Startup time is the elapsed time from launch invocation until the main interface
+is visibly ready and a test search successfully displays its expected results or
+a valid empty result. A window, loading message, or React readiness signal alone
+does not establish startup completion. Record these milestones from the same origin:
+
+| Milestone | Observable condition |
+| --- | --- |
+| Launch begins | Invoke the chosen launcher; include portable extraction and pre-process overhead. |
+| First visible feedback | Meaningful content, including a loading message, is visible. |
+| Main interface ready | Layout and search controls are visible with no overlay blocking their use. |
+| Search usable (startup complete) | Database is ready and a real test search displays its expected results or valid empty state. |
+
+Perform the fixed search promptly when controls permit it; record automation or
+operator delay and the query/workload so launch-to-search results remain comparable.
+Retain database readiness separately for attribution. A failed search is a failed
+startup sample, not a completed timing. Validate expected results against the fixture.
+
+Measure first structure display separately, from selection to a visibly usable
+structure, to expose any delay shifted to deferred JSmol loading. Record refresh and
+migration durations separately and identify those scenarios. Required migration that
+blocks search remains part of total startup time; do not subtract it. Background
+refresh completion is not the startup endpoint when search is already usable.
+
+Distinguish packaged cold starts (OS restart or validated equivalent, no existing app
+process), packaged repeat starts (fully quit and reopen without resetting OS caches),
+and development starts (`npm run dev`, with existing or fresh Vite cache recorded).
+Never pool these conditions. Development startup is deferred under #72; packaged
+acceptance remains under #40. The definition is agreed; numerical budgets below
+remain proposals pending agreement and workload evidence.
+
 ## Preparation (before the restart)
 
 Use a dedicated test machine, or coordinate a restart with its owner. Never restart
