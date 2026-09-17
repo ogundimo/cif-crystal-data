@@ -34,8 +34,14 @@ export function buildReference(tags: Map<string, string>): string {
   const volume = firstValue('_citation_journal_volume', '_journal_volume');
   const first = firstValue('_citation_page_first', '_journal_page_first');
   const last = firstValue('_citation_page_last', '_journal_page_last');
-  const pages = first !== null && last !== null ? `${first}-${last}` : null;
+  const pages = first !== null && last !== null ? `${first}-${last}` : first;
   const parts = [name, year, volume, pages].filter((p): p is string => p !== null);
+  if (!name || !year || !volume || !first) {
+    const title = firstValue('_citation_title', '_publ_section_title');
+    const doi = firstValue('_citation_doi', '_journal_paper_doi');
+    if (title) parts.push(title);
+    if (doi) parts.push(cleanDoi(doi));
+  }
   return parts.join(', ');
 }
 
@@ -179,6 +185,7 @@ export function normalizeCif(raw: RawCif): CifEntry {
     radiationType,
     radiationWavelengthAngstrom,
     publAuthors: authors,
+    dataAuthors: raw.dataAuthors ?? [],
     atomSites,
     symmetryOperations,
     atomSiteAnisotropic

@@ -70,11 +70,17 @@ export const LEVEL_FULL = 'Complete structure determined';
 export const LEVEL_CELL = 'Cell parameters determined and structure type assigned';
 
 export interface ImportFailure {
+  phase?: 'discovery' | 'read' | 'parse' | 'write';
   filename: string;
   reason: string;
 }
 
 export interface ImportResult {
+  cancelled?: boolean;
+  discoveryComplete?: boolean;
+  processed?: number;
+  unattempted?: number;
+  skippedLinks?: number;
   outcomes?: { created: number; updated: number; duplicate: number };
   importedCount: number;
   skippedCount: number;
@@ -83,6 +89,8 @@ export interface ImportResult {
 }
 
 export interface ImportProgress {
+  phase?: 'discovery' | 'ingestion';
+  discovered?: number;
   processed: number;
   total: number;
   importedCount: number;
@@ -192,6 +200,10 @@ export interface CifViewerSource {
 }
 
 export interface CifApi {
+  traceMilestone: (name: 'controls-ready' | 'search-results' | 'controls-restored') => Promise<void>;
+  cancelImport: () => Promise<boolean>;
+  getStartupRefresh: () => Promise<boolean>;
+  setStartupRefresh: (enabled: boolean) => Promise<void>;
   relinkSource: (entryId: number) => Promise<boolean>;
   backupProfile: (layout?: Record<string, string>) => Promise<boolean>;
   getPreservedLayout: () => Promise<Record<string, string>>;
@@ -199,6 +211,7 @@ export interface CifApi {
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;
   getDiffractionInput: (entryId: number) => Promise<DiffractionInput>;
+  getDataAuthors: (entryId: number) => Promise<PublAuthorRow[]>;
   getPublAuthors: (entryId: number) => Promise<PublAuthorRow[]>;
   getViewerSource: (entryId: number) => Promise<CifViewerSource>;
   getImportFolder: () => Promise<string | null>;

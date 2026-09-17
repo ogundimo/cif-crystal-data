@@ -48,6 +48,7 @@ async function run() {
   mkdirSync(rootDir);
   writeFileSync(join(rootDir, 'synthetic-test.cif'), diffractionFixtureText);
   const workerUrl = pathToFileURL(join(chunksDirectory, workerFilename));
+  await require('./import-lifecycle-regressions.cjs')(workerUrl, fixtureText);
   await require('./preservation-regressions.cjs')(chunksDirectory, runWorker, workerUrl);
 
   const legacyUserDataPath = mkdtempSync(join(tmpdir(), 'cif-legacy-migration-'));
@@ -91,10 +92,10 @@ async function run() {
     assert.equal(migrationImport.result.importedCount, 1);
     legacyDatabase = new Database(legacyDatabasePath);
     try {
-      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 9);
+      assert.equal(legacyDatabase.pragma('user_version', { simple: true }), 10);
       assert.equal(
         legacyDatabase.prepare("SELECT value FROM app_settings WHERE key = 'schema_version'").get().value,
-        '9'
+        '10'
       );
       assert.equal(legacyDatabase.prepare('SELECT formula FROM entries').get().formula, 'Cl1Na1');
       assert.ok(
@@ -134,15 +135,15 @@ async function run() {
 
   try {
     const firstImport = await runWorker(workerUrl, rootDir, userDataPath);
-    assert.deepEqual(firstImport.result, { outcomes: { created: 1, updated: 0, duplicate: 0 }, importedCount: 1, skippedCount: 0, failures: [], total: 1 });
-    assert.deepEqual(firstImport.messages.filter((message) => message.type === 'progress'), [
+    assert.deepEqual(firstImport.result, { outcomes: { created: 1, updated: 0, duplicate: 0 }, importedCount: 1, skippedCount: 0, failures: [], total: 1, processed: 1, unattempted: 0, cancelled: false, discoveryComplete: true, skippedLinks: 0 });
+    assert.deepEqual(firstImport.messages.filter((message) => message.type === 'progress' && message.progress.phase === 'ingestion'), [
       {
         type: 'progress',
-        progress: { processed: 0, total: 1, importedCount: 0, skippedCount: 0, failureCount: 0 }
+        progress: { phase: 'ingestion', discovered: 1, processed: 0, total: 1, importedCount: 0, skippedCount: 0, failureCount: 0 }
       },
       {
         type: 'progress',
-        progress: { processed: 1, total: 1, importedCount: 1, skippedCount: 0, failureCount: 0 }
+        progress: { phase: 'ingestion', discovered: 1, processed: 1, total: 1, importedCount: 1, skippedCount: 0, failureCount: 0 }
       }
     ]);
 
@@ -205,7 +206,7 @@ async function run() {
       `${diffractionFixtureText}\n# modified for refresh test\n`
     );
     const updateImport = await runWorker(workerUrl, rootDir, userDataPath);
-    assert.deepEqual(updateImport.result, { outcomes: { created: 0, updated: 1, duplicate: 0 }, importedCount: 1, skippedCount: 0, failures: [], total: 1 });
+    assert.deepEqual(updateImport.result, { outcomes: { created: 0, updated: 1, duplicate: 0 }, importedCount: 1, skippedCount: 0, failures: [], total: 1, processed: 1, unattempted: 0, cancelled: false, discoveryComplete: true, skippedLinks: 0 });
     database = new Database(databasePath);
     try {
       assert.equal(database.prepare('SELECT COUNT(*) AS count FROM entries').get().count, 1);
@@ -221,7 +222,7 @@ async function run() {
         importedCount: 0,
         skippedCount: 1,
         failures: [],
-        total: 1
+        total: 1, processed: 1, unattempted: 0, cancelled: false, discoveryComplete: true, skippedLinks: 0
       });
 
       database.pragma('foreign_keys = ON');

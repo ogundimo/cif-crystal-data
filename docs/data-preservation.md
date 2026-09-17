@@ -2,7 +2,7 @@
 
 ## Import identity
 
-Schema 9 identifies a structure by its physical source path and data-block identity,
+Schema 10 identifies a structure by its physical source path and data-block identity,
 not its display filename. Paths are absolute and normalized; Windows paths compare
 case-insensitively. The database retains the original display filename. Equal basenames
 in different directories cannot replace each other's records.
@@ -39,7 +39,7 @@ profile's `cif-local.db`. Every indexed block references that content version an
 own block checksum. Viewer and CIF export verify both checksums and select the stored
 block. They never substitute current external content. Editing, moving, or deleting the
 external original therefore does not change viewing/export until an explicit refresh or
-import succeeds. Refresh and startup scans intentionally update indexed metadata too.
+import succeeds. Refresh and enabled startup scans intentionally update indexed metadata too. Schema 10 repairs bibliography from verified stored sources during the snapshotted upgrade; see [reliability](import-search-reliability.md).
 
 There is no new linked-only import mode. Existing linked-only records retain their source
 paths and entry IDs during migration, but cannot prove the original imported bytes from
@@ -54,7 +54,7 @@ records; inspect and keep the original migration backup as the historical refere
 Migration makes a `cif-local.pre-migration-v…db` snapshot next to the database before
 changing schema, then commits schema and data in one transaction. Failure or interruption
 rolls back; restart retries. Keep the migration backup when downgrading: older versions
-cannot open schema 9. Do not replace an open database file. Close the app before manually
+cannot open schema 10. Do not replace an open database file. Close the app before manually
 recovering a profile from a pre-migration/pre-restore snapshot.
 
 Stored versions are retained until **Clear CIFs**, including versions superseded by

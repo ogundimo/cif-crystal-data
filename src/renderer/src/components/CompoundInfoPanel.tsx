@@ -25,6 +25,8 @@ export default function CompoundInfoPanel({ entry }: Props) {
   const viewerPercentage = usePanePercentage(viewerRowsRef, '[aria-label="Crystal structure viewer"]', 'height');
   const [atomSites, setAtomSites] = useState<AtomSiteRow[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [dataAuthors, setDataAuthors] = useState<PublAuthorRow[]>([]);
+  const [dataAuthorStatus, setDataAuthorStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [authors, setAuthors] = useState<PublAuthorRow[]>([]);
   const [authorStatus, setAuthorStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
@@ -50,6 +52,8 @@ export default function CompoundInfoPanel({ entry }: Props) {
   useEffect(() => {
     let active = true;
     setAuthors([]);
+    setDataAuthors([]); setDataAuthorStatus('loading');
+    window.cifApi.getDataAuthors(entry.id).then(rows => { if (active) { setDataAuthors(rows); setDataAuthorStatus('ready'); } }, () => { if (active) setDataAuthorStatus('error'); });
     setAuthorStatus('loading');
     window.cifApi.getPublAuthors(entry.id).then(
       (rows) => {
@@ -140,6 +144,10 @@ export default function CompoundInfoPanel({ entry }: Props) {
             ))}
           </tbody>
         </table>
+        <section aria-label="Data-block authors" className="bg-white p-2 text-xs">
+          <h3 className="font-semibold">Data-block authors (not publication authors)</h3>
+          {dataAuthorStatus === 'loading' ? <p>Loading data authors…</p> : dataAuthorStatus === 'error' ? <p role="alert">Could not load data authors.</p> : dataAuthors.length === 0 ? <p>No data authors supplied in this source.</p> : <ul>{dataAuthors.map(author => <li key={author.id}>{author.name}{author.address ? ` — ${author.address}` : ''}</li>)}</ul>}
+        </section>
         <table data-testid="cell-parameters-table" className="mt-1.5 w-full min-w-[15rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
           <caption className="info-section-label">Cell angles</caption>
           <thead>
@@ -216,7 +224,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
             ))}
             <tr>
               <th className="w-40 border-b border-r border-[#c8d2dc] bg-[#dfe8f1] px-2 py-1 text-left align-top font-semibold text-[#2f4052]">
-                Authors
+                Publication authors
               </th>
               <td className="border-b border-[#d8dee5] bg-white p-0 text-[#202020]">
                 {authorStatus === 'loading' ? (
@@ -224,7 +232,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
                 ) : authorStatus === 'error' ? (
                   <span className="block px-2 py-1 text-[#c42b1c]">Could not load authors.</span>
                 ) : authors.length === 0 ? (
-                  <span className="block px-2 py-1 text-text-dim">No author data available.</span>
+                  <span className="block px-2 py-1 text-text-dim">No publication authors supplied in this source.</span>
                 ) : (
                   <table data-testid="publication-authors" className="w-full table-fixed border-collapse">
                     <thead>

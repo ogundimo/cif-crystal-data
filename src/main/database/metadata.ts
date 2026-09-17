@@ -73,6 +73,15 @@ export function getCifExportSource(
 
 const IMPORT_FOLDER_SETTING = 'import_folder';
 
+export function getStartupRefresh(database: Database.Database = getDb()): boolean {
+  const row = database.prepare("SELECT value FROM app_settings WHERE key = 'startup_refresh'").get() as { value: string } | undefined;
+  return row?.value === 'true';
+}
+
+export function setStartupRefresh(enabled: boolean, database: Database.Database = getDb()): void {
+  database.prepare("INSERT INTO app_settings(key, value) VALUES ('startup_refresh', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(String(enabled));
+}
+
 export function getImportFolder(database: Database.Database = getDb()): string | null {
   const row = database
     .prepare('SELECT value FROM app_settings WHERE key = ?')
@@ -92,4 +101,8 @@ export function setImportFolder(folderPath: string, database: Database.Database 
 export function getPreservedLayout(database: Database.Database = getDb()): Record<string, string> {
   const row = database.prepare("SELECT value FROM app_settings WHERE key = 'renderer_layout'").get() as { value: string } | undefined;
   return row ? JSON.parse(row.value) : {};
+}
+
+export function getDataAuthors(entryId: number, database: Database.Database = getDb()): PublAuthorRow[] {
+  return database.prepare('SELECT * FROM data_authors WHERE entry_id = ? ORDER BY author_order').all(entryId) as PublAuthorRow[];
 }

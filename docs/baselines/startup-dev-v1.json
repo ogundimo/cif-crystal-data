@@ -1,0 +1,151 @@
+{
+  "protocol": "visible-dev-fresh-vite-empty-profile-v1",
+  "status": "passed",
+  "recordedAt": "2026-09-17T03:23:34.977Z",
+  "source": {
+    "commit": "f4e6304beb4d5b85cc48af7974f46f271a612ee0",
+    "dirty": false,
+    "diffHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "lockfileHash": "4254f206f76cff956599d95ec5ad61d30f19ce25c8803a5541d948081959306c"
+  },
+  "environment": {
+    "platform": "win32",
+    "arch": "x64",
+    "os": "10.0.26200",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "memoryBytes": 8317952000,
+    "node": "v22.23.2",
+    "electron": "44.1.0",
+    "vite": "7.3.6",
+    "electronVite": "5.0.0",
+    "harnessHash": "fcfb18ebf8b5831e45fec9ab69384bd6f6e5cadcbad60202a04826f5b4c78fad"
+  },
+  "conditions": {
+    "launcher": "Node -> electron-vite dev (npm overhead excluded)",
+    "profile": "new empty synthetic profile each sample",
+    "viteCache": "new each sample",
+    "osCache": "uncontrolled; not OS-cold",
+    "window": "shown and focused; GPU enabled",
+    "tracing": "IPC and inspector enabled; no CPU profiler",
+    "startupRefresh": false
+  },
+  "samples": [
+    {
+      "mainMs": 2313,
+      "firstContentfulPaintMs": 10644.60009765625,
+      "controlsReadyMs": 10167,
+      "databaseReadyMs": 10286,
+      "quickSearchPaintMs": 104.89999999850988,
+      "emptySearchMs": 15,
+      "resourceCount": 34,
+      "decodedBytes": 2057415
+    },
+    {
+      "mainMs": 2922,
+      "firstContentfulPaintMs": 10607.300048828125,
+      "controlsReadyMs": 10339,
+      "databaseReadyMs": 10444,
+      "quickSearchPaintMs": 92.69999999552965,
+      "emptySearchMs": 17,
+      "resourceCount": 34,
+      "decodedBytes": 2057415
+    },
+    {
+      "mainMs": 2196,
+      "firstContentfulPaintMs": 3166.800048828125,
+      "controlsReadyMs": 6519,
+      "databaseReadyMs": 6626,
+      "quickSearchPaintMs": 113.30000000447035,
+      "emptySearchMs": 13,
+      "resourceCount": 34,
+      "decodedBytes": 2057415
+    }
+  ],
+  "limitations": [
+    "Run on an idle desktop with other app instances closed.",
+    "No populated profile, upgrade, first structure, or portable launcher coverage.",
+    "Timing comparisons are advisory, not a release gate."
+  ],
+  "summary": {
+    "mainMs": {
+      "samples": [
+        2313,
+        2922,
+        2196
+      ],
+      "min": 2196,
+      "median": 2313,
+      "max": 2922
+    },
+    "firstContentfulPaintMs": {
+      "samples": [
+        10644.60009765625,
+        10607.300048828125,
+        3166.800048828125
+      ],
+      "min": 3166.800048828125,
+      "median": 10607.300048828125,
+      "max": 10644.60009765625
+    },
+    "controlsReadyMs": {
+      "samples": [
+        10167,
+        10339,
+        6519
+      ],
+      "min": 6519,
+      "median": 10167,
+      "max": 10339
+    },
+    "databaseReadyMs": {
+      "samples": [
+        10286,
+        10444,
+        6626
+      ],
+      "min": 6626,
+      "median": 10286,
+      "max": 10444
+    },
+    "quickSearchPaintMs": {
+      "samples": [
+        104.89999999850988,
+        92.69999999552965,
+        113.30000000447035
+      ],
+      "min": 92.69999999552965,
+      "median": 104.89999999850988,
+      "max": 113.30000000447035
+    },
+    "emptySearchMs": {
+      "samples": [
+        15,
+        17,
+        13
+      ],
+      "min": 13,
+      "median": 15,
+      "max": 17
+    },
+    "resourceCount": {
+      "samples": [
+        34,
+        34,
+        34
+      ],
+      "min": 34,
+      "median": 34,
+      "max": 34
+    },
+    "decodedBytes": {
+      "samples": [
+        2057415,
+        2057415,
+        2057415
+      ],
+      "min": 2057415,
+      "median": 2057415,
+      "max": 2057415
+    }
+  }
+}

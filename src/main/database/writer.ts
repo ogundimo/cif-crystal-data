@@ -65,6 +65,8 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
     'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
   );
   const deleteAtomSites = database.prepare('DELETE FROM atom_sites WHERE entry_id = ?');
+  const deleteDataAuthors = database.prepare('DELETE FROM data_authors WHERE entry_id = ?');
+  const insertDataAuthor = database.prepare('INSERT INTO data_authors(entry_id, author_order, name, address) VALUES (?, ?, ?, ?)');
   const deletePublAuthors = database.prepare('DELETE FROM publ_authors WHERE entry_id = ?');
   const deleteSymmetryOperations = database.prepare(
     'DELETE FROM symmetry_operations WHERE entry_id = ?'
@@ -182,6 +184,8 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
     deleteElements.run(entryId);
     deleteAtomSites.run(entryId);
     deletePublAuthors.run(entryId);
+    deleteDataAuthors.run(entryId);
+    entry.dataAuthors?.forEach((author, index) => insertDataAuthor.run(entryId, index, author.name, author.address));
     deleteSymmetryOperations.run(entryId);
     deleteAtomSiteAnisotropic.run(entryId);
     for (const el of entry.elements) {

@@ -1,7 +1,8 @@
+import { migrateBibliography } from './bibliographyMigration';
 import { dirname, join } from 'node:path';
 import type Database from 'better-sqlite3';
 
-export const CURRENT_SCHEMA_VERSION = 9;
+export const CURRENT_SCHEMA_VERSION = 10;
 
 function hasColumn(database: Database.Database, table: string, column: string): boolean {
   return (database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[])
@@ -231,7 +232,8 @@ const migrations: Record<number, (database: Database.Database) => void> = {
   6: migration6,
   7: migration7,
   8: migration8,
-  9: migration9
+  9: migration9,
+  10: migrateBibliography
 };
 
 function createMigrationBackup(

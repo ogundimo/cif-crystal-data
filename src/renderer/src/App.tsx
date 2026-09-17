@@ -1,3 +1,4 @@
+import { createSearchController } from './searchController';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ResultsWorkspace from './components/ResultsWorkspace';
 import QuickSearchDialog from './components/QuickSearchDialog';
@@ -7,7 +8,7 @@ import type { EntryRow, ImportProgress, ImportResult, SearchFilter, SearchSortCo
 import AboutDialog from './components/AboutDialog';
 
 const NO_CRITERIA_LABEL = 'A0 (No selection criteria)';
-const SEARCH_PAGE_SIZE = 500;
+
 
 export default function App() {
   if (typeof window.cifApi === 'undefined') {
@@ -29,6 +30,8 @@ export default function App() {
 
 function AppInner() {
   const startupScanStarted = useRef(false);
+  const [startupRefresh, setStartupRefresh] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [qsOpen, setQsOpen] = useState(false);
@@ -49,10 +52,10 @@ function AppInner() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [searchTotal, setSearchTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
-  const searchRequestId = useRef(0);
-  const activeFilter = useRef<SearchFilter | null>(null);
+
+
   const [sort, setSort] = useState<{ column?: SearchSortColumn; direction?: 'asc' | 'desc' }>({});
-  const activeSort = useRef<{ column?: SearchSortColumn; direction?: 'asc' | 'desc' }>({});
+
 
   const showApiError = useCallback((action: string, error: unknown) => {
     const detail = error instanceof Error && error.message ? ` ${error.message}` : '';
@@ -68,21 +71,25 @@ function AppInner() {
     }
   }, [showApiError]);
 
+  useEffect(() => { void window.cifApi.traceMilestone('controls-ready').catch(() => {}); }, []);
+  useEffect(() => { if (!importing && !refreshing) void window.cifApi.traceMilestone('controls-restored').catch(() => {}); }, [importing, refreshing]);
+  const controllerRef = useRef<ReturnType<typeof createSearchController> | null>(null);
+  if (!controllerRef.current) controllerRef.current = createSearchController(window.cifApi, state => {
+    if (state.active && !state.busy) void window.cifApi.traceMilestone('search-results').catch(() => {});
+    setEntries(state.entries);
+    setSelectedEntryId(state.selectedEntryId);
+    setSearchTotal(state.total);
+    setSearchActive(state.active);
+    setLoadingMore(state.busy);
+    setSort(state.sort);
+    setAnswerSetLabel(state.active ? `A1 (${state.total} matching)` : NO_CRITERIA_LABEL);
+  }, showApiError);
+  const controller = controllerRef.current;
   const clearAnswerSet = useCallback((resetSearchForm = false) => {
-    setEntries([]);
-    setSelectedEntryId(null);
-    setAnswerSetLabel(NO_CRITERIA_LABEL);
-    setSearchActive(false);
-    setSearchTotal(0);
-    setLoadingMore(false);
-    activeSort.current = {};
-    setSort({});
-    activeFilter.current = null;
-    searchRequestId.current += 1;
+    controller.reset();
     setExportMessage(null);
-    if (resetSearchForm) setSearchResetSignal((value) => value + 1);
-  }, []);
-
+    if (resetSearchForm) setSearchResetSignal(value => value + 1);
+  }, [controller]);
   useEffect(() => {
     refreshDatabaseCount();
   }, [refreshDatabaseCount]);
@@ -95,18 +102,22 @@ function AppInner() {
       try {
         const folder = await window.cifApi.getImportFolder();
         setImportFolder(folder);
-        if (!folder) return;
+        const enabled = await window.cifApi.getStartupRefresh();
+        setStartupRefresh(enabled);
+        if (!folder || !enabled) return;
 
         setRefreshing(true);
         setImportProgress(null);
+        setCancelling(false);
         const result = await window.cifApi.refreshCifFolder();
-        if (result.importedCount > 0 || result.failures.length > 0) setImportResult(result);
+        if (result.cancelled || result.importedCount > 0 || result.failures.length > 0) setImportResult(result);
         await refreshDatabaseCount();
       } catch (error) {
         showApiError('scan the saved CIF folder at startup', error);
       } finally {
         setRefreshing(false);
         setImportProgress(null);
+        setCancelling(false);
       }
     }
 
@@ -158,6 +169,7 @@ function AppInner() {
     } finally {
       setImporting(false);
       setImportProgress(null);
+      setCancelling(false);
     }
   }
 
@@ -175,6 +187,7 @@ function AppInner() {
     } finally {
       setRefreshing(false);
       setImportProgress(null);
+      setCancelling(false);
     }
   }
 
@@ -215,99 +228,11 @@ function AppInner() {
   }
 
   async function handleSearch(filter: SearchFilter) {
-    const hasCriteria =
-      filter.slot1.length > 0 ||
-      filter.slot2.length > 0 ||
-      Boolean(filter.elementSelections?.some((selection) => selection.elements.length || selection.groups.length || selection.periods.length)) ||
-      Boolean(filter.elementSelection && (filter.elementSelection.elements.length || filter.elementSelection.groups.length || filter.elementSelection.periods.length)) ||
-      (filter.slot3?.length ?? 0) > 0 ||
-      (filter.slot4?.length ?? 0) > 0 ||
-      filter.aMin !== undefined ||
-      filter.aMax !== undefined ||
-      filter.bMin !== undefined ||
-      filter.bMax !== undefined ||
-      filter.cMin !== undefined ||
-      filter.cMax !== undefined ||
-      Boolean(filter.sgQuery && filter.sgQuery.trim()) ||
-      Boolean(filter.spaceGroupQuery && filter.spaceGroupQuery.trim()) ||
-      Boolean(filter.referenceQuery && filter.referenceQuery.trim()) ||
-      Boolean(filter.level && filter.level.trim()) ||
-      Boolean(filter.elementCountQuery && filter.elementCountQuery.trim());
-
     setApiError(null);
-    if (!hasCriteria) {
-      clearAnswerSet();
-      return;
-    }
-    const requestId = ++searchRequestId.current;
-    setLoadingMore(true);
-    try {
-      activeFilter.current = filter;
-      activeSort.current = {};
-      setSort({});
-      const result = await window.cifApi.searchPage({ filter, offset: 0, limit: SEARCH_PAGE_SIZE });
-      if (requestId !== searchRequestId.current) return;
-      setEntries(result.rows);
-      setSearchTotal(result.total);
-      setSelectedEntryId(result.rows[0]?.id ?? null);
-      setAnswerSetLabel(`A1 (${result.total} matching)`);
-      setSearchActive(true);
-    } catch (error) {
-      if (requestId === searchRequestId.current) showApiError('search entries', error);
-    } finally {
-      if (requestId === searchRequestId.current) setLoadingMore(false);
-    }
+    await controller.search(filter);
   }
-
-  const loadMoreResults = useCallback(async () => {
-    const filter = activeFilter.current;
-    if (!filter || loadingMore || entries.length >= searchTotal) return;
-    const requestId = searchRequestId.current;
-    setLoadingMore(true);
-    try {
-      const result = await window.cifApi.searchPage({
-        filter,
-        offset: entries.length,
-        limit: SEARCH_PAGE_SIZE,
-        sortColumn: activeSort.current.column,
-        sortDirection: activeSort.current.direction
-      });
-      if (requestId !== searchRequestId.current) return;
-      setEntries((current) => [...current, ...result.rows]);
-      setSearchTotal(result.total);
-    } catch (error) {
-      showApiError('load more search results', error);
-    } finally {
-      if (requestId === searchRequestId.current) setLoadingMore(false);
-    }
-  }, [entries.length, loadingMore, searchTotal, showApiError]);
-
-  const sortSearchResults = useCallback(async (column?: SearchSortColumn, direction?: 'asc' | 'desc') => {
-    const filter = activeFilter.current;
-    if (!filter) return;
-    activeSort.current = { column, direction };
-    setSort({ column, direction });
-    const requestId = ++searchRequestId.current;
-    setLoadingMore(true);
-    try {
-      const result = await window.cifApi.searchPage({
-        filter,
-        offset: 0,
-        limit: SEARCH_PAGE_SIZE,
-        sortColumn: column,
-        sortDirection: direction
-      });
-      if (requestId !== searchRequestId.current) return;
-      setEntries(result.rows);
-      setSearchTotal(result.total);
-      setSelectedEntryId(result.rows[0]?.id ?? null);
-    } catch (error) {
-      showApiError('sort search results', error);
-    } finally {
-      if (requestId === searchRequestId.current) setLoadingMore(false);
-    }
-  }, [showApiError]);
-
+  const loadMoreResults = controller.loadMore;
+  const sortSearchResults = controller.sort;
   return (
     <div className="mx-auto flex h-screen max-w-full flex-col overflow-hidden bg-mica">
       <div className="app-toolbar flex items-center gap-1.5 border-b border-stroke px-2.5 py-1.5" role="toolbar" aria-label="Application actions">
@@ -343,6 +268,11 @@ function AppInner() {
               <button className="btn-w32" disabled={importing || refreshing || clearing || preserving} onClick={() => handlePreservation('backupProfile')}>Save portable backup...</button>
               <button className="btn-w32" disabled={importing || refreshing || clearing || preserving} onClick={() => handlePreservation('restoreProfile')}>Restore backup...</button>
               <button className="btn-w32" disabled={selectedEntryId === null || importing || refreshing || clearing || preserving} onClick={() => handlePreservation('relinkSource')}>Relink selected source...</button>
+              <label className="text-xs"><input type="checkbox" checked={startupRefresh} disabled={importing || refreshing || clearing || preserving} onChange={async (event) => {
+                const enabled = event.target.checked;
+                try { await window.cifApi.setStartupRefresh(enabled); setStartupRefresh(enabled); }
+                catch (error) { showApiError('save startup refresh preference', error); }
+              }} /> Refresh saved folder at startup</label>
               <p className="text-xs">New imports keep a managed copy. Relinking requires identical content. Export and backup require new destination filenames.</p>
             </div>
           </details>
@@ -367,6 +297,10 @@ function AppInner() {
                 ? 'Refreshing...'
                 : 'Refresh CIFs'}
           </button>
+          {(importing || refreshing) && <button className="btn-w32" disabled={cancelling} onClick={async () => {
+            setCancelling(true);
+            try { await window.cifApi.cancelImport(); } catch (error) { setCancelling(false); showApiError('cancel import', error); }
+          }}>{cancelling ? 'Cancelling…' : 'Cancel import'}</button>}
           {(importing || refreshing) && importProgress && (
             <ImportProgressIndicator progress={importProgress} />
           )}
@@ -393,7 +327,7 @@ function AppInner() {
         emptyMessage={loadingMore ? { title: 'Searching…', description: 'Finding matching structures.' } : searchActive ? { title: 'No matching results', description: 'Open Quick search to adjust or remove criteria.' } : databaseEntryCount === 0 ? { title: 'No structures imported', description: 'Use Import CIFs to add structures, then run a Quick search.' } : databaseEntryCount === null ? { title: 'Loading database…', description: 'Checking the available structures.' } : { title: 'Run a search', description: 'Use Quick search to filter the imported structures.' }}
         rows={entries}
         selectedId={selectedEntryId}
-        onSelect={(entry) => setSelectedEntryId(entry.id)}
+        onSelect={(entry) => controller.select(entry.id)}
         totalRows={searchTotal || entries.length}
         loadingMore={loadingMore}
         onLoadMore={loadMoreResults}

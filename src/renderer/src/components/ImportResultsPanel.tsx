@@ -9,7 +9,7 @@ export default function ImportResultsPanel({ result, onDismiss }: Props) {
   return (
     <div className="fixed bottom-4 right-4 z-40 w-96 rounded-md border border-stroke-strong bg-white shadow-2xl">
       <div className="flex items-center gap-2 border-b border-stroke px-3 py-2 font-semibold">
-        <span>Import results</span>
+        <span>{result.cancelled ? 'Import cancelled' : 'Import results'}</span>
         <span className="flex-1" />
         <button className="rounded px-2 hover:bg-[#e9e9e9]" onClick={onDismiss} aria-label="Dismiss">
           ✕
@@ -17,9 +17,12 @@ export default function ImportResultsPanel({ result, onDismiss }: Props) {
       </div>
       <div className="max-h-72 overflow-auto px-3 py-2">
         <p className="mb-2">
-          Scanned <b>{result.total}</b> file(s): <b>{result.importedCount}</b> structure(s) imported or updated
+          Discovered <b>{result.total}</b> file(s); processed <b>{result.processed ?? result.total}</b>: <b>{result.importedCount}</b> structure(s) imported or updated
           {result.skippedCount > 0 && <>, <b>{result.skippedCount}</b> unchanged file(s)</>}.
         </p>
+        {result.discoveryComplete === false && <p>Discovery stopped early; the remaining total is unknown.</p>}
+        {!!result.unattempted && <p>{result.unattempted} discovered files unattempted.</p>}
+        {!!result.skippedLinks && <p>{result.skippedLinks} symlinks/junctions skipped.</p>}
         {result.outcomes && <p className="mb-2">{result.outcomes.created} new structures; {result.outcomes.updated} updated;
           {' '}{result.outcomes.duplicate} structures from identical copies kept separately. Changed files with block failures retain their previous imported version.</p>}
         {result.failures.length > 0 && (
@@ -28,7 +31,7 @@ export default function ImportResultsPanel({ result, onDismiss }: Props) {
             <ul className="flex flex-col gap-1">
               {result.failures.map((f, i) => (
                 <li key={i} className="text-[11px]">
-                  <span className="font-medium">{f.filename}</span>: {f.reason}
+                  <span className="font-medium">{f.filename}</span> ({f.phase ?? 'import'}): {f.reason}
                 </li>
               ))}
             </ul>

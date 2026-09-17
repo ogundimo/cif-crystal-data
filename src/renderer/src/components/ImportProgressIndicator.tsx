@@ -5,6 +5,7 @@ interface Props {
 }
 
 export default function ImportProgressIndicator({ progress }: Props) {
+  if (progress.phase === 'discovery') return <div role="status" data-testid="import-progress"><progress aria-label="Discovering CIF files" /> Discovering: {progress.discovered ?? progress.total} files found</div>;
   return (
     <div
       data-testid="import-progress"
@@ -18,7 +19,7 @@ export default function ImportProgressIndicator({ progress }: Props) {
         value={progress.processed}
       />
       <span>
-        {progress.importedCount} imported
+        {progress.importedCount} structures imported
         {progress.skippedCount > 0 ? `, ${progress.skippedCount} unchanged` : ''}
         {progress.failureCount > 0 ? `, ${progress.failureCount} failed` : ''}
       </span>

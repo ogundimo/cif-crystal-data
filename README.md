@@ -42,6 +42,10 @@ npm start
 This starts the Electron app with a live-reloading renderer. `npm run dev` is an alias
 for the same development command.
 
+For repeatable startup measurements and comparisons with the recorded baseline, see
+[the startup benchmark](docs/startup-baseline.md). Run `npm run benchmark:startup`
+on an idle Windows desktop using Node 22.13+ on the Node 22 line.
+
 ## Importing CIF files
 
 Click **Import CIFs...** in the toolbar, then choose a folder in the native folder picker.
@@ -51,13 +55,14 @@ separate structures. Refresh hashes each file, skips unchanged sources, and repo
 structures, updates, identical copies kept separately, and failures. A failed block leaves
 the entire previous version of that file intact.
 
-The selected folder is remembered and scanned at startup. **Refresh CIFs** scans it again.
+The selected folder is remembered. Startup refresh defaults off; enable it under **Sources & backups**. **Refresh CIFs** scans it again.
 A changed file updates structures with the same unique data-block labels. Renamed or copied
 files remain separate unless you explicitly relink the existing source to an identical copy.
 
 Use **Sources & backups** to save a portable backup, restore one, or relink the selected
 source. Viewing and export use the managed imported version even after the original is
 moved, edited, or deleted. Backup and export require a new destination filename.
+See [Import and search reliability](docs/import-search-reliability.md) for cancellation, diagnostics, author roles, and startup behavior.
 See [Data preservation](docs/data-preservation.md) for identity, migration, legacy-source,
 relinking, backup, and recovery policies.
 

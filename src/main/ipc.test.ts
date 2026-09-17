@@ -6,7 +6,7 @@ const doubles = vi.hoisted(() => ({
   handlers: new Map<string, Handler>(), windowOptions: vi.fn(),
   readFile: vi.fn(), stat: vi.fn(), writeFile: vi.fn(),
   save: vi.fn(), open: vi.fn(), confirm: vi.fn(), error: vi.fn(), worker: vi.fn(),
-  db: { readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
+  db: { getStartupRefresh: vi.fn(), setStartupRefresh: vi.fn(), getDataAuthors: vi.fn(), readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
     searchEntriesPage: vi.fn(), getImportFolder: vi.fn(), setImportFolder: vi.fn(), clearAllEntries: vi.fn() }
 }));
 vi.mock('electron', () => ({
@@ -16,6 +16,8 @@ vi.mock('electron', () => ({
     constructor(options: unknown) { doubles.windowOptions(options); }
     static fromWebContents() { return null; }
     static getAllWindows() { return []; }
+    once() {}
+    webContents = { once: vi.fn() };
     loadURL() {}
     loadFile() {}
   },
@@ -204,4 +206,29 @@ describe('main-process IPC contracts', () => {
     doubles.confirm.mockResolvedValueOnce({ response: 1 });
     await expect(invoke('cif:clearCifs')).resolves.toEqual({ cleared: true, deletedCount: 3 });
   });
+});
+
+it('validates startup preference and author role requests at the IPC boundary', async () => {
+  await expect(invoke('cif:setStartupRefresh', 'true')).rejects.toThrow('Invalid startup');
+  await invoke('cif:setStartupRefresh', true);
+  expect(doubles.db.setStartupRefresh).toHaveBeenCalledWith(true);
+  await expect(invoke('cif:getDataAuthors', -1)).rejects.toThrow('Invalid entry');
+  doubles.db.getDataAuthors.mockReturnValue([{ name: 'Depositor' }]);
+  await expect(invoke('cif:getDataAuthors', 1)).resolves.toEqual([{ name: 'Depositor' }]);
+});
+
+it('keeps mutations excluded during cancellation and permits a new import after worker settlement', async () => {
+  doubles.open.mockResolvedValue({ canceled: false, filePaths: ['synthetic-input'] });
+  let finish!: (value: unknown) => void;
+  doubles.worker.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  const pending = invoke('cif:importCifFolder');
+  await vi.waitFor(() => expect(doubles.worker).toHaveBeenCalledOnce());
+  await expect(invoke('cif:cancelImport')).resolves.toBe(true);
+  expect(doubles.worker.mock.calls[0][3].aborted).toBe(true);
+  await expect(invoke('cif:clearCifs')).rejects.toThrow('already in progress');
+  finish({ importedCount: 1, skippedCount: 0, failures: [], total: 2, cancelled: true });
+  await pending;
+  await expect(invoke('cif:cancelImport')).resolves.toBe(false);
+  doubles.worker.mockResolvedValueOnce({ importedCount: 1, skippedCount: 1, failures: [], total: 2 });
+  await expect(invoke('cif:importCifFolder')).resolves.toMatchObject({ importedCount: 1, skippedCount: 1 });
 });

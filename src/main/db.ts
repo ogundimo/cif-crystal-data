@@ -4,6 +4,7 @@ export { initDb } from './database/connection';
 export { createEntryWriter, clearAllEntries } from './database/writer';
 export type { EntryWriteItem, EntryWriter, FileFingerprint } from './database/writer';
 export {
+  getStartupRefresh, setStartupRefresh, getDataAuthors,
   getEntryCount, getAtomSites, getSymmetryOperations, getPublAuthors,
   getCifViewerSourceRecord, getCifExportSource, getImportFolder, setImportFolder, getPreservedLayout
 } from './database/metadata';

@@ -227,6 +227,7 @@ async function testAngstromCellLengths(window) {
 }
 
 async function testCompoundInformationSelection(window) {
+  await waitForRenderer(window, "!!document.querySelector('[data-testid=compound-info-panel] [data-testid=atom-sites-table] tbody td')", 'deferred compound details and atom data');
   const initial = await window.webContents.executeJavaScript(`
     (() => {
       const panel = document.querySelector('[data-testid="compound-info-panel"]');
@@ -362,7 +363,7 @@ async function testCompoundInformationSelection(window) {
     { label: 'Publication link', value: 'Synthetic structure report 2' },
     { label: 'Language', value: 'English' }
   ]);
-  assert.equal(selected.publication[3]?.label, 'Authors');
+  assert.equal(selected.publication[3]?.label, 'Publication authors');
   assert.deepEqual(selected.authorHeadings, ['Name', 'Organization / City']);
   assert.deepEqual(selected.authors, [
     ['Doe, J.', 'Department of Chemistry, Example University, Springfield'],
@@ -505,7 +506,7 @@ async function testImportProgressIndicator(window) {
     })()
   `);
   assert.equal(result.label, 'Import progress: 800 of 1000 files processed');
-  assert.match(result.text, /90 imported, 700 unchanged, 10 failed/);
+  assert.match(result.text, /90 structures imported, 700 unchanged, 10 failed/);
   assert.equal(result.value, 800);
   assert.equal(result.max, 1000);
   console.log('✓ import progress indicator counts and accessibility label');
@@ -568,8 +569,27 @@ async function run() {
 
   await require('./quick-search-lifecycle.cjs')(window, testUrl, waitForRenderer);
 
+  // Hold the real renderer entry to check feedback before its dependency graph loads.
+  let releaseEntry;
+  window.webContents.session.webRequest.onBeforeRequest({ urls: ['*://*/src/main.tsx*'] }, (_details, callback) => {
+    releaseEntry = callback;
+  });
+  const startupLoad = window.loadURL(testUrl.replace('ui-test.html', 'index.html'));
+  await waitForRenderer(window, "document.body.textContent.includes('Starting CIF Crystal Data')", 'early startup feedback');
+  const entryDeadline = Date.now() + 5000;
+  while (!releaseEntry && Date.now() < entryDeadline) await pause(20);
+  assert.ok(releaseEntry, 'renderer entry request must be intercepted');
+  releaseEntry({ cancel: true });
+  await startupLoad;
+  await waitForRenderer(window, "document.querySelector('[role=alert]')?.textContent.includes('could not start')", 'renderer-load failure feedback');
+  assert.equal(await window.webContents.executeJavaScript("document.querySelector('button').textContent"), 'Reload workspace');
+  window.webContents.session.webRequest.onBeforeRequest(null);
+  console.log('✓ startup feedback precedes renderer loading and a failed entry offers reload');
+
   await window.loadURL(testUrl + '?app-regression');
   await pause(300);
+  assert.equal(await window.webContents.executeJavaScript('Boolean(window.Jmol)'), false, 'empty workspace must not load JSmol');
+  assert.equal(await window.webContents.executeJavaScript("performance.getEntriesByType('resource').some(e => e.name.includes('CompoundInfoPanel'))"), false, 'empty workspace must not fetch structure details');
   const clickButton = async (text) => {
     await window.webContents.executeJavaScript(`(() => { const button = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes(${JSON.stringify(text)})); button.focus(); button.click(); })()`);
     await pause(100);
@@ -592,6 +612,15 @@ async function run() {
     })()`);
     await pause(100);
   };
+  window.webContents.session.webRequest.onBeforeRequest({ urls: ['*://*/src/components/CompoundInfoPanel.tsx*'] }, (_details, callback) => callback({ cancel: true }));
+  await search();
+  await waitForRenderer(window, "document.querySelector('[role=alert]')?.textContent.includes('Could not load structure details')", 'details-load error boundary');
+  assert.ok(await window.webContents.executeJavaScript("document.querySelectorAll('tbody tr').length > 0"), 'results remain available after a details chunk failure');
+  assert.ok(await window.webContents.executeJavaScript("[...document.querySelectorAll('button')].some(b => b.textContent.includes('Quick search') && !b.disabled)"));
+  window.webContents.session.webRequest.onBeforeRequest(null);
+  await window.loadURL(testUrl + '?app-regression');
+  await waitForRenderer(window, "[...document.querySelectorAll('button')].some(b => b.textContent.includes('Quick search'))", 'reloaded workspace');
+  console.log('✓ a failed deferred details module preserves results and search');
   await search();
   await scrollToEnd();
   assert.equal(await window.webContents.executeJavaScript('window.appRegression.pending.length'), 1);
@@ -626,11 +655,10 @@ async function run() {
   await window.webContents.executeJavaScript("document.querySelector('[data-testid=data-grid-scroll]').focus()");
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'DOWN' });
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'DOWN' });
-  await pause(100);
-  assert.notEqual(await window.webContents.executeJavaScript("document.querySelector('tr[aria-selected=true]').dataset.entryId"), firstSelected);
+  await waitForRenderer(window, "document.querySelector('tr[aria-selected=true]')?.dataset.entryId === '2'", 'Down to select the second result');
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'UP' });
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'UP' });
-  await pause(100);
+  await waitForRenderer(window, `document.querySelector('tr[aria-selected=true]')?.dataset.entryId === ${JSON.stringify(firstSelected)}`, 'Up to restore the first result');
   assert.equal(await window.webContents.executeJavaScript("document.querySelector('tr[aria-selected=true]').dataset.entryId"), firstSelected);
   for (let index = 0; index < 3; index++) {
     const before = await window.webContents.executeJavaScript(
@@ -668,6 +696,7 @@ async function run() {
   await window.reload();
   await pause(400);
   await search();
+  await waitForRenderer(window, "!!document.querySelector('[data-testid=compound-info-panel]')", 'deferred details after reload');
   const restored = await window.webContents.executeJavaScript("({width: document.querySelector('[data-testid=compound-info-panel]').getBoundingClientRect().width, column:parseFloat(document.querySelector('th').style.width), values:Array.from(document.querySelectorAll('[data-resize-handle]')).map(e=>({value:e.getAttribute('aria-valuenow'),target:!!document.getElementById(e.getAttribute('aria-controls'))}))})");
   assert.ok(Math.abs(restored.width - storedWidth) < 1);
   assert.equal(restored.column, 210);

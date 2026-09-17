@@ -1,3 +1,4 @@
+import { traceEvent, traceOperation } from './runtimeTrace';
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
 import { stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
@@ -15,9 +16,12 @@ import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
 import { sourceKey } from './sourceIdentity';
 import { resolvePublication } from './publicationResolver';
 
+if (process.env.CIF_TRACE_FILE && process.env.CIF_TEST_PROFILE) app.setPath('userData', process.env.CIF_TEST_PROFILE);
+traceEvent('main.loaded');
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
 
+let importController: AbortController | null = null;
 let dbReady: Promise<DbModule> | null = null;
 let dataMutationInFlight: 'import' | 'refresh' | 'clear' | 'backup' | 'restore' | 'relink' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
@@ -39,12 +43,12 @@ function databaseInitializationError(error: unknown): Error {
  */
 function getDbModule(): Promise<DbModule> {
   if (!dbReady) {
-    dbReady = import('./db')
+    dbReady = traceOperation('database.ready', () => import('./db')
       .then((database) => {
         database.initDb(app.getPath('userData'), app.getVersion());
         lastDatabaseErrorMessage = null;
         return database;
-      })
+      }))
       .catch((error) => {
         dbReady = null;
         throw databaseInitializationError(error);
@@ -69,6 +73,8 @@ function createWindow(): void {
     }
   });
 
+  win.once('ready-to-show', () => traceEvent('window.first-paint'));
+  win.webContents.once('did-finish-load', () => traceEvent('renderer.loaded'));
   if (process.env.ELECTRON_RENDERER_URL) {
     win.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
@@ -77,14 +83,27 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('cif:getEntryCount', async () => (await getDbModule()).getEntryCount());
-  ipcMain.handle('cif:getAtomSites', async (_event, entryId: unknown) => {
+  const handle: typeof ipcMain.handle = (channel, listener) => ipcMain.handle(channel, (event, ...args) => traceOperation(channel, () => listener(event, ...args)));
+  traceEvent('app.ready');
+  handle('cif:traceMilestone', (_event, name: unknown) => {
+    if (typeof name !== 'string' || !['controls-ready', 'search-results', 'controls-restored'].includes(name)) throw new TypeError('Invalid trace milestone');
+    traceEvent('renderer.' + name);
+  });
+  handle('cif:cancelImport', () => { if (!importController) return false; importController.abort(); return true; });
+  handle('cif:getStartupRefresh', async () => (await getDbModule()).getStartupRefresh());
+  handle('cif:setStartupRefresh', async (_event, enabled: unknown) => {
+    if (typeof enabled !== 'boolean') throw new TypeError('Invalid startup refresh preference');
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    (await getDbModule()).setStartupRefresh(enabled);
+  });
+  handle('cif:getEntryCount', async () => (await getDbModule()).getEntryCount());
+  handle('cif:getAtomSites', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
     return (await getDbModule()).getAtomSites(entryId);
   });
-  ipcMain.handle('cif:getDiffractionInput', async (_event, entryId: unknown) => {
+  handle('cif:getDiffractionInput', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
@@ -94,13 +113,17 @@ app.whenReady().then(() => {
       symmetryOperations: database.getSymmetryOperations(entryId)
     };
   });
-  ipcMain.handle('cif:getPublAuthors', async (_event, entryId: unknown) => {
+  handle('cif:getDataAuthors', async (_event, entryId: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) throw new TypeError('Invalid entry id');
+    return (await getDbModule()).getDataAuthors(entryId);
+  });
+  handle('cif:getPublAuthors', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
     return (await getDbModule()).getPublAuthors(entryId);
   });
-  ipcMain.handle('cif:getViewerSource', async (_event, entryId: unknown) => {
+  handle('cif:getViewerSource', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
@@ -109,8 +132,8 @@ app.whenReady().then(() => {
     if (!source) throw new Error('The selected compound is no longer in the database.');
     return { fileName: source.source_filename, text: database.readStoredCif(entryId) };
   });
-  ipcMain.handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
-  ipcMain.handle('cif:exportCif', async (event, entryId: unknown) => {
+  handle('cif:getImportFolder', async () => (await getDbModule()).getImportFolder());
+  handle('cif:exportCif', async (event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
@@ -136,7 +159,7 @@ app.whenReady().then(() => {
     return { exported: true, fileName: basename(result.filePath) };
   });
 
-  ipcMain.handle('cif:exportPxrd', async (event, entryId: unknown, contents: unknown) => {
+  handle('cif:exportPxrd', async (event, entryId: unknown, contents: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
       throw new TypeError('Invalid entry id');
     }
@@ -159,7 +182,7 @@ app.whenReady().then(() => {
     return { exported: true, fileName: basename(result.filePath) };
   });
 
-  ipcMain.handle('cif:relinkSource', async (_event, entryId: unknown) => {
+  handle('cif:relinkSource', async (_event, entryId: unknown) => {
     if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) throw new TypeError('Invalid entry id');
     if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
     dataMutationInFlight = 'relink';
@@ -171,8 +194,8 @@ app.whenReady().then(() => {
     } finally { dataMutationInFlight = null; }
   });
 
-  ipcMain.handle('cif:getPreservedLayout', async () => (await getDbModule()).getPreservedLayout());
-  ipcMain.handle('cif:backupProfile', async (_event, layout: unknown = {}) => {
+  handle('cif:getPreservedLayout', async () => (await getDbModule()).getPreservedLayout());
+  handle('cif:backupProfile', async (_event, layout: unknown = {}) => {
     if (!layout || typeof layout !== 'object' || Array.isArray(layout) || JSON.stringify(layout).length > 100_000 ||
       Object.entries(layout).some(([key, value]) => !key.startsWith('cif-layout-v1:') || typeof value !== 'string')) {
       throw new TypeError('Invalid layout settings');
@@ -187,7 +210,7 @@ app.whenReady().then(() => {
     } finally { dataMutationInFlight = null; }
   });
 
-  ipcMain.handle('cif:restoreProfile', async () => {
+  handle('cif:restoreProfile', async () => {
     if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
     dataMutationInFlight = 'restore';
     try {
@@ -201,14 +224,14 @@ app.whenReady().then(() => {
     } finally { dataMutationInFlight = null; }
   });
 
-  ipcMain.handle('cif:openExternal', async (_event, url: unknown) => {
+  handle('cif:openExternal', async (_event, url: unknown) => {
     if (typeof url !== 'string') throw new TypeError('Invalid external URL');
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:') throw new TypeError('Only HTTPS links are allowed');
     await shell.openExternal(parsed.toString());
   });
 
-  ipcMain.handle('cif:resolvePublication', async (_event, request: unknown) => {
+  handle('cif:resolvePublication', async (_event, request: unknown) => {
     if (!request || typeof request !== 'object') throw new TypeError('Invalid publication lookup');
     const candidate = request as Partial<PublicationLookupRequest>;
     if (typeof candidate.title !== 'string' || candidate.title.length > 1_000) {
@@ -231,7 +254,7 @@ app.whenReady().then(() => {
     });
   });
 
-  ipcMain.handle('cif:searchPage', async (_e, request: SearchPageRequest) => {
+  handle('cif:searchPage', async (_e, request: SearchPageRequest) => {
     if (!request || typeof request !== 'object') throw new TypeError('Invalid search page request');
     const offset = Number(request.offset);
     const limit = Number(request.limit);
@@ -253,13 +276,14 @@ app.whenReady().then(() => {
     });
   });
 
-  ipcMain.handle('cif:restraints', async (_e, filter: SearchFilter) =>
+  handle('cif:restraints', async (_e, filter: SearchFilter) =>
     (await getDbModule()).computeRestraints(validateSearchFilter(filter))
   );
 
-  ipcMain.handle('cif:importCifFolder', async (event) => {
+  handle('cif:importCifFolder', async (event) => {
     if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
     dataMutationInFlight = 'import';
+    importController = new AbortController();
     const win = BrowserWindow.fromWebContents(event.sender);
     try {
       const options = { properties: ['openDirectory'] as ['openDirectory'] };
@@ -270,7 +294,7 @@ app.whenReady().then(() => {
       try {
         const importResult = await runImportWorker(result.filePaths[0], app.getPath('userData'), (progress) => {
           if (!event.sender.isDestroyed()) event.sender.send('cif:importProgress', progress);
-        });
+        }, importController.signal);
         (await getDbModule()).setImportFolder(result.filePaths[0]);
         lastDatabaseErrorMessage = null;
         return importResult;
@@ -281,13 +305,15 @@ app.whenReady().then(() => {
         throw error;
       }
     } finally {
+      importController = null;
       dataMutationInFlight = null;
     }
   });
 
-  ipcMain.handle('cif:refreshCifFolder', async (event) => {
+  handle('cif:refreshCifFolder', async (event) => {
     if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
     dataMutationInFlight = 'refresh';
+    importController = new AbortController();
     try {
       const folderPath = (await getDbModule()).getImportFolder();
       if (!folderPath) {
@@ -301,7 +327,7 @@ app.whenReady().then(() => {
       try {
         const importResult = await runImportWorker(folderPath, app.getPath('userData'), (progress) => {
           if (!event.sender.isDestroyed()) event.sender.send('cif:importProgress', progress);
-        });
+        }, importController.signal);
         lastDatabaseErrorMessage = null;
         return importResult;
       } catch (error) {
@@ -311,11 +337,12 @@ app.whenReady().then(() => {
         throw error;
       }
     } finally {
+      importController = null;
       dataMutationInFlight = null;
     }
   });
 
-  ipcMain.handle('cif:clearCifs', async (event) => {
+  handle('cif:clearCifs', async (event) => {
     if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
     dataMutationInFlight = 'clear';
     try {
