@@ -227,6 +227,7 @@ async function testAngstromCellLengths(window) {
 }
 
 async function testCompoundInformationSelection(window) {
+  await waitForRenderer(window, "!!document.querySelector('[data-testid=compound-info-panel] [data-testid=atom-sites-table] tbody td')", 'deferred compound details and atom data');
   const initial = await window.webContents.executeJavaScript(`
     (() => {
       const panel = document.querySelector('[data-testid="compound-info-panel"]');
@@ -654,11 +655,10 @@ async function run() {
   await window.webContents.executeJavaScript("document.querySelector('[data-testid=data-grid-scroll]').focus()");
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'DOWN' });
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'DOWN' });
-  await pause(100);
-  assert.notEqual(await window.webContents.executeJavaScript("document.querySelector('tr[aria-selected=true]').dataset.entryId"), firstSelected);
+  await waitForRenderer(window, "document.querySelector('tr[aria-selected=true]')?.dataset.entryId === '2'", 'Down to select the second result');
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'UP' });
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'UP' });
-  await pause(100);
+  await waitForRenderer(window, `document.querySelector('tr[aria-selected=true]')?.dataset.entryId === ${JSON.stringify(firstSelected)}`, 'Up to restore the first result');
   assert.equal(await window.webContents.executeJavaScript("document.querySelector('tr[aria-selected=true]').dataset.entryId"), firstSelected);
   for (let index = 0; index < 3; index++) {
     const before = await window.webContents.executeJavaScript(
@@ -696,6 +696,7 @@ async function run() {
   await window.reload();
   await pause(400);
   await search();
+  await waitForRenderer(window, "!!document.querySelector('[data-testid=compound-info-panel]')", 'deferred details after reload');
   const restored = await window.webContents.executeJavaScript("({width: document.querySelector('[data-testid=compound-info-panel]').getBoundingClientRect().width, column:parseFloat(document.querySelector('th').style.width), values:Array.from(document.querySelectorAll('[data-resize-handle]')).map(e=>({value:e.getAttribute('aria-valuenow'),target:!!document.getElementById(e.getAttribute('aria-controls'))}))})");
   assert.ok(Math.abs(restored.width - storedWidth) < 1);
   assert.equal(restored.column, 210);
