@@ -111,10 +111,15 @@ numbers. New migration/worker tests also contribute to the overall increase.
 
 ## Remaining acceptance evidence
 
-See [cold-start protocol](cold-start-protocol.md). No actual cold-cache samples or
-owner-approved budgets were available during this implementation. The two local research bibliography examples were located but copied-fixture validation requires explicit authorization; synthetic layouts reproduce the reported
-issues without claiming corpus coverage. Full closure of the milestone must await the
-required cold-start evidence and any resulting performance fixes.
+See [cold-start protocol](cold-start-protocol.md) and the
+[packaged validation record](packaged-startup-validation.md). Authorized isolated
+copies of both reported bibliography examples now pass import and stored-source
+upgrade checks, including visible titles/references and preservation of IDs/bytes.
+Actual cold-cache samples and owner-approved workload budgets remain outstanding.
+Instrumented unpacked launches are fast in the tested cases, while the portable
+launcher has an unresolved pre-application delay. Full closure of the milestone
+must await the required packaged cold-start evidence and resulting fixes.
+Further development-startup optimization is deferred and non-blocking under #72.
 
 ## Reproducible installation
 
