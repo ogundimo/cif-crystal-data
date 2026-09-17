@@ -1,5 +1,9 @@
 # Targeted mutation testing (#19)
 
+The milestone-3 follow-up is recorded in [PXRD survivor review](pxrd-mutation-review.md).
+It retains the original results below, measures new analytic tests against the
+unchanged source, and separately validates the replacement IT92 model.
+
 This pilot measures whether tests detect deliberate changes in selected critical
 logic. It complements the [unit coverage baseline](code-quality.md); it does not
 establish scientific accuracy or replace Electron UI, worker and viewer checks.
