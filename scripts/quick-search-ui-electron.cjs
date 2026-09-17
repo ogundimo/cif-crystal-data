@@ -566,6 +566,7 @@ async function run() {
   await testCompoundInformationSelection(window);
   await testLargeGridVirtualization(window);
   await testImportProgressIndicator(window);
+  await require('./grid-selection-shortcut.cjs')(window, testUrl, waitForRenderer);
 
   await require('./quick-search-lifecycle.cjs')(window, testUrl, waitForRenderer);
 
@@ -660,6 +661,11 @@ async function run() {
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'UP' });
   await waitForRenderer(window, `document.querySelector('tr[aria-selected=true]')?.dataset.entryId === ${JSON.stringify(firstSelected)}`, 'Up to restore the first result');
   assert.equal(await window.webContents.executeJavaScript("document.querySelector('tr[aria-selected=true]').dataset.entryId"), firstSelected);
+  await window.webContents.executeJavaScript("window.revealBefore = {requests:window.appRegression.requests.length, details:document.querySelector('[data-testid=compound-info-panel]'), viewer:document.querySelector('[data-testid=jsmol-host]'), pxrd:document.querySelector('[data-testid=pxrd-chart]')}; const grid=document.querySelector('[data-testid=data-grid-scroll]');grid.scrollTop=3000;grid.focus({preventScroll:true});undefined");
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'ENTER',modifiers:['control','shift']});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'ENTER',modifiers:['control','shift']});
+  await waitForRenderer(window, "document.querySelector('tr[aria-selected=true]')?.dataset.entryId === '1'", 'shortcut to reveal existing selection');
+  assert.ok(await window.webContents.executeJavaScript("window.revealBefore.requests===window.appRegression.requests.length && window.revealBefore.details===document.querySelector('[data-testid=compound-info-panel]') && window.revealBefore.viewer===document.querySelector('[data-testid=jsmol-host]') && window.revealBefore.pxrd===document.querySelector('[data-testid=pxrd-chart]')"),'shortcut replaced associated views or reran search');
   for (let index = 0; index < 3; index++) {
     const before = await window.webContents.executeJavaScript(
       "(() => { const e = document.querySelectorAll('[data-resize-handle]')[" + index + "]; e.focus(); const r = e.getBoundingClientRect(); return e.getAttribute('aria-orientation') === 'vertical' ? r.x : r.y; })()"

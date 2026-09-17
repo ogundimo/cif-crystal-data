@@ -46,6 +46,14 @@ For repeatable startup measurements and comparisons with the recorded baseline, 
 [the startup benchmark](docs/startup-baseline.md). Run `npm run benchmark:startup`
 on an idle Windows desktop using Node 22.13+ on the Node 22 line.
 
+## Navigating search results
+
+In search results, focus the grid and press **Ctrl+Shift+Enter** to center the selected
+row after scrolling away. The selection, horizontal scroll and detail/viewer/PXRD
+panels stay unchanged. The shortcut only applies to the focused results grid; it
+does not act in text fields or modal dialogs. Near either end, the row is shown as
+close to the center as the available scroll range permits.
+
 ## Importing CIF files
 
 Click **Import CIFs...** in the toolbar, then choose a folder in the native folder picker.

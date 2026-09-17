@@ -117,8 +117,12 @@ copies of both reported bibliography examples now pass import and stored-source
 upgrade checks, including visible titles/references and preservation of IDs/bytes.
 Actual cold-cache samples and owner-approved workload budgets remain outstanding.
 Instrumented unpacked launches are fast in the tested cases, while the portable
-launcher has an unresolved pre-application delay. Full closure of the milestone
-must await the required packaged cold-start evidence and resulting fixes.
+launcher has an unresolved pre-application delay. On 2026-09-17 the owner accepted
+current packaged performance as sufficient to continue the roadmap and moved #40
+to the dedicated [Startup performance and validation milestone](https://github.com/ogundimo/cif-crystal-data/milestone/11).
+Its outstanding acceptance requirements remain open there, with measurements in
+PR #74; they no longer block the import/search milestone. This reprioritization
+does not claim that cold-start validation passed or that the portable delay is fixed.
 Further development-startup optimization is deferred and non-blocking under #72.
 
 ## Reproducible installation
