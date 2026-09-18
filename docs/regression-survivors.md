@@ -15,11 +15,27 @@ Both target formula, PXRD and scattering, use Node 22.23.2/Stryker 10.0.0, two
 concurrency slots, the existing TypeScript checker and unchanged timeout settings.
 Search validation remains in the separate three-file policy pilot.
 
-The comparable measurements are still running. Their per-ID transitions, counts,
-duration, hashes and reviewed decisions will be retained before this review is
-considered complete. An initial attempt failed its dry run when the existing
-large-reflection test exceeded 5 seconds during concurrent coverage collection;
-that attempt produced no valid measurement. The retry keeps the same timeouts.
+The [retained comparison and per-ID decisions](baselines/regression-survivors.json)
+record 1,030 identical replacements, measured with tests at `b213933` before and
+`bde2341` after. Both completed successfully; wall times were 38m55.5s and 39m13.5s.
+Concurrent report ordering is normalized when checking population identity.
+
+| Scope | Killed before → after | Survived before → after | Uncovered before → after | Timeout before → after | Compile errors |
+| --- | --- | --- | --- | --- | --- |
+| Formula | 96 → 101 | 16 → 11 | 0 → 0 | 1 → 1 | 23 |
+| PXRD | 501 → 625 | 184 → 71 | 7 → 0 | 13 → 9 | 165 |
+| Scattering | 11 → 21 | 10 → 0 | 0 → 0 | 0 → 0 | 3 |
+| Total | 608 → 747 | 210 → 82 | 7 → 0 | 14 → 10 | 191 |
+
+There were no runtime errors or ignored mutants. The displayed score rose from
+74.14% to 90.23%; this includes timeouts, which are not assertion kills. Specifically,
+128 survivors, all seven fresh uncovered replacements and four prior timeouts became
+assertion kills. No previously killed replacement became a survivor. The initial
+related-test runs contained 226 and 306 tests respectively.
+
+An initial attempt failed its dry run after 58.2 seconds when the existing
+large-reflection test exceeded 5 seconds during concurrent coverage collection.
+It produced no valid measurement. The completed retry used the same timeouts.
 
 ## Formula decisions
 
@@ -60,6 +76,11 @@ The seven uncovered replacements receive particular attention:
 - Missing atoms, malformed type and inferred-element diagnostic strings: public
   results now assert exact actionable messages and absence of spurious inference.
 
+All seven historical uncovered replacements changed from uncovered to killed in
+the fresh comparison. Historical locations are aligned against the changed source
+before matching the original expression, operator and replacement; all 207 mappings
+are unique and retain both old and current locations.
+
 Other meaningful additions cover signed fractional symmetry with explicitly listed
 mixed-element sites; periodic rounded-site deduplication; accepted/rejected radiation
 and charge notation; defaults on mixed sites; nonfinite and invalid cell/atom/profile
@@ -84,6 +105,29 @@ is summed. The 5e-6 absolute assertion tolerance accommodates Gemmi's stored
 single-precision values. This is consistent with the existing
 [scientific model and reference provenance](scientific-validity.md); all fixtures
 are synthetic. No new experimental or corpus-coverage claim is made.
+
+## Supplemental boundary checks
+
+After the complete comparison, a [separate 93-mutant line-range check](baselines/regression-boundaries.json)
+took 4m35.6s: 78 killed, ten survived and five compile errors, with no timeouts,
+uncovered, runtime errors or ignored mutants. It kills eleven additional targeted
+historical survivors (37, 91, 203, 226, 227, 229, 426, 727, 729, 731, 808);
+the already killed ID 47 stays killed. Assertions cover leading integer coefficients,
+special positions translated below -1, near-degenerate cells, wrong symmetry
+component counts, large legacy cells and an oversized profile step with a peak at
+the first sampling position. The original full comparison remains unchanged.
+
+A [five-mutant unknown-element check](baselines/regression-element.json) took 39.8s
+and killed all five, including full-run survivor 270. The test now distinguishes an
+unsupported element from a complete empty pattern. Current-only survivors 576/577
+receive explicit duplicate-validation/unused-wrapping reasoning in the review record.
+These focused runs preserve operators and source, retain their exact ranges and
+input hashes, and do not supply a replacement full-population score.
+
+The final [radiation-default diagnostic check](baselines/regression-diagnostic.json)
+took 33.2s and killed historical survivor 542; its other three replacements were
+compile errors. This protects the positive default message alongside existing
+assertions that explicit radiation metadata suppresses that message.
 
 ## Remaining limits
 

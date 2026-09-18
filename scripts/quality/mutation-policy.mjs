@@ -19,14 +19,20 @@ export function assessMutation(report, execution, baseline) {
     const ids=new Set();
     for (const mutant of data.mutants) {
       if (!mutationStates.includes(mutant.status) || ids.has(mutant.id)) throw new Error(`Incomplete/invalid mutant: ${file} ${mutant.id} ${mutant.status}`);
+      const positions=[mutant.location?.start?.line,mutant.location?.start?.column,
+        mutant.location?.end?.line,mutant.location?.end?.column];
+      if (typeof mutant.id!=='string' || !mutant.id || typeof mutant.mutatorName!=='string' ||
+        !mutant.mutatorName || typeof mutant.replacement!=='string' ||
+        positions.some(value=>!Number.isSafeInteger(value)||value<1)) throw new Error(`Malformed mutant identity: ${file} ${mutant.id}`);
       ids.add(mutant.id);counts[mutant.status]++;
-      identities.push([file,mutant.location,mutant.mutatorName,mutant.replacement]);
+      identities.push([file,...positions,mutant.mutatorName,mutant.replacement]);
     }
   }
   if (sorted(sourceHashes)!==sorted(execution.sourceHashes)) throw new Error('Stale report/source mismatch');
   if (!identities.length) throw new Error('Empty mutation population');
   if (counts.Ignored) throw new Error('Ignored mutations require explicit policy review; no exclusions are adopted');
-  const populationHash=createHash('sha256').update(JSON.stringify(identities)).digest('hex');
+  // Concurrent runners may return identical mutants in different completion order.
+  const populationHash=createHash('sha256').update(JSON.stringify(identities.map(row=>JSON.stringify(row)).sort())).digest('hex');
   const denominator=counts.Killed+counts.Survived+counts.NoCoverage+counts.Timeout;
   const score=denominator ? 100*(counts.Killed+counts.Timeout)/denominator : null;
   const comparable=Boolean(baseline && JSON.stringify(baseline.contract)===JSON.stringify(execution.contract) &&

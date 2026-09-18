@@ -107,7 +107,7 @@ try {
   const summary = [
     '# Code-quality baseline', '', `Commit: \`${metadata.commit}\` · working tree: **${metadata.dirty ? 'modified (see source hashes)' : 'clean'}**`,
     `Node ${metadata.node} on ${metadata.platform}. Source fingerprint: \`${metadata.sourceSha256}\`.`, '',
-    '**Advisory measurements; no score thresholds enforced.** Coverage is from Vitest unit tests only; separate Electron UI/worker/viewer runs are not included.', '',
+    '**Measurement report.** Coverage and function-complexity enforcement runs separately through `quality:regression`; duplication and deferred metrics remain advisory. Coverage is from Vitest unit tests only; separate Electron UI/worker/viewer runs are not included.', '',
     '## Coverage', '', '| Module | Lines | Statements | Functions | Branches |', '| --- | ---: | ---: | ---: | ---: |',
     ...Object.entries({ ...modules, total: totals }).map(([name, data]) => `| ${name} | ${percent(data.lines)} | ${percent(data.statements)} | ${percent(data.functions)} | ${percent(data.branches)} |`), '',
     'Untested executable production files are included. Declaration-only modules have no executable denominator.', '',

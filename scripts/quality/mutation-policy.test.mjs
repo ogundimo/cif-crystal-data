@@ -19,6 +19,8 @@ test('failed initial tests, missing/stale reports, pending and ignored mutations
   assert.throws(()=>assessMutation(report(['Ignored']),execution),/Ignored/);
   assert.throws(()=>assessMutation(report(['Killed']),{...execution,sourceHashes:{}}),/Stale/);
   assert.throws(()=>assessMutation(report(['Killed']),execution,{counts:{}}),/Invalid mutation comparison baseline/);
+  const malformed=report(['Killed']);delete malformed.files['src/file.ts'].mutants[0].location;
+  assert.throws(()=>assessMutation(malformed,execution),/Malformed mutant identity/);
 });
 test('comparable outcomes show regressions without failing scores; configuration changes invalidate comparison',()=>{
   const baseline=assessMutation(report(['Killed','Killed']),execution);
@@ -27,4 +29,11 @@ test('comparable outcomes show regressions without failing scores; configuration
   const changed=assessMutation(report(['Killed','Survived']),{...execution,contract:{version:2}},baseline);
   assert.match(changed.comparison,/not comparable/);assert.equal(changed.changes,null);
   assert.throws(()=>assessMutation(report(['Killed','Killed']),execution,{...baseline,counts:{...baseline.counts,Killed:3}}),/Invalid baseline population/);
+});
+test('concurrent completion order does not change population comparability',()=>{
+  const original=report(['Killed','Survived']);
+  const baseline=assessMutation(original,execution);
+  const reordered=structuredClone(original);
+  reordered.files['src/file.ts'].mutants.reverse();
+  assert.equal(assessMutation(reordered,execution,baseline).comparison,'comparable');
 });

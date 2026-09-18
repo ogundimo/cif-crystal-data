@@ -50,7 +50,7 @@ async function snapshot() {
     complexity[metric]=inventory.flatMap(file => identifyFunctions(file,contents.get(file),report.complexity[metric].filter(row => row.file===file)));
   }
   return {schemaVersion:1,contract,production:inventory,declarationOnly,coverage:{total:report.coverage.total,files:report.coverage.files},complexity,
-    provenance:{commit:report.commit,sourceSha256:report.sourceSha256,node:report.node,testsSha256:testHash,inputsSha256:inputHash}};
+    provenance:{commit:report.commit,dirty:report.dirty,sourceSha256:report.sourceSha256,node:report.node,testsSha256:testHash,inputsSha256:inputHash}};
 }
 
 await mkdir(resolve('reports/quality'),{recursive:true});

@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "note": "Supplemental line-range check after the complete 1030-mutant comparison. Only the listed ranges generate mutants; no operator exclusions are used. This is not a full-population score or policy-pilot measurement.",
+  "configuration": {
+    "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "mutate": [
+      "src/renderer/src/pxrd.ts:49-49",
+      "src/renderer/src/pxrd.ts:65-65",
+      "src/renderer/src/pxrd.ts:119-119",
+      "src/renderer/src/pxrd.ts:128-128",
+      "src/renderer/src/pxrd.ts:197-197",
+      "src/renderer/src/pxrd.ts:254-254",
+      "src/renderer/src/pxrd.ts:280-280"
+    ],
+    "testRunner": "vitest",
+    "vitest": {
+      "configFile": "vitest.config.ts"
+    },
+    "checkers": [
+      "typescript"
+    ],
+    "tsconfigFile": "tsconfig.mutation.json",
+    "typescriptChecker": {
+      "prioritizePerformanceOverAccuracy": false
+    },
+    "coverageAnalysis": "perTest",
+    "concurrency": 2,
+    "timeoutMS": 5000,
+    "timeoutFactor": 1.5,
+    "reporters": [
+      "clear-text",
+      "progress",
+      "html",
+      "json"
+    ],
+    "htmlReporter": {
+      "fileName": "reports/scientific/regression-boundaries.html"
+    },
+    "jsonReporter": {
+      "fileName": "reports/scientific/regression-boundaries.json"
+    },
+    "thresholds": {
+      "high": 90,
+      "low": 70,
+      "break": 0
+    },
+    "ignorePatterns": [
+      "reports/**",
+      "dist/**",
+      "dist-electron/**",
+      "release/**",
+      ".dist/**",
+      "third_party/**",
+      "src/renderer/public/**"
+    ]
+  },
+  "inputHashes": {
+    "src/parser/cif/formula.ts": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+    "src/parser/cif/formula.test.ts": "012fae290b85d61dd7cffbe60e914d78cb4cab571e4261620932a6a725a040b0",
+    "src/renderer/src/pxrd.ts": "f48ceb8364807574c211e2468842f22d571b993254b5864cdf516156a7ab382e",
+    "src/renderer/src/pxrd.test.ts": "518440f44eceb7a1bdb84dcc212a1118cfeb20f35de3651c8dea57bc31f72570",
+    "src/renderer/src/scattering.ts": "06c1398b010731ff0086e08c0308aa457a364ddf9fcda824f71a45256390f369",
+    "src/renderer/src/scattering.test.ts": "7f16adffc0c28501a9c89a1000361c1bedf5825d7f973743a238d762d2115180",
+    "src/shared/it92.json": "30929d70b204f683f443b99b19c528ae856429325bcaddcddc0a2df9b51ae75c",
+    "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+    "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+    "tsconfig.mutation.json": "fe0b211244af68a8472f0a34a0a2da4c925603800085df5bda3a2fe90ffb2568",
+    "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+  },
+  "execution": {
+    "exit": 0,
+    "durationSeconds": 275.57
+  },
+  "rawReportSha256Lf": "c15f47a4244a8dce177b1cf2408fe47e193081c16db2250d363a49442a6b38c8",
+  "counts": {
+    "Killed": 78,
+    "CompileError": 5,
+    "Survived": 10
+  },
+  "transitions": [
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "37",
+      "fullRunId": "183",
+      "location": {
+        "end": {
+          "column": 78,
+          "line": 49
+        },
+        "start": {
+          "column": 8,
+          "line": 49
+        }
+      },
+      "mutatorName": "Regex",
+      "replacement": "/^[+-]?(?:\\D*[xyz]|\\d+(?:\\/\\d+)?)(?:[+-](?:\\d*[xyz]|\\d+(?:\\/\\d+)?))*$/",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "47",
+      "fullRunId": "193",
+      "location": {
+        "end": {
+          "column": 78,
+          "line": 49
+        },
+        "start": {
+          "column": 8,
+          "line": 49
+        }
+      },
+      "mutatorName": "Regex",
+      "replacement": "/^[+-]?(?:\\d*[xyz]|\\d+(?:\\/\\d+)?)(?:[+-](?:\\D*[xyz]|\\d+(?:\\/\\d+)?))*$/",
+      "before": "Killed",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "91",
+      "fullRunId": "239",
+      "location": {
+        "end": {
+          "column": 28,
+          "line": 65
+        },
+        "start": {
+          "column": 19,
+          "line": 65
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "value * 1",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "203",
+      "fullRunId": "351",
+      "location": {
+        "end": {
+          "column": 126,
+          "line": 119
+        },
+        "start": {
+          "column": 94,
+          "line": 119
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "226",
+      "fullRunId": "374",
+      "location": {
+        "end": {
+          "column": 58,
+          "line": 128
+        },
+        "start": {
+          "column": 7,
+          "line": 128
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "227",
+      "fullRunId": "375",
+      "location": {
+        "end": {
+          "column": 58,
+          "line": 128
+        },
+        "start": {
+          "column": 7,
+          "line": 128
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "!Number.isFinite(volume) && Math.abs(volume) < 1e-8",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "229",
+      "fullRunId": "377",
+      "location": {
+        "end": {
+          "column": 58,
+          "line": 128
+        },
+        "start": {
+          "column": 35,
+          "line": 128
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "426",
+      "fullRunId": "574",
+      "location": {
+        "end": {
+          "column": 39,
+          "line": 197
+        },
+        "start": {
+          "column": 34,
+          "line": 197
+        }
+      },
+      "mutatorName": "BooleanLiteral",
+      "replacement": "true",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "727",
+      "fullRunId": "875",
+      "location": {
+        "end": {
+          "column": 60,
+          "line": 254
+        },
+        "start": {
+          "column": 45,
+          "line": 254
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "entry.cell_a / 10",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "729",
+      "fullRunId": "877",
+      "location": {
+        "end": {
+          "column": 102,
+          "line": 254
+        },
+        "start": {
+          "column": 87,
+          "line": 254
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "entry.cell_b / 10",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "731",
+      "fullRunId": "879",
+      "location": {
+        "end": {
+          "column": 144,
+          "line": 254
+        },
+        "start": {
+          "column": 129,
+          "line": 254
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "entry.cell_c / 10",
+      "before": "Survived",
+      "after": "Killed"
+    },
+    {
+      "file": "src/renderer/src/pxrd.ts",
+      "historicalId": "808",
+      "fullRunId": "956",
+      "location": {
+        "end": {
+          "column": 119,
+          "line": 280
+        },
+        "start": {
+          "column": 110,
+          "line": 280
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "before": "Survived",
+      "after": "Killed"
+    }
+  ]
+}

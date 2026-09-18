@@ -135,7 +135,11 @@ coefficient tables participate in the comparison contract.
 
 Policy probes test completed advisory runs, deliberate survivors/uncovered mutants,
 failed execution, stale/missing reports, ignored/pending results and baseline/config
-changes without repeatedly spending a full mutation run. Analyzer probes actually
+changes without repeatedly spending a full mutation run. Population identity is
+independent of concurrent result order. The assessor was also exercised against the
+actual completed 1,030-mutant before/after review and correctly reported comparable
+outcomes; that separate scope does not replace a hosted run of the default pilot.
+Analyzer probes actually
 insert branching/nesting and check the named function's failure. Coverage probes
 include loss in an exercised file, a new untested file, zero denominators and normal
 improvements. These checks supplement application regressions; they do not establish

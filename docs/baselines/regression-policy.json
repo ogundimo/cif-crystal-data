@@ -12,7 +12,10 @@
     "files": {
       "scripts/quality/scope.mjs": "ef3f40ad957e66edd33fa1f0f0f928b517b25f3439a0ddcc98e13f5787a8882a",
       "scripts/quality/analyzers.mjs": "3f16c8fc9c0b692ec49f9f1eea69def7cb6defb6a7f58382622db1d0bb40318b",
-      "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2"
+      "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+      "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68",
+      "tsconfig.web.json": "1fb7f77ec14f13a38643102e20415662f7c877a89b10ab80d29f3643599afe08",
+      "tsconfig.node.json": "1ebe93a0a191b41b9e194baf13069ee78b25117028d94fbbc4501be4524c14aa"
     }
   },
   "production": [
@@ -2406,10 +2409,13 @@
     ]
   },
   "provenance": {
-    "commit": "b21393322ea51981fbda531066fac391542da862",
+    "commit": "2efc7ea70d8868223b4c89a6eb066e77560eb3c1",
+    "dirty": true,
     "sourceSha256": "4920aefc33c36ad04966c205408db4147e44e866dc4faec9545d74e1f5be7593",
     "node": "v22.23.2",
-    "testsSha256": "0ac80b62672c8531007aea710248edb47539cdf0985486736fec23cd2939639e"
+    "testsSha256": "64fa4a59423a608f0cd82a95d5ee0663375884197971e5096a104f3401ca910e",
+    "inputsSha256": "4e25c9212bc6d717bfc3ddeba64fa5eac27563bc4ad7b408b1fa51ca8d7de74a",
+    "testsCommit": "bde2341f1fb00ebea6f52199bf1b6342c52a2b72"
   },
   "policy": {
     "cyclomatic": 20,

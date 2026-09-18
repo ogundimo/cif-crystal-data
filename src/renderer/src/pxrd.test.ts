@@ -347,7 +347,7 @@ describe('scientific diagnostics and reproducibility', () => {
     // R(y,z)=(y-2z,y-z), R^2=-I; G=[[16,-16],[-16,32]] satisfies R^T G R=G.
     const crystal={...entry,cell_b_angstrom:4,cell_c_angstrom:Math.sqrt(32),cell_angle_alpha:135};
     const original={...site,fract_x:.1,fract_y:.2,fract_z:.3};
-    const operations=['x,y,z','x,y-2z,y-z','x,-y,-z','x,-y+2z,-y+z'].map(operation_xyz=>({...identity[0],operation_xyz}));
+    const operations=['x,y,z','x,y-2z,y-z','x,-y,-z','x,2z-y,z-y'].map(operation_xyz=>({...identity[0],operation_xyz}));
     const expanded=[[.2,.3],[.6,.9],[.8,.7],[.4,.1]].map(([fract_y,fract_z])=>({...original,fract_y,fract_z}));
     const actual=calculatePxrd(crystal,[original],operations),expected=calculatePxrd(crystal,expanded,identity);
     expect(actual.status).toBe('complete');
@@ -383,8 +383,8 @@ describe('scientific diagnostics and reproducibility', () => {
   it('deduplicates a special position reached with positive and negative coordinates', () => {
     const sodium={...site,fract_x:.5};
     const iron={...site,type_symbol:'Fe',fract_x:.2,fract_y:.13,fract_z:.27};
-    const operations=[...identity,{...identity[0],operation_xyz:'-x,y,z'}];
-    // +1/2 and -1/2 are one Na site; the Fe orbit has two distinct positions.
+    const operations=[...identity,{...identity[0],operation_xyz:'-x-1,y,z'}];
+    // +1/2 and -3/2 are one Na site; the Fe orbit has two distinct positions.
     const actual=calculatePxrd(entry,[sodium,iron],operations);
     const expected=calculatePxrd(entry,[sodium,iron,{...iron,fract_x:.8}],identity);
     expect(actual.status).toBe('complete');
@@ -417,6 +417,9 @@ describe('scientific diagnostics and reproducibility', () => {
     // Exchanging unequal axes must remain incompatible after conversion.
     expect(calculatePxrd({...crystal,[`cell_${axis}_angstrom`]:null},[site],
       [{...identity[0],operation_xyz:'y,z,x'}]).status).toBe('unsupported');
+    // 6 nm = 60 A needs indices beyond the cap; a wrong /10 fallback can hide it.
+    expect(calculatePxrd({...entry,[`cell_${axis}_angstrom`]:null,[`cell_${axis}`]:6},[site],identity).status)
+      .toBe('incomplete');
   });
   it.each(['12+x,y,z','1/12+x,y,z','1+x,y,z','x+12,y,z','x+1/12,y,z'])
     ('accepts translations before and after variables: %s', operation_xyz => {
@@ -454,6 +457,7 @@ describe('scientific diagnostics and reproducibility', () => {
     const explicit = calculatePxrd({...entry,radiation_type:'X-ray'},[site],identity);
     expect(explicit.diagnostics).toEqual(['Neutral atoms; isotropic displacement only; no anomalous scattering, texture, absorption or instrumental corrections. Supplied symmetry must describe the complete cell.']);
     const mixed = calculatePxrd(entry,[site,{...site,occupancy:null,b_iso_or_equiv:null,u_iso_or_equiv:null}],identity);
+    expect(mixed.diagnostics).toContain('Radiation assumed: monochromatic X-rays.');
     expect(mixed.diagnostics).toContain('Missing occupancies assumed to be one.');
     expect(mixed.diagnostics).toContain('Missing isotropic displacement assumed to be zero.');
     for (const displacement of [{b_iso_or_equiv:null,u_iso_or_equiv:.01},{b_iso_or_equiv:1,u_iso_or_equiv:null}]) {
@@ -474,15 +478,26 @@ describe('scientific diagnostics and reproducibility', () => {
     }
   });
   it.each([
+    {cell_a_angstrom:.001,cell_b_angstrom:.001,cell_c_angstrom:.001},
+    {cell_angle_gamma:1e-7}
+  ])('rejects near-degenerate synthetic cells: %j', cell => {
+    // Orthogonal volume 1e-9 A^3 and sin(1e-7 degrees) ~= 1.75e-9
+    // independently fall below the declared 1e-8 volume/sine cutoffs.
+    const result=calculatePxrd({...entry,...cell},[site],identity);
+    expect(result.status).toBe('unsupported');
+    expect(result.diagnostics).toContain('Invalid or degenerate unit cell.');
+  });
+  it.each([
     [{fract_x:null},'Missing or non-finite atomic coordinates; no partial pattern is calculated.'],
     [{occupancy:2},'Atomic occupancy must lie between zero and one.'],
     [{b_iso_or_equiv:-1},'Displacement parameters must be finite and nonnegative.'],
+    [{type_symbol:'Xx'},'An atom has no supported neutral-atom form factor (H–Cf).'],
     [{type_symbol:'Es'},'An atom has no supported neutral-atom form factor (H–Cf).']
   ] as const)('retains rejection reason for %j', (invalid,message) => {
     expect(calculatePxrd(entry,[site,{...site,...invalid}],identity).diagnostics).toContain(message);
   });
   it.each([NaN,Infinity,-1,0,.0009,75.01])('rejects invalid profile sampling step %s', step => {
-    expect(createPxrdProfile([{twoTheta:40,intensity:100,hkl:'1 0 0'}],.1,step)).toEqual([]);
+    expect(createPxrdProfile([{twoTheta:5,intensity:100,hkl:'1 0 0'}],.1,step)).toEqual([]);
   });
   it.each([{twoTheta:NaN,intensity:1},{twoTheta:40,intensity:Infinity},{twoTheta:40,intensity:-1}])
     ('does not hide invalid profile peaks among valid ones: %j', invalid => {
@@ -523,7 +538,7 @@ describe('scientific diagnostics and reproducibility', () => {
     for (const text of ['IT92-neutral-v1','wavelength_A=1.5406','FWHM_2theta_deg=0.1','status=complete','step_deg=0.02']) expect(header).toContain(text);
     expect(serializePxrdProfile(profile,false,{result,fwhm:.1})).toBe(serializePxrdProfile(profile,false));
   });
-  it.each(['x,,z','x+1/2/3,y,z','2x,y,z','x+y,y,z','x+1/0,y,z'])('rejects unusable operation %s', operation_xyz => {
+  it.each(['x,y','x,y,z,x','x,,z','x+1/2/3,y,z','2x,y,z','x+y,y,z','x+1/0,y,z'])('rejects unusable operation %s', operation_xyz => {
     expect(calculatePxrd(entry,[site],[{...identity[0],operation_xyz}]).status).toBe('unsupported');
   });
   it.each([{fract_x:NaN},{fract_y:Infinity},{occupancy:-.1},{occupancy:1.1},{b_iso_or_equiv:-1},{u_iso_or_equiv:Infinity},{type_symbol:'Es'}])('rejects unsupported atoms %j', invalid => {
