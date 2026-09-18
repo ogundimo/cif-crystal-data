@@ -123,6 +123,25 @@ module.exports = async (window, { waitFor, clickByText, pause, representativeCif
   await script('rotate z 30');
   assert.notEqual(await axes(), before);
   evidence.axes = {before, rotated:await axes()};
+  // Synthetic elongated hexagonal cell reproduces the short a/b indicator bug.
+  // With the old common length scale both arrows were 3 units and labels stayed fixed.
+  await load(cif(geometry,120).replace('_cell_length_a 20', '_cell_length_a 4')
+    .replace('_cell_length_b 20', '_cell_length_b 4').replace('_cell_length_c 20', '_cell_length_c 40'));
+  await script('moveto 0 {0 0 1} 0');
+  const axisPositions = () => ui(`Array.from(document.querySelectorAll('[aria-label="Crystallographic orientation axes"] g')).map(g=>({
+    x:Number(g.querySelector('line').getAttribute('x2'))-48,
+    y:Number(g.querySelector('line').getAttribute('y2'))-48,
+    label:[g.querySelector('text').getAttribute('x'),g.querySelector('text').getAttribute('y')]
+  }))`);
+  const elongatedBefore = await axisPositions();
+  for (const i of [0,1]) assert.ok(Math.abs(Math.hypot(elongatedBefore[i].x,elongatedBefore[i].y)-30)<1e-4);
+  await script('rotate z 30');
+  const elongatedAfter = await axisPositions();
+  for (const i of [0,1]) {
+    assert.ok(Math.hypot(elongatedAfter[i].x-elongatedBefore[i].x,elongatedAfter[i].y-elongatedBefore[i].y)>10);
+    assert.notDeepEqual(elongatedAfter[i].label,elongatedBefore[i].label);
+  }
+  evidence.elongatedAxes = {before:elongatedBefore,after:elongatedAfter};
   const box = () => ui("(()=>{const r=document.querySelector('[aria-label=\"Crystallographic orientation axes\"]').getBoundingClientRect();const v=document.querySelector('[data-testid=jsmol-host]').getBoundingClientRect();return {left:r.left-v.left,bottom:v.bottom-r.bottom,width:r.width,height:r.height};})()");
   const initialBox = await box();
   window.setContentSize(950,700); await pause(400);
@@ -149,11 +168,24 @@ module.exports = async (window, { waitFor, clickByText, pause, representativeCif
   window.webContents.sendInputEvent({type:'mouseUp',button:'left',clickCount:1,...frank});
   await pause(200);
   assert.equal(await ui("[...document.querySelectorAll('[role=menu],[id*=PopupMenu],[class*=jmolPopup]')].some(e=>e.getBoundingClientRect().width>0)"),false);
-  writeFileSync('reports/viewer/usability.json',JSON.stringify(evidence,null,2));
   window.showInactive();
   await pause(300);
   writeFileSync('reports/viewer/viewer-controls.png',(await window.webContents.capturePage()).toPNG());
   window.hide();
   await load(representativeCif);
+  await script('moveto 0 {0 0 1} 0');
+  const representativeBefore = await axisPositions();
+  await script('rotate x 25;rotate y 35;rotate z 30');
+  const representativeAfter = await axisPositions();
+  for (const i of [0,1,2]) {
+    assert.ok(Math.hypot(representativeAfter[i].x-representativeBefore[i].x,representativeAfter[i].y-representativeBefore[i].y)>1);
+    assert.notDeepEqual(representativeAfter[i].label,representativeBefore[i].label);
+  }
+  evidence.representativeAxes = {before:representativeBefore,after:representativeAfter};
+  writeFileSync('reports/viewer/usability.json',JSON.stringify(evidence,null,2));
+  window.showInactive();
+  await pause(300);
+  writeFileSync('reports/viewer/representative-axes.png',(await window.webContents.capturePage()).toPNG());
+  window.hide();
   console.log('✓ actual pointer measurements, mode transitions, popup suppression, polyhedra failure reproduction and anchored nonorthogonal axes');
 };

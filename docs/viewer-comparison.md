@@ -45,8 +45,10 @@ Rotation, zoom, axis views and fit/reset preserve completed measurements.
 The native popup is disabled at initialization and after loads, while the viewport
 suppresses browser context menus. Crystallographic axes are an independent SVG
 overlay using the loaded unit cell and native orientation matrix. Unit-cell
-visibility, model scale and translation do not affect the indicator. Its longest
-axis is 30 display units; relative lengths and nonorthogonal angles are preserved.
+visibility, model scale and translation do not affect the indicator. Each axis
+direction has length 30 before projection, preserving nonorthogonal angles without
+encoding cell lengths. This keeps short cell axes visible in elongated cells;
+an axis pointing into the screen still appears foreshortened.
 The pointer-transparent overlay tracks the runtime at 20 Hz and scales down only
 when the viewport itself is smaller than its 96-pixel footprint.
 
@@ -91,6 +93,16 @@ Analytical checks use first-order Bragg law with cubic `d100 = 4 Å` (peak toler
 synthetic 20 Å P1 cells, with 1.5 Å distances and right angles checked independently
 against both app feedback and native measurement data. The nonorthogonal axes fixture
 has γ = 60°. These examples are not research data or corpus-coverage claims.
+
+The elongated-axis regression uses a synthetic 4 × 4 × 40 Å cell with
+α = β = 90° and γ = 120°. Its unit directions are independently known:
+a = (1, 0, 0), b = (−1/2, √3/2, 0), c = (0, 0, 1).
+The Cartesian convention agrees with the bundled JSmol
+[`SimpleUnitCell`](../src/renderer/public/vendor/jsmol/j2s/JU/SimpleUnitCell.js).
+Unit tests check 30-unit direction lengths to 10 decimal places, rotated directions,
+and end-on foreshortening. The live viewer checks both a/b arrows and labels move,
+with projected lengths within 1e-4 display units before rotation; the representative
+CIF also checks all three arrows and labels during rotation.
 
 The Electron runner retains `reports/viewer/usability.json`, `lifecycle.json` and
 comparison captures; regular representation captures remain in `.dist/jsmol-verification`.
