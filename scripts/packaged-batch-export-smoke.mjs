@@ -92,14 +92,18 @@ try {
   await run.ui("document.querySelector('input[aria-label^=\"Select entry\"]').click()");
   await new Promise(resolve => setTimeout(resolve, 100));
   await run.ui("[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Batch export')).click()");
-  await new Promise(resolve => setTimeout(resolve, 100));
+  for (let i=0;i<200;i++) {
+    if(await run.ui("[...document.querySelectorAll('dialog button')].some(b=>b.textContent.includes('Choose folder and export 1')&&!b.disabled)")) break;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  assert.ok(await run.ui("[...document.querySelectorAll('dialog button')].some(b=>b.textContent.includes('Choose folder and export 1')&&!b.disabled)"), 'packaged count preview must be ready before starting');
   await run.main(`__smoke.electron.dialog.showOpenDialog=async()=>({canceled:false,filePaths:[${JSON.stringify(output)}]}); true`);
   await run.ui("[...document.querySelectorAll('dialog button')].find(b=>b.textContent.includes('Choose folder')).click()");
   for (let i=0;i<100;i++) {
     if(await run.ui("document.querySelector('dialog')?.textContent.includes('Export completed')")) break;
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  assert.ok(await run.ui("document.querySelector('dialog').textContent.includes('1 completed; 0 failed; 0 not attempted')"));
+  assert.ok(await run.ui("document.querySelector('dialog').textContent.includes('1 completed; 0 failed; 0 not attempted')"), await run.ui("document.querySelector('dialog').textContent"));
   report.screenshot = join(root, 'batch-export.png');
   await run.main(`(async()=>{const image=await __smoke.electron.BrowserWindow.getAllWindows()[0].webContents.capturePage();process.getBuiltinModule('fs').writeFileSync(${JSON.stringify(report.screenshot)},image.toPNG());return true;})()`);
   report.cancelled = cancelled;
