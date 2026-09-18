@@ -144,5 +144,5 @@ the transition from the viewer fixture to the separate grid fixture. The new
 page and every subsequent assertion passed; the dedicated viewer suite also
 passed. This is scoped as a non-blocking teardown investigation, not evidence of
 a reproduced ordinary-workspace crash or a claim that teardown is fully correct.
-A focused follow-up draft retains the trigger, evidence and reproduction criteria;
-external tracking awaits publication authorization along with the milestone PR.
+[Follow-up #77](https://github.com/ogundimo/cif-crystal-data/issues/77) retains
+the trigger, evidence and reproduction criteria in the viewer usability milestone.

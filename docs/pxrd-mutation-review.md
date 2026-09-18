@@ -71,6 +71,6 @@ is separate from the 78 historical decisions above.
 The seven uncovered replacements concern the integer-rotation guard, legacy
 nanometre fallback inside symmetry metric validation, and three diagnostic
 strings. Some guards repeat prior validation; that alone does not establish all
-replacements as equivalent. A focused follow-up draft scopes the new population's
-triage, including boundary/diagnostic assertions, without changing tolerances or
-suppressing mutants. External tracking awaits publication authorization.
+replacements as equivalent. [Follow-up #78](https://github.com/ogundimo/cif-crystal-data/issues/78)
+scopes the new population's triage in the regression protection milestone,
+including boundary/diagnostic assertions, without changing tolerances or suppressing mutants.
