@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AtomSiteRow, EntryRow, SymmetryOperationRow } from '../../shared/types';
 import { calculatePxrd, createPxrdProfile, PXRD_FWHM_TWO_THETA, serializePxrdProfile, simulatePxrd } from './pxrd';
 import reference from './__fixtures__/pxrd-reference.json';
+import { WAVELENGTH_PRESETS } from './patternComparison';
 
 // Independently transcribed IT92 coefficients for the analytic interference checks.
 function factor(z: number, s2: number): number {
@@ -41,6 +42,13 @@ const site = {
 const identity = [{ id: 1, entry_id: 1, operation_order: 0, operation_id: '1', operation_xyz: 'x,y,z' }] as SymmetryOperationRow[];
 
 describe('simulatePxrd', () => {
+  it.each(WAVELENGTH_PRESETS)('uses the $label preset for analytic cubic 100 Bragg positions and export', ({value}) => {
+    const result = calculatePxrd(entry, [site], identity, value);
+    // d100 = 4 Å; first-order Bragg law 2d sin(theta) = wavelength.
+    const expected = 2 * Math.asin(value / 8) * 180 / Math.PI;
+    expect(result.peaks[0].twoTheta).toBeCloseTo(expected, 6);
+    expect(serializePxrdProfile(createPxrdProfile(result.peaks), true, {result, fwhm:PXRD_FWHM_TWO_THETA})).toContain(`wavelength_A=${value};`);
+  });
   it('accepts integer rotations with thirds translations without subtraction roundoff', () => {
     const operations = ['x,y,z', 'x,y,z+1/3', 'x,y,z+2/3'].map((operation_xyz, i) =>
       ({ ...identity[0], operation_order: i, operation_xyz }));

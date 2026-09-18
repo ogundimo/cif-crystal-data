@@ -27,7 +27,7 @@ export interface PxrdResult {
 const MODEL = 'IT92-neutral-v1';
 
 const DEG = Math.PI / 180;
-export const DEFAULT_WAVELENGTH = 1.5406;
+const DEFAULT_WAVELENGTH = 1.5406;
 const MIN_TWO_THETA = 5;
 const MAX_TWO_THETA = 80;
 export const PXRD_FWHM_TWO_THETA = 0.1;

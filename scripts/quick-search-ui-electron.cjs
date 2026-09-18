@@ -4,6 +4,8 @@ const { mkdtempSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 app.setPath('userData', mkdtempSync(join(tmpdir(), 'cif-ui-tests-')));
+// Only the completion handler may choose the test process exit status.
+app.on('window-all-closed', () => {});
 
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('force-device-scale-factor', '1');
@@ -272,6 +274,7 @@ async function testCompoundInformationSelection(window) {
   assert.deepEqual(initial.headings, ['Elements', 'Site', 'Wyck.', 'x', 'y', 'z', 'Occ.']);
   assert.deepEqual(initial.values, ['Sb', 'Sb1', '4c', '0.0286', '0.25', '0.394', '1']);
   assert.deepEqual(initial.metadata, [
+    { label: 'Formula', value: 'FeO' },
     { label: 'Sample', value: 'Sample crystal' },
     { label: 'Color', value: 'gray steel' },
     { label: 'Unit-cell volume [Å³]', value: '6' }
@@ -281,6 +284,8 @@ async function testCompoundInformationSelection(window) {
     values: ['90', '90', '90']
   });
   assert.equal(initial.formula, 'FeO', 'formula displays a subscript when stoichiometry is exactly one');
+  await waitForRenderer(window,"document.querySelector('[data-info-field=Formula] td')?.textContent === 'Fe2O3'",'selected formula in information panel');
+  assert.deepEqual(await window.webContents.executeJavaScript("[...document.querySelectorAll('[data-info-field=Formula] sub')].map(e=>e.textContent)"),['2','3']);
   assert.deepEqual(initial.coordinateHeadingStyles, ['italic', 'italic', 'italic']);
   assert.equal(initial.wyckoffText, '4c');
   assert.equal(initial.wyckoffLetterStyle, 'italic');
@@ -515,7 +520,7 @@ async function testImportProgressIndicator(window) {
 }
 
 async function run() {
-  const window = new BrowserWindow({
+  const createWindow = () => new BrowserWindow({
     show: false,
     width: 1200,
     height: 800,
@@ -527,10 +532,18 @@ async function run() {
     }
   });
 
-  window.webContents.on('console-message', (details) => {
+  let window = createWindow();
+  const reportConsole = (details) => {
     if (details.level === 'error') console.error('Renderer:', details.message);
-  });
+  };
+  window.webContents.on('console-message', reportConsole);
   await require('./pxrd-ui-regressions.cjs')(window,testUrl);
+  // The comparison capture briefly shows its window. Start layout scenarios in
+  // a fresh hidden window, without native display-size constraints from showing.
+  const comparisonWindow = window;
+  window = createWindow();
+  comparisonWindow.destroy();
+  window.webContents.on('console-message', reportConsole);
   await window.loadURL(testUrl);
   await runScenario(window, {
     name: 'minimum application viewport',
@@ -689,6 +702,9 @@ async function run() {
     await pause(100);
   }
   await clickButton('About');
+  assert.equal(await window.webContents.executeJavaScript("document.querySelector('[aria-labelledby=contributors-title] p').textContent"),'Opeyemi Ogundimu, Vidyanshu Mishra, Abishek Iyer');
+  assert.ok(await window.webContents.executeJavaScript("(()=>{const p=document.querySelector('[aria-labelledby=contributors-title] p');return p.scrollWidth<=p.clientWidth && p.getBoundingClientRect().height<=21;})()"));
+  assert.ok(await window.webContents.executeJavaScript("(()=>{const d=document.querySelector('[aria-labelledby=about-title]');d.style.width='230px';const p=document.querySelector('[aria-labelledby=contributors-title] p');const wraps=p.scrollWidth<=p.clientWidth&&p.getBoundingClientRect().height>21;d.style.width='';return wraps;})()"));
   assert.equal(await window.webContents.executeJavaScript("document.activeElement.getAttribute('aria-labelledby')"), 'about-title');
   window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'TAB', modifiers: ['shift'] });
   window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'TAB', modifiers: ['shift'] });

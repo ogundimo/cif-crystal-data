@@ -4,6 +4,7 @@ import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import JSmolViewer from './JSmolViewer';
 import PxrdPattern from './PxrdPattern';
 import PublicationReference from './PublicationReference';
+import { formatFormula } from '../formatFormula';
 
 interface Props {
   entry: EntryRow;
@@ -73,6 +74,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
   const displayNumber = (value: number | null): string =>
     value === null ? '' : String(value);
   const metadata = [
+    { label: 'Formula', value: entry.formula ? <span aria-label={entry.formula} className="break-words">{formatFormula(entry.formula)}</span> : 'Not supplied' },
     { label: 'Sample', value: entry.sample_type },
     { label: 'Color', value: entry.crystal_colour },
     {

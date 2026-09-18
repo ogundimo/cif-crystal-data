@@ -6,7 +6,6 @@ import {
   cellParametersScript,
   clearPolyhedraScript,
   clearMeasurementsScript,
-  CRYSTAL_AXES_SCALE,
   CRYSTAL_OVERVIEW_ZOOM,
   fitResetScript,
   initialAppearanceScript,
@@ -56,11 +55,10 @@ describe('JSmol crystallographic scripts', () => {
     expect(representationScript('spacefill')).toContain('spacefill 100%');
   });
 
-  it('increases the original crystallographic axis spacing by five percent', () => {
+  it('uses an independent orientation indicator and suppresses the native popup', () => {
     const script = initialAppearanceScript(1, 'atoms', true, false);
-    expect(script).toContain(`set axesScale ${CRYSTAL_AXES_SCALE}`);
-    expect(script).toContain('axes unitcell');
-    expect(script).toContain('axes on');
+    expect(script).toContain('axes off');
+    expect(script).toContain('set disablePopupMenu true');
   });
 
   it('loads selectable 2×2×2 and 3×3×3 packed unit-cell blocks', () => {
@@ -112,12 +110,11 @@ describe('JSmol crystallographic scripts', () => {
     expect(script).toContain('select none');
   });
 
-  it('binds fullscreen atom double-clicks to a radius-based coordination polyhedron', () => {
+  it('routes deliberate single atom picks to the application without double-click measurement conflicts', () => {
     const script = polyhedraPickingScript(true);
     expect(script).toContain('LEFT+double+click');
-    expect(script).toContain('connect 15% 125% _ATOM {*} CREATE');
-    expect(script).toContain('polyhedra BONDS _ATOM TO {*} COLLAPSED EDGES');
-    expect(polyhedraPickingScript(false)).toBe('unbind');
+    expect(script).toContain('set picking IDENTIFY');
+    expect(polyhedraPickingScript(false)).toContain('set picking OFF');
   });
 
   it('clears polyhedra and restores the selected representation connections', () => {

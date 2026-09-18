@@ -11,4 +11,5 @@ reports/quality/
 reports/architecture/
 reports/mutation/
 reports/scientific/
+reports/viewer/
 .stryker-tmp/

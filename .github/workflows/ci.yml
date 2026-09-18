@@ -62,7 +62,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: viewer-${{ github.sha }}
-          path: .dist/jsmol-verification/
+          path: |
+            .dist/jsmol-verification/
+            reports/viewer/
           include-hidden-files: true
           retention-days: 30
 

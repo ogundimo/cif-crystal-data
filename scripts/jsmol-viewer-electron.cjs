@@ -23,7 +23,10 @@ async function waitFor(window, expression, timeout = 90_000) {
     viewerText: document.querySelector('[aria-label="Crystal structure viewer"]')?.innerText,
     canvasCount: document.querySelectorAll('canvas').length,
     scriptSources: Array.from(document.scripts).map((script) => script.src),
-    hasJmol: Boolean(window.Jmol)
+    hasJmol: Boolean(window.Jmol),
+    jmolError: window.Jmol?.getPropertyAsArray(Object.values(window.Jmol._applets)[0], 'errorMessage'),
+    queue: window.Jmol?.getPropertyAsArray(Object.values(window.Jmol._applets)[0], 'scriptQueueInfo'),
+    consoleText: window.Jmol?.getPropertyAsArray(Object.values(window.Jmol._applets)[0], 'consoleText')
   })`);
   throw new Error(`Timed out waiting for: ${expression}\n${JSON.stringify(diagnostics, null, 2)}`);
 }
@@ -77,9 +80,14 @@ async function run() {
   window.webContents.on('console-message', (event, ...args) => {
     const message = event.message ?? (typeof args[0] === 'object' ? args[0]?.message : args[1]) ?? '';
     if (message) console.log(`[renderer] ${message}`);
-    if (/ERR_FILE_NOT_FOUND|Failed to load resource|Refused to load|JSmol.*error/i.test(message)) resourceErrors.push(message);
+    if (/ERR_FILE_NOT_FOUND|Failed to load resource|Refused to load|JSmol.*error|Uncaught/i.test(message)) resourceErrors.push(message);
   });
   await window.loadURL(testUrl);
+  window.webContents.debugger.attach('1.3');
+  await window.webContents.debugger.sendCommand('Runtime.enable');
+  window.webContents.debugger.on('message', (_event, method, params) => {
+    if (method === 'Runtime.exceptionThrown') resourceErrors.push(JSON.stringify(params.exceptionDetails));
+  });
   // Default to repository-owned synthetic geometry; real corpora are optional manual probes.
   const fixturePath = process.env.CIF_VIEWER_TEST_CIF || join(process.cwd(), 'docs', 'samples', 'rocksalt-demo.cif');
   const representativeCif = await readFile(fixturePath, 'utf8');
@@ -151,6 +159,12 @@ async function run() {
     })()
   `);
   await pause(500);
+  if (process.env.CIF_VIEWER_USABILITY_ONLY === '1') {
+    await require('./viewer-usability-regressions.cjs')(window, { waitFor, clickByText, pause, representativeCif });
+    await require('./viewer-lifecycle-regressions.cjs')(window, representativeCif, pause);
+    window.destroy();
+    return;
+  }
 
   await clickByText(window, 'Atoms');
   const atomsHash = await captureViewer(window, 'atoms');
@@ -179,34 +193,7 @@ async function run() {
   await clickByText(window, '1³');
   await waitFor(window, `!document.querySelector('[aria-label="Crystal structure viewer"]')?.textContent.includes('Preparing')`);
 
-  const polyhedraModeActive = await window.webContents.executeJavaScript(`
-    Array.from(document.querySelectorAll('[aria-label="Crystal structure viewer"] button.btn-on'))
-      .some((button) => button.textContent.trim() === 'Polyhedra')
-  `);
-  assert.equal(polyhedraModeActive, true, 'Fullscreen polyhedra picking mode was not enabled');
-  const polyhedraBindingActive = await window.webContents.executeJavaScript(`
-    (() => {
-      const applet = Object.values(window.Jmol._applets)[0];
-      const mouseInfo = window.Jmol.getPropertyAsArray(applet, 'mouseInfo');
-      return JSON.stringify(mouseInfo).toLowerCase().includes('polyhedra');
-    })()
-  `);
-  assert.equal(polyhedraBindingActive, true, 'JSmol did not install the atom double-click polyhedra binding');
-  await window.webContents.executeJavaScript(`
-    (() => {
-      const applet = Object.values(window.Jmol._applets)[0];
-      window.Jmol.script(applet, 'polyhedra {*} DELETE;connect 15% 125% {atomIndex=0} {*} CREATE;polyhedra BONDS {atomIndex=0} TO {*} COLLAPSED EDGES;select {atomIndex=0};color polyhedra translucent 0.45 [x66B5D8];select none');
-    })()
-  `);
-  await pause(1_000);
-  const hasPolyhedron = await window.webContents.executeJavaScript(`
-    (() => {
-      const applet = Object.values(window.Jmol._applets)[0];
-      return JSON.stringify(window.Jmol.getPropertyAsArray(applet, 'shapeInfo')).toLowerCase().includes('polyhedra');
-    })()
-  `);
-  assert.equal(hasPolyhedron, true, 'JSmol did not create a polyhedron around the selected atom');
-  await clickByText(window, 'Clear polyhedra');
+  await require('./viewer-usability-regressions.cjs')(window, { waitFor, clickByText, pause, representativeCif });
 
   for (const control of ['Cells', 'Labels', 'Fit / reset', 'a', 'b', 'c']) await clickByText(window, control);
   await window.webContents.executeJavaScript(`
@@ -254,6 +241,16 @@ async function run() {
     })()
   `);
   assert.equal(String(compactCellParameters), 'false', 'Compact viewer did not hide cell parameters');
+  const compactBounds = await window.webContents.executeJavaScript(`(()=>{const r=document.querySelector('[data-testid="jsmol-host"]').getBoundingClientRect();return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),frankX:Math.round(r.right-20),frankY:Math.round(r.bottom-8)};})()`);
+  for (const event of [{button:'right',x:compactBounds.x,y:compactBounds.y},{button:'left',modifiers:['control'],x:compactBounds.x,y:compactBounds.y},{button:'left',x:compactBounds.frankX,y:compactBounds.frankY}]) {
+    window.webContents.sendInputEvent({type:'mouseDown',clickCount:1,...event});
+    await pause(80);
+    window.webContents.sendInputEvent({type:'mouseUp',clickCount:1,...event});
+    await pause(200);
+    assert.equal(await window.webContents.executeJavaScript(`Array.from(document.querySelectorAll('[role=menu],[id*=PopupMenu],[class*=jmolPopup]')).some(e=>e.getBoundingClientRect().width>0)`),false);
+  }
+  assert.equal(await window.webContents.executeJavaScript(`!!document.querySelector('[aria-label="Crystallographic orientation axes"]')`),true);
+  await require('./viewer-lifecycle-regressions.cjs')(window, representativeCif, pause);
   assert.deepEqual(resourceErrors, [], `JSmol console/resource errors: ${resourceErrors.join('; ')}`);
   console.log('✓ live JSmol CIF load and structural evidence');
   console.log('✓ Atoms, Ball + stick, and Space fill produced distinct canvas captures');

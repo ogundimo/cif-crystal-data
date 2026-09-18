@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { DiffractionInput, EntryRow } from '../../../shared/types';
 import {
-  DEFAULT_WAVELENGTH,
   PXRD_FWHM_TWO_THETA,
   PXRD_RANGE,
   serializePxrdProfile,
@@ -9,12 +8,14 @@ import {
 } from '../pxrd';
 import { startPxrdTask } from '../pxrdTask';
 import type { PxrdRequest, PxrdResponse } from '../pxrdTask';
+import { MAX_PATTERN_BYTES, parsePersonalPattern, usePatternComparison, WAVELENGTH_PRESETS } from '../patternComparison';
 
 interface Props { entry: EntryRow }
 
 const MIN_CHART_WIDTH = 220;
 const MIN_CHART_HEIGHT = 180;
 const MARGIN = { left: 52, right: 14, top: 12, bottom: 42 };
+const ImportError = globalThis.Error;
 
 export default function PxrdPattern({ entry }: Props) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -35,7 +36,10 @@ export default function PxrdPattern({ entry }: Props) {
   const [sourceStatus, setSourceStatus] = useState<{entry:EntryRow; value:'loading'|'ready'|'error'}>({entry,value:'loading'});
   const status = sourceStatus.entry === entry ? sourceStatus.value : 'loading';
   const [fwhm, setFwhm] = useState(PXRD_FWHM_TWO_THETA);
-  const [wavelength, setWavelength] = useState(entry.radiation_wavelength_angstrom ?? DEFAULT_WAVELENGTH);
+  const { wavelength, setWavelength, imported, setImported } = usePatternComparison();
+  const [importError, setImportError] = useState<string | null>(null);
+  const importSequence = useRef(0);
+  useEffect(() => () => { importSequence.current++; }, []);
   const [includeHeader, setIncludeHeader] = useState(true);
   const [hoveredPeak, setHoveredPeak] = useState<PxrdPeak | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -56,7 +60,6 @@ export default function PxrdPattern({ entry }: Props) {
   }, [entry,retry]);
 
   useEffect(() => {
-    setWavelength(entry.radiation_wavelength_angstrom ?? DEFAULT_WAVELENGTH);
     setHoveredPeak(null);
     setExportMessage(null);
   }, [entry.id, entry.radiation_wavelength_angstrom]);
@@ -87,6 +90,20 @@ export default function PxrdPattern({ entry }: Props) {
   const profilePath = profile.map((point, index) =>
     `${index === 0 ? 'M' : 'L'}${x(point.twoTheta).toFixed(2)},${y(point.intensity).toFixed(2)}`
   ).join(' ');
+  const importedPath = imported?.normalized.map((point, index) => `${index === 0 ? 'M' : 'L'}${x(point.twoTheta).toFixed(2)},${y(point.intensity).toFixed(2)}`).join(' ');
+  const noOverlap = imported && (imported.original.at(-1)!.twoTheta < PXRD_RANGE.min || imported.original[0].twoTheta > PXRD_RANGE.max);
+
+  async function importPattern(file: File): Promise<void> {
+    const sequence = ++importSequence.current;
+    setImportError(null);
+    try {
+      if (file.size > MAX_PATTERN_BYTES) throw new ImportError('Pattern exceeds the 4 MiB file limit.');
+      const pattern = parsePersonalPattern(await file.text(), file.name);
+      if (sequence === importSequence.current) setImported(pattern);
+    } catch (error) {
+      if (sequence === importSequence.current) setImportError(error instanceof ImportError ? error.message : 'Could not read pattern.');
+    }
+  }
 
   async function exportPattern(): Promise<void> {
     if (!response) return;
@@ -109,21 +126,15 @@ export default function PxrdPattern({ entry }: Props) {
         <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
           <label className="flex items-center gap-1 whitespace-nowrap font-medium">
             λ
-            <input
+            <select
               aria-label="PXRD wavelength in angstroms"
               data-testid="pxrd-wavelength-input"
-              type="number"
-              min="0.1"
-              max="10"
-              step="0.0001"
               value={wavelength}
               onChange={(event) => {
-                const value = event.currentTarget.valueAsNumber;
-                if (Number.isFinite(value) && value >= 0.1 && value <= 10) setWavelength(value);
+                setWavelength(Number(event.currentTarget.value));
               }}
-              className="h-6 w-20 rounded-sm border border-[#aeb8c2] bg-white px-1 text-right text-xs font-normal text-[#202020] outline-none focus:border-accent"
-            />
-            <span>Å</span>
+              className="h-6 rounded-sm border border-[#aeb8c2] bg-white px-1 text-xs font-normal text-[#202020] outline-none focus:border-accent"
+            >{WAVELENGTH_PRESETS.map(preset => <option key={preset.value} value={preset.value}>{preset.label}</option>)}</select>
           </label>
           <label className="flex items-center gap-1 whitespace-nowrap font-medium">
             FWHM (2θ)
@@ -152,6 +163,18 @@ export default function PxrdPattern({ entry }: Props) {
           </button>
           {exportMessage && <span className="max-w-40 truncate text-[10px] text-[#2f6f3e]" title={exportMessage}>{exportMessage}</span>}
         </div>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 px-2 text-[10px]">
+        <label className="btn-w32 cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-accent">Import .xy<input aria-label="Import personal XY pattern" className="sr-only" type="file" accept=".xy" onChange={event => {
+          const file = event.currentTarget.files?.[0];
+          event.currentTarget.value = '';
+          if (file) void importPattern(file);
+        }} /></label>
+        {imported && <><span className="break-all text-red-700">Red: {imported.fileName} (maximum = 100)</span><button className="btn-w32" onClick={() => { importSequence.current++; setImported(null); setImportError(null); }}>Clear imported pattern</button></>}
+        <span className="text-blue-700">Blue: simulation</span>
+        {imported && <span>Comparison requires matching wavelengths. Imported angles stay unchanged; display clips to 5–80°.</span>}
+        {noOverlap && <span role="status">Imported pattern has no overlap with 5–80°.</span>}
+        {importError && <span role="alert" className="text-red-700">{importError}</span>}
       </div>
       {response && <details data-testid="pxrd-diagnostics" className="shrink-0 px-2 text-[10px] text-[#4c5260]">
         <summary>{response.result.status === 'incomplete' ? 'Incomplete pattern — reflection limit reached' : response.result.status === 'unsupported' ? 'Unsupported calculation' : 'Calculated X-ray model — assumptions and limits'}</summary>
@@ -190,6 +213,8 @@ export default function PxrdPattern({ entry }: Props) {
           <line x1={MARGIN.left} x2={WIDTH - MARGIN.right} y1={MARGIN.top + plotHeight} y2={MARGIN.top + plotHeight} stroke="#687786" vectorEffect="non-scaling-stroke" />
           <line x1={MARGIN.left} x2={MARGIN.left} y1={MARGIN.top} y2={MARGIN.top + plotHeight} stroke="#687786" vectorEffect="non-scaling-stroke" />
           <path data-role="pxrd-profile" d={profilePath} fill="none" stroke="#0000FF" strokeWidth="1.0" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <defs><clipPath id="pxrd-plot-clip"><rect x={MARGIN.left} y={MARGIN.top} width={plotWidth} height={plotHeight} /></clipPath></defs>
+          {imported && <path data-role="pxrd-imported-profile" d={importedPath} clipPath="url(#pxrd-plot-clip)" fill="none" stroke="#d00000" strokeWidth="1.3" vectorEffect="non-scaling-stroke" />}
           {peaks.map((peak, index) => (
             <line
               key={`${peak.hkl}-${index}`}
