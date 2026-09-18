@@ -2,7 +2,8 @@
 
 Coverage and function complexity now have [incremental regression gates](regression-protection.md).
 The collection command remains a measurement step; CI enforces the versioned policy separately.
-Duplication and deferred measurements remain advisory.
+The [duplication gate](duplication-policy.md) now rejects new or changed clone pairs;
+deferred measurements remain advisory.
 
 Issue [#13](https://github.com/ogundimo/cif-crystal-data-public/issues/13) establishes a
 repeatable baseline before introducing blocking quality targets. Measurements identify
@@ -44,6 +45,9 @@ boundaries, unchanged complexity hotspots, native regressions and benchmark comp
 
 The [#18 parser refactor](parser-refactor.md) records stage boundaries, preserved
 behavior, complexity exceptions and the available local corpus comparison.
+
+The [milestone 7 simplification](targeted-simplification.md) records subsequent
+parser/PXRD extraction, numerical boundary assertions and the writer-clone decision.
 
 The [#19 mutation pilot](mutation-testing.md) records the targeted command, scope,
 survivor review and execution cost. It runs separately from the coverage baseline.

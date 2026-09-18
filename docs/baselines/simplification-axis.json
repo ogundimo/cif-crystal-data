@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "note": "Separate final all-axis boundary check after the completed default pilot; the default report and its totals are not overwritten.",
+  "execution": {
+    "exit": 0,
+    "node": "v22.23.2",
+    "durationSeconds": 47.851,
+    "inputs": {
+      "src/renderer/src/pxrd.ts": "a4075aba7ba08abda013abfe665345d8eb6a602076a9444459ce6bb9db3dfbea",
+      "src/renderer/src/pxrd.test.ts": "6f33dfe948fcb2ef21d44263734fda9386ec91519c77c14bff4bfd5aa40e3240",
+      "src/renderer/src/pxrd.boundaries.test.ts": "899e7691697e6c24fddaf65e5448b03ce8536fc185836c4f84d9b96008c15817",
+      "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+      "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+      "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+    }
+  },
+  "configuration": {
+    "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "mutate": [
+      "src/renderer/src/pxrd.ts:174-174"
+    ],
+    "testRunner": "vitest",
+    "vitest": {
+      "configFile": "vitest.config.ts"
+    },
+    "checkers": [
+      "typescript"
+    ],
+    "tsconfigFile": "tsconfig.mutation.json",
+    "typescriptChecker": {
+      "prioritizePerformanceOverAccuracy": false
+    },
+    "coverageAnalysis": "perTest",
+    "concurrency": 2,
+    "timeoutMS": 5000,
+    "timeoutFactor": 1.5,
+    "reporters": [
+      "clear-text",
+      "json"
+    ],
+    "htmlReporter": {
+      "fileName": "reports/mutation/index.html"
+    },
+    "jsonReporter": {
+      "fileName": "reports/scientific/milestone7-k-axis.json"
+    },
+    "thresholds": {
+      "high": 90,
+      "low": 70,
+      "break": 0
+    },
+    "ignorePatterns": [
+      "reports/**",
+      "dist/**",
+      "dist-electron/**",
+      "release/**",
+      ".dist/**",
+      "third_party/**",
+      "src/renderer/public/**"
+    ]
+  },
+  "rawReportSha256Lf": "1847c3772c13eda11f87a3772db540d57ac6a222d2ebfcde93eabcffb6628f3c",
+  "transition": {
+    "defaultPilotId": "503",
+    "before": "Survived",
+    "after": "Killed",
+    "location": {
+      "end": {
+        "column": 44,
+        "line": 174
+      },
+      "start": {
+        "column": 30,
+        "line": 174
+      }
+    },
+    "replacement": "k < limits[1]"
+  },
+  "mutants": [
+    {
+      "id": "0",
+      "location": {
+        "end": {
+          "column": 28,
+          "line": 174
+        },
+        "start": {
+          "column": 18,
+          "line": 174
+        }
+      },
+      "mutatorName": "UnaryOperator",
+      "replacement": "+limits[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "1",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 174
+        },
+        "start": {
+          "column": 30,
+          "line": 174
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "2",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 174
+        },
+        "start": {
+          "column": 30,
+          "line": 174
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k < limits[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "3",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 174
+        },
+        "start": {
+          "column": 30,
+          "line": 174
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k > limits[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "4",
+      "location": {
+        "end": {
+          "column": 52,
+          "line": 174
+        },
+        "start": {
+          "column": 46,
+          "line": 174
+        }
+      },
+      "mutatorName": "AssignmentOperator",
+      "replacement": "k -= 1",
+      "status": "Timeout"
+    }
+  ]
+}

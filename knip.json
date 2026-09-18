@@ -2,6 +2,8 @@
   "$schema": "https://unpkg.com/knip@6.35.1/schema.json",
   "entry": [
     "scripts/startup/config.mjs",
+    "scripts/compare-simplification.mjs",
+    "scripts/verify-pxrd-boundary-reference.mjs",
     "src/main/importWorker.ts",
     "src/renderer/src/uiTest.tsx",
     "scripts/packaged-smoke.mjs",

@@ -1,0 +1,3353 @@
+{
+  "schemaVersion": 1,
+  "note": "Completed default three-file pilot after extraction. Production/population changed, so its score is not compared to the pre-extraction focused run or historical model. Timeouts are not assertion kills.",
+  "execution": {
+    "startedAt": "2026-09-18T06:11:46.098Z",
+    "completed": true,
+    "exitCode": 0,
+    "contract": {
+      "nodeMajor": 22,
+      "tools": {
+        "@stryker-mutator/core": "10.0.0",
+        "@stryker-mutator/vitest-runner": "10.0.0",
+        "@stryker-mutator/typescript-checker": "10.0.0",
+        "vitest": "4.1.11",
+        "typescript": "5.9.3"
+      },
+      "configHashes": {
+        "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+        "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+        "scripts/quality/scope.mjs": "ef3f40ad957e66edd33fa1f0f0f928b517b25f3439a0ddcc98e13f5787a8882a",
+        "tsconfig.mutation.json": "fe0b211244af68a8472f0a34a0a2da4c925603800085df5bda3a2fe90ffb2568",
+        "tsconfig.web.json": "1fb7f77ec14f13a38643102e20415662f7c877a89b10ab80d29f3643599afe08",
+        "tsconfig.node.json": "1ebe93a0a191b41b9e194baf13069ee78b25117028d94fbbc4501be4524c14aa",
+        "package.json": "6f89bacfac333b2adc875999239999594ca425c29f4dc6a119572a180c6afd13",
+        "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+      },
+      "productionSha256": "b7ba650e7d1bd2aec73b2da455cac249db228a9b33f4497eb3930311e3774d47"
+    },
+    "testInputs": {
+      "src/main/batchExport.test.ts": "b8c8fb656641c59eca8b513ba61645ab616bb569fc4040438bc385718548e9e2",
+      "src/main/bibliographyMigration.test.ts": "6f9aa95dbdd08cf7eb863f6f4f693225c6ce94952bdad1ad846b35a70e3d5340",
+      "src/main/databaseDiagnostics.test.ts": "206594d5e7263535e81725f9acd823dcb18aecba1c2359246b42ac9a88836178",
+      "src/main/db.test.ts": "81f2c0e0821bff18bc5fd86cdec95fe2940f7613a9459f864ba163b7f8f4f78c",
+      "src/main/exportCif.test.ts": "671e640d69a6c6969c0083b798f05de19e74a82c8b8b98c7708115e2f14ae0e6",
+      "src/main/importFolderSettings.test.ts": "ed89f649a82f5b66ee72045070693a4ce911752a05feea1c7f7a8f03d5fe7790",
+      "src/main/importRunner.test.ts": "bbf645a0376fb334bae5780155307ffc902f29311e886b56c43f55afd339568d",
+      "src/main/ingest.test.ts": "cca6857161e09af70b0caecf579b2249427c69df72d1d536b604bf443397caae",
+      "src/main/ingestDiscovery.test.ts": "f4ee1123331bf2759c6742313ae2859775a273b0cc53106117d46304538de58f",
+      "src/main/ipc.test.ts": "ed7084d5d9730bed62cb31a81c8ed4dde062152509c038c439b94be21c086f2a",
+      "src/main/publicationResolver.test.ts": "0d49d14a28bb8b8101876335257fdf40f16a9af7d35c78c5544d92b958587b95",
+      "src/main/runtimeTrace.test.ts": "d55f67f0a1835baac4df6466bfc6dbc54c2506556fe64ec481abb5c6e410f960",
+      "src/main/searchFilterValidation.test.ts": "4497f460f375a65a362d19ab294674e333168e814d657cf97de7f0abf577bccd",
+      "src/main/sourceIdentity.test.ts": "fc0f5ac33ebde7b0ccc10383a891c104fe698a1ea59ae4d95539666c4efd1abf",
+      "src/parser/__fixtures__/synthetic-test.cif": "bc88f245023eb77ef8e190383fc753fed671d2737b4cf633df35baaf5481235f",
+      "src/parser/bibliography.test.ts": "44380c8ad73bd92ce26bbec2d191dbbbcf5572588569cd9c1a0740bd16de7115",
+      "src/parser/cif/formula.test.ts": "012fae290b85d61dd7cffbe60e914d78cb4cab571e4261620932a6a725a040b0",
+      "src/parser/cifParser.test.ts": "6fe61b7931d684e66b97540abf59df392175bc61b11e25dce702786d9ef2772e",
+      "src/renderer/src/__fixtures__/pxrd-reference.json": "b1de06a00ca77e21be9de593dbcc6779b4bfa903e9606f7c35e55737ef6353fa",
+      "src/renderer/src/components/JSmolViewer.test.ts": "82cfd1bcd353bd8457c5f009e7bc7fa520bfa813c6daa746e748de430dad511f",
+      "src/renderer/src/components/PublicationReference.test.ts": "cd8a7eb60eec763b5932ef1f15c142074d40d9efc5fe7d0be27673e3b527e9b6",
+      "src/renderer/src/components/quickSearchForm.test.ts": "0a6c1321bb525aac0d1cfa99f4a2b97ee7a34c29050da9f45ed9c9485d5f4ab9",
+      "src/renderer/src/debouncedRequest.test.ts": "c932a77d484feed10878af0913856eb13671478bc2c8ffc12efe7c7d16bfe2fe",
+      "src/renderer/src/formatFormula.test.ts": "3092357643e97c7a0b773e4ffabbe3d549438a1786ed88eaffefe055a00cbaac",
+      "src/renderer/src/jsmol/assets.test.ts": "87591b056b181d219ab003d81d677264623cc7445e304d7645e24f2998403ebb",
+      "src/renderer/src/jsmol/geometry.test.ts": "f93288f57e521b236c1c8ebe6a9c28f5b834c3a44efd2e1cf4dc1956537e7c0e",
+      "src/renderer/src/jsmol/latestOnlyScheduler.test.ts": "fccdf9daa342dd82e18f1b32ea4dd41afe19d3744e4b163433962069423bad16",
+      "src/renderer/src/jsmol/lifecycle.test.ts": "3374c1193505ddd6a3c900e970a23745da70553f73223a576cdece1b8a6fef8a",
+      "src/renderer/src/jsmol/runtime-loading.test.ts": "f9dd51a279e7c20fa43e72d6904fb3036f66977bdf85a4247a8f9b26a990d6f6",
+      "src/renderer/src/jsmol/scripts.test.ts": "7f865a41b4e6d6e39944d4328f043fb3fabeca4eacd9055da0a00337dfceaee3",
+      "src/renderer/src/jsmol/status.test.ts": "26fbda39a34bb85d8225c9cd7f7db2c6118b5b10ea1647294799ac9fc304b323",
+      "src/renderer/src/layoutPreferences.test.ts": "996b18a2d9cf8ca620bec35c689a2a0a0e2aa02c0eef00fba3d61687b60dc0e7",
+      "src/renderer/src/patternComparison.test.ts": "5c69fdf16da64510fb81410ed0e2f1d8c3ae25d2f11d261a2dec000498609015",
+      "src/renderer/src/pxrd.boundaries.test.ts": "11321d465f32ef82b6d2d85168359ec42c06c39eb4221c31e1a75fc92ec001b2",
+      "src/renderer/src/pxrd.test.ts": "6f33dfe948fcb2ef21d44263734fda9386ec91519c77c14bff4bfd5aa40e3240",
+      "src/renderer/src/pxrdTask.test.ts": "bc2985010296498e1b034c6251260d9ee9411fb26bb5f3c075b934292b4091b7",
+      "src/renderer/src/scattering.test.ts": "7f16adffc0c28501a9c89a1000361c1bedf5825d7f973743a238d762d2115180",
+      "src/renderer/src/searchController.test.ts": "423fd76b04e3b2167f386d1ee5384d136e7d5af90614eba1cecba35a31a1e8b6",
+      "src/renderer/src/virtualRows.test.ts": "56e840a90937d077b1a77fe4f0d36429142bc4b6d29999835508de6bad091be9",
+      "src/shared/periodicTableData.test.ts": "7c91f5f4d3eeae1a82ce872eb75e209938ab82bf1abaca631f28f367cf357c46",
+      "src/shared/searchValidation.test.ts": "738801b30117d8627f793f25b13c7251fade09f27d1aa1a48d7c272815e4eb4e"
+    },
+    "sourceHashes": {
+      "src/parser/cif/formula.ts": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+      "src/renderer/src/pxrd.ts": "a4075aba7ba08abda013abfe665345d8eb6a602076a9444459ce6bb9db3dfbea",
+      "src/shared/searchValidation.ts": "b0c26f34e560d0a3de21608fc2cddc0d0fe3d104f6118dacbc3b8b309c4f57ba"
+    },
+    "commit": "5e23e57dfc7927d1f51fbc10a7b3f0e7e6d64eff",
+    "finishedAt": "2026-09-18T06:47:38.015Z",
+    "durationSeconds": 2151.917
+  },
+  "assessment": {
+    "schemaVersion": 1,
+    "policy": "advisory",
+    "counts": {
+      "Killed": 829,
+      "Survived": 54,
+      "NoCoverage": 0,
+      "Timeout": 10,
+      "CompileError": 234,
+      "RuntimeError": 0,
+      "Ignored": 0
+    },
+    "score": 93.95296752519597,
+    "populationHash": "d19fce27f7d3d083d559ae59550d4714c16d0f11a4e3b5eeb53af35bb841ea2b",
+    "sourceHashes": {
+      "src/parser/cif/formula.ts": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+      "src/renderer/src/pxrd.ts": "a4075aba7ba08abda013abfe665345d8eb6a602076a9444459ce6bb9db3dfbea",
+      "src/shared/searchValidation.ts": "b0c26f34e560d0a3de21608fc2cddc0d0fe3d104f6118dacbc3b8b309c4f57ba"
+    },
+    "contract": {
+      "nodeMajor": 22,
+      "tools": {
+        "@stryker-mutator/core": "10.0.0",
+        "@stryker-mutator/vitest-runner": "10.0.0",
+        "@stryker-mutator/typescript-checker": "10.0.0",
+        "vitest": "4.1.11",
+        "typescript": "5.9.3"
+      },
+      "configHashes": {
+        "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+        "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+        "scripts/quality/scope.mjs": "ef3f40ad957e66edd33fa1f0f0f928b517b25f3439a0ddcc98e13f5787a8882a",
+        "tsconfig.mutation.json": "fe0b211244af68a8472f0a34a0a2da4c925603800085df5bda3a2fe90ffb2568",
+        "tsconfig.web.json": "1fb7f77ec14f13a38643102e20415662f7c877a89b10ab80d29f3643599afe08",
+        "tsconfig.node.json": "1ebe93a0a191b41b9e194baf13069ee78b25117028d94fbbc4501be4524c14aa",
+        "package.json": "6f89bacfac333b2adc875999239999594ca425c29f4dc6a119572a180c6afd13",
+        "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+      },
+      "productionSha256": "b7ba650e7d1bd2aec73b2da455cac249db228a9b33f4497eb3930311e3774d47"
+    },
+    "comparison": "not comparable: source, mutation population or tool/configuration contract changed",
+    "changes": null,
+    "notes": [
+      "Survivors and uncovered mutants remain advisory and visible.",
+      "Timeout is not an assertion kill; invalid outcomes are not detections.",
+      "Reviewed equivalents remain in the denominator."
+    ]
+  },
+  "rawReportSha256Lf": "4278623db8a54501731f56d68b1906154de324350828fc35e1168089571fa489",
+  "counts": {
+    "Killed": 829,
+    "Survived": 54,
+    "NoCoverage": 0,
+    "Timeout": 10,
+    "CompileError": 234,
+    "RuntimeError": 0,
+    "Ignored": 0
+  },
+  "files": {
+    "src/parser/cif/formula.ts": {
+      "sourceSha256": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+      "counts": {
+        "Killed": 101,
+        "Survived": 11,
+        "NoCoverage": 0,
+        "Timeout": 1,
+        "CompileError": 23,
+        "RuntimeError": 0,
+        "Ignored": 0
+      }
+    },
+    "src/renderer/src/pxrd.ts": {
+      "sourceSha256": "a4075aba7ba08abda013abfe665345d8eb6a602076a9444459ce6bb9db3dfbea",
+      "counts": {
+        "Killed": 655,
+        "Survived": 43,
+        "NoCoverage": 0,
+        "Timeout": 9,
+        "CompileError": 174,
+        "RuntimeError": 0,
+        "Ignored": 0
+      }
+    },
+    "src/shared/searchValidation.ts": {
+      "sourceSha256": "b0c26f34e560d0a3de21608fc2cddc0d0fe3d104f6118dacbc3b8b309c4f57ba",
+      "counts": {
+        "Killed": 73,
+        "Survived": 0,
+        "NoCoverage": 0,
+        "Timeout": 0,
+        "CompileError": 37,
+        "RuntimeError": 0,
+        "Ignored": 0
+      }
+    }
+  },
+  "affectedReflectionStageMutants": [
+    {
+      "id": "384",
+      "location": {
+        "end": {
+          "column": 2,
+          "line": 148
+        },
+        "start": {
+          "column": 108,
+          "line": 132
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "409",
+      "location": {
+        "end": {
+          "column": 2,
+          "line": 165
+        },
+        "start": {
+          "column": 127,
+          "line": 150
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "410",
+      "location": {
+        "end": {
+          "column": 4,
+          "line": 156
+        },
+        "start": {
+          "column": 19,
+          "line": 152
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[]",
+      "status": "CompileError"
+    },
+    {
+      "id": "385",
+      "location": {
+        "end": {
+          "column": 33,
+          "line": 134
+        },
+        "start": {
+          "column": 22,
+          "line": 134
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "qLength * 2",
+      "status": "Killed"
+    },
+    {
+      "id": "386",
+      "location": {
+        "end": {
+          "column": 4,
+          "line": 144
+        },
+        "start": {
+          "column": 29,
+          "line": 137
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "387",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 139
+        },
+        "start": {
+          "column": 34,
+          "line": 139
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "-atom.bIso / scattering ** 2",
+      "status": "Killed"
+    },
+    {
+      "id": "388",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 139
+        },
+        "start": {
+          "column": 34,
+          "line": 139
+        }
+      },
+      "mutatorName": "UnaryOperator",
+      "replacement": "+atom.bIso",
+      "status": "Killed"
+    },
+    {
+      "id": "389",
+      "location": {
+        "end": {
+          "column": 101,
+          "line": 140
+        },
+        "start": {
+          "column": 19,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "2 * Math.PI / (h * atom.position[0] + k * atom.position[1] + l * atom.position[2])",
+      "status": "Killed"
+    },
+    {
+      "id": "390",
+      "location": {
+        "end": {
+          "column": 30,
+          "line": 140
+        },
+        "start": {
+          "column": 19,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "2 / Math.PI",
+      "status": "Killed"
+    },
+    {
+      "id": "391",
+      "location": {
+        "end": {
+          "column": 100,
+          "line": 140
+        },
+        "start": {
+          "column": 34,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * atom.position[0] + k * atom.position[1] - l * atom.position[2]",
+      "status": "Killed"
+    },
+    {
+      "id": "392",
+      "location": {
+        "end": {
+          "column": 77,
+          "line": 140
+        },
+        "start": {
+          "column": 34,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * atom.position[0] - k * atom.position[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "393",
+      "location": {
+        "end": {
+          "column": 54,
+          "line": 140
+        },
+        "start": {
+          "column": 34,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h / atom.position[0]",
+      "status": "Killed"
+    },
+    {
+      "id": "394",
+      "location": {
+        "end": {
+          "column": 77,
+          "line": 140
+        },
+        "start": {
+          "column": 57,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "k / atom.position[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "395",
+      "location": {
+        "end": {
+          "column": 100,
+          "line": 140
+        },
+        "start": {
+          "column": 80,
+          "line": 140
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "l / atom.position[2]",
+      "status": "Killed"
+    },
+    {
+      "id": "396",
+      "location": {
+        "end": {
+          "column": 64,
+          "line": 141
+        },
+        "start": {
+          "column": 23,
+          "line": 141
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "atom.occupancy * formFactor / temperature",
+      "status": "Killed"
+    },
+    {
+      "id": "397",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 141
+        },
+        "start": {
+          "column": 23,
+          "line": 141
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "atom.occupancy / formFactor",
+      "status": "Killed"
+    },
+    {
+      "id": "398",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 142
+        },
+        "start": {
+          "column": 5,
+          "line": 142
+        }
+      },
+      "mutatorName": "AssignmentOperator",
+      "replacement": "real -= amplitude * Math.cos(phase)",
+      "status": "Survived"
+    },
+    {
+      "id": "399",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 142
+        },
+        "start": {
+          "column": 13,
+          "line": 142
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "amplitude / Math.cos(phase)",
+      "status": "Killed"
+    },
+    {
+      "id": "400",
+      "location": {
+        "end": {
+          "column": 45,
+          "line": 143
+        },
+        "start": {
+          "column": 5,
+          "line": 143
+        }
+      },
+      "mutatorName": "AssignmentOperator",
+      "replacement": "imaginary -= amplitude * Math.sin(phase)",
+      "status": "Survived"
+    },
+    {
+      "id": "401",
+      "location": {
+        "end": {
+          "column": 45,
+          "line": 143
+        },
+        "start": {
+          "column": 18,
+          "line": 143
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "amplitude / Math.sin(phase)",
+      "status": "Killed"
+    },
+    {
+      "id": "402",
+      "location": {
+        "end": {
+          "column": 101,
+          "line": 145
+        },
+        "start": {
+          "column": 14,
+          "line": 145
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "(1 + Math.cos(2 * theta) ** 2) * Math.max(1e-8, Math.sin(theta) ** 2 * Math.cos(theta))",
+      "status": "Killed"
+    },
+    {
+      "id": "403",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 145
+        },
+        "start": {
+          "column": 15,
+          "line": 145
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "1 - Math.cos(2 * theta) ** 2",
+      "status": "Killed"
+    },
+    {
+      "id": "404",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 145
+        },
+        "start": {
+          "column": 28,
+          "line": 145
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "2 / theta",
+      "status": "Killed"
+    },
+    {
+      "id": "405",
+      "location": {
+        "end": {
+          "column": 101,
+          "line": 145
+        },
+        "start": {
+          "column": 47,
+          "line": 145
+        }
+      },
+      "mutatorName": "MethodExpression",
+      "replacement": "Math.min(1e-8, Math.sin(theta) ** 2 * Math.cos(theta))",
+      "status": "Killed"
+    },
+    {
+      "id": "406",
+      "location": {
+        "end": {
+          "column": 100,
+          "line": 145
+        },
+        "start": {
+          "column": 62,
+          "line": 145
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "Math.sin(theta) ** 2 / Math.cos(theta)",
+      "status": "Killed"
+    },
+    {
+      "id": "407",
+      "location": {
+        "end": {
+          "column": 54,
+          "line": 146
+        },
+        "start": {
+          "column": 21,
+          "line": 146
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "(real ** 2 + imaginary ** 2) / lp",
+      "status": "Killed"
+    },
+    {
+      "id": "408",
+      "location": {
+        "end": {
+          "column": 48,
+          "line": 146
+        },
+        "start": {
+          "column": 22,
+          "line": 146
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "real ** 2 - imaginary ** 2",
+      "status": "Killed"
+    },
+    {
+      "id": "411",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 153
+        },
+        "start": {
+          "column": 5,
+          "line": 153
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * basis[0][0] + k * basis[1][0] - l * basis[2][0]",
+      "status": "Survived"
+    },
+    {
+      "id": "412",
+      "location": {
+        "end": {
+          "column": 38,
+          "line": 153
+        },
+        "start": {
+          "column": 5,
+          "line": 153
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * basis[0][0] - k * basis[1][0]",
+      "status": "Survived"
+    },
+    {
+      "id": "413",
+      "location": {
+        "end": {
+          "column": 20,
+          "line": 153
+        },
+        "start": {
+          "column": 5,
+          "line": 153
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h / basis[0][0]",
+      "status": "Killed"
+    },
+    {
+      "id": "414",
+      "location": {
+        "end": {
+          "column": 38,
+          "line": 153
+        },
+        "start": {
+          "column": 23,
+          "line": 153
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "k / basis[1][0]",
+      "status": "Killed"
+    },
+    {
+      "id": "415",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 153
+        },
+        "start": {
+          "column": 41,
+          "line": 153
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "l / basis[2][0]",
+      "status": "Killed"
+    },
+    {
+      "id": "416",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 154
+        },
+        "start": {
+          "column": 5,
+          "line": 154
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * basis[0][1] + k * basis[1][1] - l * basis[2][1]",
+      "status": "Survived"
+    },
+    {
+      "id": "417",
+      "location": {
+        "end": {
+          "column": 38,
+          "line": 154
+        },
+        "start": {
+          "column": 5,
+          "line": 154
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * basis[0][1] - k * basis[1][1]",
+      "status": "Killed"
+    },
+    {
+      "id": "418",
+      "location": {
+        "end": {
+          "column": 20,
+          "line": 154
+        },
+        "start": {
+          "column": 5,
+          "line": 154
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h / basis[0][1]",
+      "status": "Killed"
+    },
+    {
+      "id": "419",
+      "location": {
+        "end": {
+          "column": 38,
+          "line": 154
+        },
+        "start": {
+          "column": 23,
+          "line": 154
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "k / basis[1][1]",
+      "status": "Killed"
+    },
+    {
+      "id": "420",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 154
+        },
+        "start": {
+          "column": 41,
+          "line": 154
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "l / basis[2][1]",
+      "status": "Killed"
+    },
+    {
+      "id": "421",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 155
+        },
+        "start": {
+          "column": 5,
+          "line": 155
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * basis[0][2] + k * basis[1][2] - l * basis[2][2]",
+      "status": "Killed"
+    },
+    {
+      "id": "422",
+      "location": {
+        "end": {
+          "column": 38,
+          "line": 155
+        },
+        "start": {
+          "column": 5,
+          "line": 155
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h * basis[0][2] - k * basis[1][2]",
+      "status": "Killed"
+    },
+    {
+      "id": "423",
+      "location": {
+        "end": {
+          "column": 20,
+          "line": 155
+        },
+        "start": {
+          "column": 5,
+          "line": 155
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "h / basis[0][2]",
+      "status": "Killed"
+    },
+    {
+      "id": "424",
+      "location": {
+        "end": {
+          "column": 38,
+          "line": 155
+        },
+        "start": {
+          "column": 23,
+          "line": 155
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "k / basis[1][2]",
+      "status": "Killed"
+    },
+    {
+      "id": "425",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 155
+        },
+        "start": {
+          "column": 41,
+          "line": 155
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "l / basis[2][2]",
+      "status": "Killed"
+    },
+    {
+      "id": "426",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 158
+        },
+        "start": {
+          "column": 20,
+          "line": 158
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "wavelength * qLength * 2",
+      "status": "Killed"
+    },
+    {
+      "id": "427",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 158
+        },
+        "start": {
+          "column": 20,
+          "line": 158
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "wavelength / qLength",
+      "status": "Killed"
+    },
+    {
+      "id": "428",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 159
+        },
+        "start": {
+          "column": 7,
+          "line": 159
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "452",
+      "location": {
+        "end": {
+          "column": 75,
+          "line": 164
+        },
+        "start": {
+          "column": 29,
+          "line": 164
+        }
+      },
+      "mutatorName": "ObjectLiteral",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "454",
+      "location": {
+        "end": {
+          "column": 2,
+          "line": 169
+        },
+        "start": {
+          "column": 74,
+          "line": 167
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "429",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 159
+        },
+        "start": {
+          "column": 7,
+          "line": 159
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Timeout"
+    },
+    {
+      "id": "430",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 159
+        },
+        "start": {
+          "column": 7,
+          "line": 159
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "sinTheta <= 0 && sinTheta >= 1",
+      "status": "Timeout"
+    },
+    {
+      "id": "431",
+      "location": {
+        "end": {
+          "column": 20,
+          "line": 159
+        },
+        "start": {
+          "column": 7,
+          "line": 159
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived"
+    },
+    {
+      "id": "432",
+      "location": {
+        "end": {
+          "column": 20,
+          "line": 159
+        },
+        "start": {
+          "column": 7,
+          "line": 159
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "sinTheta < 0",
+      "status": "Survived"
+    },
+    {
+      "id": "433",
+      "location": {
+        "end": {
+          "column": 20,
+          "line": 159
+        },
+        "start": {
+          "column": 7,
+          "line": 159
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "sinTheta > 0",
+      "status": "Killed"
+    },
+    {
+      "id": "493",
+      "location": {
+        "end": {
+          "column": 2,
+          "line": 183
+        },
+        "start": {
+          "column": 131,
+          "line": 171
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "494",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 172
+        },
+        "start": {
+          "column": 27,
+          "line": 172
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[\"Stryker was here\"]",
+      "status": "CompileError"
+    },
+    {
+      "id": "496",
+      "location": {
+        "end": {
+          "column": 42,
+          "line": 173
+        },
+        "start": {
+          "column": 28,
+          "line": 173
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "502",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 174
+        },
+        "start": {
+          "column": 30,
+          "line": 174
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "434",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 159
+        },
+        "start": {
+          "column": 24,
+          "line": 159
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Timeout"
+    },
+    {
+      "id": "508",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 175
+        },
+        "start": {
+          "column": 32,
+          "line": 175
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "435",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 159
+        },
+        "start": {
+          "column": 24,
+          "line": 159
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "sinTheta > 1",
+      "status": "Survived"
+    },
+    {
+      "id": "436",
+      "location": {
+        "end": {
+          "column": 37,
+          "line": 159
+        },
+        "start": {
+          "column": 24,
+          "line": 159
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "sinTheta < 1",
+      "status": "Killed"
+    },
+    {
+      "id": "437",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 161
+        },
+        "start": {
+          "column": 20,
+          "line": 161
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "2 * theta * DEG",
+      "status": "Killed"
+    },
+    {
+      "id": "438",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 161
+        },
+        "start": {
+          "column": 20,
+          "line": 161
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "2 / theta",
+      "status": "Killed"
+    },
+    {
+      "id": "439",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 162
+        },
+        "start": {
+          "column": 7,
+          "line": 162
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "440",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 162
+        },
+        "start": {
+          "column": 7,
+          "line": 162
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "441",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 162
+        },
+        "start": {
+          "column": 7,
+          "line": 162
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "twoTheta < MIN_TWO_THETA && twoTheta > MAX_TWO_THETA",
+      "status": "Killed"
+    },
+    {
+      "id": "442",
+      "location": {
+        "end": {
+          "column": 31,
+          "line": 162
+        },
+        "start": {
+          "column": 7,
+          "line": 162
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "513",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 176
+        },
+        "start": {
+          "column": 13,
+          "line": 176
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "CompileError"
+    },
+    {
+      "id": "443",
+      "location": {
+        "end": {
+          "column": 31,
+          "line": 162
+        },
+        "start": {
+          "column": 7,
+          "line": 162
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "twoTheta <= MIN_TWO_THETA",
+      "status": "Killed"
+    },
+    {
+      "id": "444",
+      "location": {
+        "end": {
+          "column": 31,
+          "line": 162
+        },
+        "start": {
+          "column": 7,
+          "line": 162
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "twoTheta >= MIN_TWO_THETA",
+      "status": "Killed"
+    },
+    {
+      "id": "445",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 162
+        },
+        "start": {
+          "column": 35,
+          "line": 162
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "515",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 177
+        },
+        "start": {
+          "column": 37,
+          "line": 177
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[]",
+      "status": "CompileError"
+    },
+    {
+      "id": "516",
+      "location": {
+        "end": {
+          "column": 17,
+          "line": 178
+        },
+        "start": {
+          "column": 13,
+          "line": 178
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "CompileError"
+    },
+    {
+      "id": "517",
+      "location": {
+        "end": {
+          "column": 17,
+          "line": 178
+        },
+        "start": {
+          "column": 13,
+          "line": 178
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "446",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 162
+        },
+        "start": {
+          "column": 35,
+          "line": 162
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "twoTheta >= MAX_TWO_THETA",
+      "status": "Survived"
+    },
+    {
+      "id": "447",
+      "location": {
+        "end": {
+          "column": 59,
+          "line": 162
+        },
+        "start": {
+          "column": 35,
+          "line": 162
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "twoTheta <= MAX_TWO_THETA",
+      "status": "Killed"
+    },
+    {
+      "id": "518",
+      "location": {
+        "end": {
+          "column": 34,
+          "line": 178
+        },
+        "start": {
+          "column": 19,
+          "line": 178
+        }
+      },
+      "mutatorName": "CallExpression",
+      "replacement": ";",
+      "status": "CompileError"
+    },
+    {
+      "id": "448",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 164
+        },
+        "start": {
+          "column": 10,
+          "line": 164
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "449",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 164
+        },
+        "start": {
+          "column": 10,
+          "line": 164
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "519",
+      "location": {
+        "end": {
+          "column": 2,
+          "line": 201
+        },
+        "start": {
+          "column": 56,
+          "line": 185
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "450",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 164
+        },
+        "start": {
+          "column": 10,
+          "line": 164
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "intensity >= 1e-8",
+      "status": "Killed"
+    },
+    {
+      "id": "522",
+      "location": {
+        "end": {
+          "column": 45,
+          "line": 186
+        },
+        "start": {
+          "column": 12,
+          "line": 186
+        }
+      },
+      "mutatorName": "ArrowFunction",
+      "replacement": "() => undefined",
+      "status": "CompileError"
+    },
+    {
+      "id": "451",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 164
+        },
+        "start": {
+          "column": 10,
+          "line": 164
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "intensity <= 1e-8",
+      "status": "Killed"
+    },
+    {
+      "id": "453",
+      "location": {
+        "end": {
+          "column": 73,
+          "line": 164
+        },
+        "start": {
+          "column": 57,
+          "line": 164
+        }
+      },
+      "mutatorName": "StringLiteral",
+      "replacement": "``",
+      "status": "Killed"
+    },
+    {
+      "id": "455",
+      "location": {
+        "end": {
+          "column": 105,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "456",
+      "location": {
+        "end": {
+          "column": 105,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "457",
+      "location": {
+        "end": {
+          "column": 105,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "(h === 0 && k === 0 && l === 0 || h < 0 || h === 0 && k < 0) && h === 0 && k === 0 && l < 0",
+      "status": "Killed"
+    },
+    {
+      "id": "524",
+      "location": {
+        "end": {
+          "column": 32,
+          "line": 187
+        },
+        "start": {
+          "column": 30,
+          "line": 187
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[\"Stryker was here\"]",
+      "status": "CompileError"
+    },
+    {
+      "id": "458",
+      "location": {
+        "end": {
+          "column": 72,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "459",
+      "location": {
+        "end": {
+          "column": 72,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "(h === 0 && k === 0 && l === 0 || h < 0) && h === 0 && k < 0",
+      "status": "Killed"
+    },
+    {
+      "id": "460",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "461",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 168
+        },
+        "start": {
+          "column": 10,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "h === 0 && k === 0 && l === 0 && h < 0",
+      "status": "Killed"
+    },
+    {
+      "id": "527",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 190
+        },
+        "start": {
+          "column": 9,
+          "line": 190
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "CompileError"
+    },
+    {
+      "id": "528",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 190
+        },
+        "start": {
+          "column": 9,
+          "line": 190
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "529",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 190
+        },
+        "start": {
+          "column": 9,
+          "line": 190
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "previous || Math.abs(previous.twoTheta - peak.twoTheta) < 1e-7",
+      "status": "CompileError"
+    },
+    {
+      "id": "462",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 168
+        },
+        "start": {
+          "column": 11,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived"
+    },
+    {
+      "id": "463",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 168
+        },
+        "start": {
+          "column": 11,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "h === 0 && k === 0 || l === 0",
+      "status": "Killed"
+    },
+    {
+      "id": "464",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 168
+        },
+        "start": {
+          "column": 11,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "465",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 168
+        },
+        "start": {
+          "column": 11,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "h === 0 || k === 0",
+      "status": "Killed"
+    },
+    {
+      "id": "466",
+      "location": {
+        "end": {
+          "column": 18,
+          "line": 168
+        },
+        "start": {
+          "column": 11,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "467",
+      "location": {
+        "end": {
+          "column": 18,
+          "line": 168
+        },
+        "start": {
+          "column": 11,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "468",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 168
+        },
+        "start": {
+          "column": 22,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "469",
+      "location": {
+        "end": {
+          "column": 29,
+          "line": 168
+        },
+        "start": {
+          "column": 22,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "470",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 168
+        },
+        "start": {
+          "column": 33,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "471",
+      "location": {
+        "end": {
+          "column": 40,
+          "line": 168
+        },
+        "start": {
+          "column": 33,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "l !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "472",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 168
+        },
+        "start": {
+          "column": 45,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "473",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 168
+        },
+        "start": {
+          "column": 45,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h <= 0",
+      "status": "Killed"
+    },
+    {
+      "id": "474",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 168
+        },
+        "start": {
+          "column": 45,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h >= 0",
+      "status": "Killed"
+    },
+    {
+      "id": "475",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 168
+        },
+        "start": {
+          "column": 55,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "476",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 168
+        },
+        "start": {
+          "column": 55,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "h === 0 || k < 0",
+      "status": "Killed"
+    },
+    {
+      "id": "477",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 168
+        },
+        "start": {
+          "column": 55,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "478",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 168
+        },
+        "start": {
+          "column": 55,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "479",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 168
+        },
+        "start": {
+          "column": 66,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "480",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 168
+        },
+        "start": {
+          "column": 66,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k <= 0",
+      "status": "Killed"
+    },
+    {
+      "id": "481",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 168
+        },
+        "start": {
+          "column": 66,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k >= 0",
+      "status": "Killed"
+    },
+    {
+      "id": "482",
+      "location": {
+        "end": {
+          "column": 104,
+          "line": 168
+        },
+        "start": {
+          "column": 77,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "483",
+      "location": {
+        "end": {
+          "column": 104,
+          "line": 168
+        },
+        "start": {
+          "column": 77,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "h === 0 && k === 0 || l < 0",
+      "status": "Killed"
+    },
+    {
+      "id": "484",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 168
+        },
+        "start": {
+          "column": 77,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "485",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 168
+        },
+        "start": {
+          "column": 77,
+          "line": 168
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "h === 0 || k === 0",
+      "status": "Killed"
+    },
+    {
+      "id": "486",
+      "location": {
+        "end": {
+          "column": 84,
+          "line": 168
+        },
+        "start": {
+          "column": 77,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "487",
+      "location": {
+        "end": {
+          "column": 84,
+          "line": 168
+        },
+        "start": {
+          "column": 77,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "488",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 168
+        },
+        "start": {
+          "column": 88,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "489",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 168
+        },
+        "start": {
+          "column": 88,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "542",
+      "location": {
+        "end": {
+          "column": 30,
+          "line": 196
+        },
+        "start": {
+          "column": 19,
+          "line": 196
+        }
+      },
+      "mutatorName": "ObjectLiteral",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "490",
+      "location": {
+        "end": {
+          "column": 104,
+          "line": 168
+        },
+        "start": {
+          "column": 99,
+          "line": 168
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "543",
+      "location": {
+        "end": {
+          "column": 81,
+          "line": 199
+        },
+        "start": {
+          "column": 33,
+          "line": 199
+        }
+      },
+      "mutatorName": "ArrowFunction",
+      "replacement": "() => undefined",
+      "status": "CompileError"
+    },
+    {
+      "id": "491",
+      "location": {
+        "end": {
+          "column": 104,
+          "line": 168
+        },
+        "start": {
+          "column": 99,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "l <= 0",
+      "status": "Survived"
+    },
+    {
+      "id": "492",
+      "location": {
+        "end": {
+          "column": 104,
+          "line": 168
+        },
+        "start": {
+          "column": 99,
+          "line": 168
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "l >= 0",
+      "status": "Killed"
+    },
+    {
+      "id": "495",
+      "location": {
+        "end": {
+          "column": 26,
+          "line": 173
+        },
+        "start": {
+          "column": 16,
+          "line": 173
+        }
+      },
+      "mutatorName": "UnaryOperator",
+      "replacement": "+limits[0]",
+      "status": "Killed"
+    },
+    {
+      "id": "497",
+      "location": {
+        "end": {
+          "column": 42,
+          "line": 173
+        },
+        "start": {
+          "column": 28,
+          "line": 173
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h < limits[0]",
+      "status": "Killed"
+    },
+    {
+      "id": "548",
+      "location": {
+        "end": {
+          "column": 28,
+          "line": 200
+        },
+        "start": {
+          "column": 26,
+          "line": 200
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[\"Stryker was here\"]",
+      "status": "CompileError"
+    },
+    {
+      "id": "498",
+      "location": {
+        "end": {
+          "column": 42,
+          "line": 173
+        },
+        "start": {
+          "column": 28,
+          "line": 173
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "h > limits[0]",
+      "status": "Killed"
+    },
+    {
+      "id": "549",
+      "location": {
+        "end": {
+          "column": 108,
+          "line": 200
+        },
+        "start": {
+          "column": 42,
+          "line": 200
+        }
+      },
+      "mutatorName": "ArrowFunction",
+      "replacement": "() => undefined",
+      "status": "CompileError"
+    },
+    {
+      "id": "550",
+      "location": {
+        "end": {
+          "column": 107,
+          "line": 200
+        },
+        "start": {
+          "column": 53,
+          "line": 200
+        }
+      },
+      "mutatorName": "ObjectLiteral",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "553",
+      "location": {
+        "end": {
+          "column": 2,
+          "line": 217
+        },
+        "start": {
+          "column": 15,
+          "line": 208
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "CompileError"
+    },
+    {
+      "id": "554",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 211
+        },
+        "start": {
+          "column": 7,
+          "line": 211
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "CompileError"
+    },
+    {
+      "id": "555",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 211
+        },
+        "start": {
+          "column": 7,
+          "line": 211
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "CompileError"
+    },
+    {
+      "id": "556",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 211
+        },
+        "start": {
+          "column": 7,
+          "line": 211
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "!basis && atoms.length === 0",
+      "status": "CompileError"
+    },
+    {
+      "id": "557",
+      "location": {
+        "end": {
+          "column": 13,
+          "line": 211
+        },
+        "start": {
+          "column": 7,
+          "line": 211
+        }
+      },
+      "mutatorName": "BooleanLiteral",
+      "replacement": "basis",
+      "status": "CompileError"
+    },
+    {
+      "id": "499",
+      "location": {
+        "end": {
+          "column": 50,
+          "line": 173
+        },
+        "start": {
+          "column": 44,
+          "line": 173
+        }
+      },
+      "mutatorName": "AssignmentOperator",
+      "replacement": "h -= 1",
+      "status": "Timeout"
+    },
+    {
+      "id": "560",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 211
+        },
+        "start": {
+          "column": 44,
+          "line": 211
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[\"Stryker was here\"]",
+      "status": "CompileError"
+    },
+    {
+      "id": "500",
+      "location": {
+        "end": {
+          "column": 4,
+          "line": 181
+        },
+        "start": {
+          "column": 52,
+          "line": 173
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "501",
+      "location": {
+        "end": {
+          "column": 28,
+          "line": 174
+        },
+        "start": {
+          "column": 18,
+          "line": 174
+        }
+      },
+      "mutatorName": "UnaryOperator",
+      "replacement": "+limits[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "565",
+      "location": {
+        "end": {
+          "column": 151,
+          "line": 214
+        },
+        "start": {
+          "column": 19,
+          "line": 214
+        }
+      },
+      "mutatorName": "ArrayDeclaration",
+      "replacement": "[]",
+      "status": "CompileError"
+    },
+    {
+      "id": "503",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 174
+        },
+        "start": {
+          "column": 30,
+          "line": 174
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k < limits[1]",
+      "status": "Survived"
+    },
+    {
+      "id": "504",
+      "location": {
+        "end": {
+          "column": 44,
+          "line": 174
+        },
+        "start": {
+          "column": 30,
+          "line": 174
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "k > limits[1]",
+      "status": "Killed"
+    },
+    {
+      "id": "566",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 214
+        },
+        "start": {
+          "column": 20,
+          "line": 214
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "entry.cell_a_angstrom && entry.cell_a * 10",
+      "status": "CompileError"
+    },
+    {
+      "id": "568",
+      "location": {
+        "end": {
+          "column": 106,
+          "line": 214
+        },
+        "start": {
+          "column": 64,
+          "line": 214
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "entry.cell_b_angstrom && entry.cell_b * 10",
+      "status": "CompileError"
+    },
+    {
+      "id": "570",
+      "location": {
+        "end": {
+          "column": 150,
+          "line": 214
+        },
+        "start": {
+          "column": 108,
+          "line": 214
+        }
+      },
+      "mutatorName": "LogicalOperator",
+      "replacement": "entry.cell_c_angstrom && entry.cell_c * 10",
+      "status": "CompileError"
+    },
+    {
+      "id": "572",
+      "location": {
+        "end": {
+          "column": 97,
+          "line": 215
+        },
+        "start": {
+          "column": 30,
+          "line": 215
+        }
+      },
+      "mutatorName": "ArrowFunction",
+      "replacement": "() => undefined",
+      "status": "CompileError"
+    },
+    {
+      "id": "505",
+      "location": {
+        "end": {
+          "column": 52,
+          "line": 174
+        },
+        "start": {
+          "column": 46,
+          "line": 174
+        }
+      },
+      "mutatorName": "AssignmentOperator",
+      "replacement": "k -= 1",
+      "status": "Timeout"
+    },
+    {
+      "id": "506",
+      "location": {
+        "end": {
+          "column": 6,
+          "line": 180
+        },
+        "start": {
+          "column": 54,
+          "line": 174
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "507",
+      "location": {
+        "end": {
+          "column": 30,
+          "line": 175
+        },
+        "start": {
+          "column": 20,
+          "line": 175
+        }
+      },
+      "mutatorName": "UnaryOperator",
+      "replacement": "+limits[2]",
+      "status": "Killed"
+    },
+    {
+      "id": "509",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 175
+        },
+        "start": {
+          "column": 32,
+          "line": 175
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "l < limits[2]",
+      "status": "Killed"
+    },
+    {
+      "id": "510",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 175
+        },
+        "start": {
+          "column": 32,
+          "line": 175
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "l > limits[2]",
+      "status": "Killed"
+    },
+    {
+      "id": "511",
+      "location": {
+        "end": {
+          "column": 54,
+          "line": 175
+        },
+        "start": {
+          "column": 48,
+          "line": 175
+        }
+      },
+      "mutatorName": "AssignmentOperator",
+      "replacement": "l -= 1",
+      "status": "Timeout"
+    },
+    {
+      "id": "512",
+      "location": {
+        "end": {
+          "column": 8,
+          "line": 179
+        },
+        "start": {
+          "column": 56,
+          "line": 175
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "514",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 176
+        },
+        "start": {
+          "column": 13,
+          "line": 176
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Killed"
+    },
+    {
+      "id": "521",
+      "location": {
+        "end": {
+          "column": 46,
+          "line": 186
+        },
+        "start": {
+          "column": 3,
+          "line": 186
+        }
+      },
+      "mutatorName": "MethodExpression",
+      "replacement": "raw",
+      "status": "Killed"
+    },
+    {
+      "id": "523",
+      "location": {
+        "end": {
+          "column": 45,
+          "line": 186
+        },
+        "start": {
+          "column": 22,
+          "line": 186
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "a.twoTheta + b.twoTheta",
+      "status": "Killed"
+    },
+    {
+      "id": "525",
+      "location": {
+        "end": {
+          "column": 4,
+          "line": 198
+        },
+        "start": {
+          "column": 27,
+          "line": 188
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "526",
+      "location": {
+        "end": {
+          "column": 34,
+          "line": 189
+        },
+        "start": {
+          "column": 32,
+          "line": 189
+        }
+      },
+      "mutatorName": "UnaryOperator",
+      "replacement": "+1",
+      "status": "Killed"
+    },
+    {
+      "id": "530",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 190
+        },
+        "start": {
+          "column": 21,
+          "line": 190
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "531",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 190
+        },
+        "start": {
+          "column": 21,
+          "line": 190
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "Math.abs(previous.twoTheta - peak.twoTheta) <= 1e-7",
+      "status": "Survived"
+    },
+    {
+      "id": "532",
+      "location": {
+        "end": {
+          "column": 71,
+          "line": 190
+        },
+        "start": {
+          "column": 21,
+          "line": 190
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "Math.abs(previous.twoTheta - peak.twoTheta) >= 1e-7",
+      "status": "Killed"
+    },
+    {
+      "id": "533",
+      "location": {
+        "end": {
+          "column": 63,
+          "line": 190
+        },
+        "start": {
+          "column": 30,
+          "line": 190
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "previous.twoTheta + peak.twoTheta",
+      "status": "Killed"
+    },
+    {
+      "id": "534",
+      "location": {
+        "end": {
+          "column": 6,
+          "line": 195
+        },
+        "start": {
+          "column": 73,
+          "line": 190
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "535",
+      "location": {
+        "end": {
+          "column": 56,
+          "line": 191
+        },
+        "start": {
+          "column": 21,
+          "line": 191
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "previous.intensity - peak.intensity",
+      "status": "Killed"
+    },
+    {
+      "id": "536",
+      "location": {
+        "end": {
+          "column": 108,
+          "line": 193
+        },
+        "start": {
+          "column": 27,
+          "line": 193
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "(previous.twoTheta * previous.intensity + peak.twoTheta * peak.intensity) * total",
+      "status": "Killed"
+    },
+    {
+      "id": "537",
+      "location": {
+        "end": {
+          "column": 99,
+          "line": 193
+        },
+        "start": {
+          "column": 28,
+          "line": 193
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "previous.twoTheta * previous.intensity - peak.twoTheta * peak.intensity",
+      "status": "Killed"
+    },
+    {
+      "id": "538",
+      "location": {
+        "end": {
+          "column": 66,
+          "line": 193
+        },
+        "start": {
+          "column": 28,
+          "line": 193
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "previous.twoTheta / previous.intensity",
+      "status": "Killed"
+    },
+    {
+      "id": "539",
+      "location": {
+        "end": {
+          "column": 99,
+          "line": 193
+        },
+        "start": {
+          "column": 69,
+          "line": 193
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "peak.twoTheta / peak.intensity",
+      "status": "Killed"
+    },
+    {
+      "id": "540",
+      "location": {
+        "end": {
+          "column": 6,
+          "line": 197
+        },
+        "start": {
+          "column": 12,
+          "line": 195
+        }
+      },
+      "mutatorName": "BlockStatement",
+      "replacement": "{}",
+      "status": "Killed"
+    },
+    {
+      "id": "544",
+      "location": {
+        "end": {
+          "column": 81,
+          "line": 199
+        },
+        "start": {
+          "column": 50,
+          "line": 199
+        }
+      },
+      "mutatorName": "MethodExpression",
+      "replacement": "Math.min(value, peak.intensity)",
+      "status": "Killed"
+    },
+    {
+      "id": "545",
+      "location": {
+        "end": {
+          "column": 23,
+          "line": 200
+        },
+        "start": {
+          "column": 10,
+          "line": 200
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "true",
+      "status": "Killed"
+    },
+    {
+      "id": "546",
+      "location": {
+        "end": {
+          "column": 23,
+          "line": 200
+        },
+        "start": {
+          "column": 10,
+          "line": 200
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived"
+    },
+    {
+      "id": "547",
+      "location": {
+        "end": {
+          "column": 23,
+          "line": 200
+        },
+        "start": {
+          "column": 10,
+          "line": 200
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "maximum !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "551",
+      "location": {
+        "end": {
+          "column": 105,
+          "line": 200
+        },
+        "start": {
+          "column": 75,
+          "line": 200
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "peak.intensity * 100 * maximum",
+      "status": "Killed"
+    },
+    {
+      "id": "552",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 200
+        },
+        "start": {
+          "column": 75,
+          "line": 200
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "peak.intensity / 100",
+      "status": "Killed"
+    },
+    {
+      "id": "558",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 211
+        },
+        "start": {
+          "column": 17,
+          "line": 211
+        }
+      },
+      "mutatorName": "ConditionalExpression",
+      "replacement": "false",
+      "status": "Survived"
+    },
+    {
+      "id": "559",
+      "location": {
+        "end": {
+          "column": 35,
+          "line": 211
+        },
+        "start": {
+          "column": 17,
+          "line": 211
+        }
+      },
+      "mutatorName": "EqualityOperator",
+      "replacement": "atoms.length !== 0",
+      "status": "Killed"
+    },
+    {
+      "id": "561",
+      "location": {
+        "end": {
+          "column": 43,
+          "line": 212
+        },
+        "start": {
+          "column": 20,
+          "line": 212
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "MAX_TWO_THETA * DEG * 2",
+      "status": "Killed"
+    },
+    {
+      "id": "562",
+      "location": {
+        "end": {
+          "column": 39,
+          "line": 212
+        },
+        "start": {
+          "column": 20,
+          "line": 212
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "MAX_TWO_THETA / DEG",
+      "status": "Killed"
+    },
+    {
+      "id": "563",
+      "location": {
+        "end": {
+          "column": 53,
+          "line": 213
+        },
+        "start": {
+          "column": 16,
+          "line": 213
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "wavelength * (2 * Math.sin(thetaMax))",
+      "status": "Killed"
+    },
+    {
+      "id": "564",
+      "location": {
+        "end": {
+          "column": 52,
+          "line": 213
+        },
+        "start": {
+          "column": 30,
+          "line": 213
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "2 / Math.sin(thetaMax)",
+      "status": "Survived"
+    },
+    {
+      "id": "567",
+      "location": {
+        "end": {
+          "column": 62,
+          "line": 214
+        },
+        "start": {
+          "column": 45,
+          "line": 214
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "entry.cell_a / 10",
+      "status": "Killed"
+    },
+    {
+      "id": "569",
+      "location": {
+        "end": {
+          "column": 106,
+          "line": 214
+        },
+        "start": {
+          "column": 89,
+          "line": 214
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "entry.cell_b / 10",
+      "status": "Killed"
+    },
+    {
+      "id": "571",
+      "location": {
+        "end": {
+          "column": 150,
+          "line": 214
+        },
+        "start": {
+          "column": 133,
+          "line": 214
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "entry.cell_c / 10",
+      "status": "Killed"
+    },
+    {
+      "id": "573",
+      "location": {
+        "end": {
+          "column": 97,
+          "line": 215
+        },
+        "start": {
+          "column": 42,
+          "line": 215
+        }
+      },
+      "mutatorName": "MethodExpression",
+      "replacement": "Math.max(36, Math.max(1, Math.ceil(length / dMin) + 1))",
+      "status": "Timeout"
+    },
+    {
+      "id": "574",
+      "location": {
+        "end": {
+          "column": 96,
+          "line": 215
+        },
+        "start": {
+          "column": 55,
+          "line": 215
+        }
+      },
+      "mutatorName": "MethodExpression",
+      "replacement": "Math.min(1, Math.ceil(length / dMin) + 1)",
+      "status": "Killed"
+    },
+    {
+      "id": "575",
+      "location": {
+        "end": {
+          "column": 95,
+          "line": 215
+        },
+        "start": {
+          "column": 67,
+          "line": 215
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "Math.ceil(length / dMin) - 1",
+      "status": "Killed"
+    },
+    {
+      "id": "576",
+      "location": {
+        "end": {
+          "column": 90,
+          "line": 215
+        },
+        "start": {
+          "column": 77,
+          "line": 215
+        }
+      },
+      "mutatorName": "ArithmeticOperator",
+      "replacement": "length * dMin",
+      "status": "Killed"
+    }
+  ],
+  "affectedStageReview": [
+    {
+      "id": "398",
+      "status": "Survived",
+      "reason": "Negates the complete real structure-factor sum; its square is unchanged."
+    },
+    {
+      "id": "400",
+      "status": "Survived",
+      "reason": "Negates the complete imaginary structure-factor sum; its square is unchanged."
+    },
+    {
+      "id": "411",
+      "status": "Survived",
+      "reason": "The c-star x component is identically zero in this triangular reciprocal basis."
+    },
+    {
+      "id": "412",
+      "status": "Survived",
+      "reason": "The b-star x component is identically zero in this triangular reciprocal basis."
+    },
+    {
+      "id": "416",
+      "status": "Survived",
+      "reason": "The c-star y component is identically zero in this triangular reciprocal basis."
+    },
+    {
+      "id": "429",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    },
+    {
+      "id": "430",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    },
+    {
+      "id": "431",
+      "status": "Survived",
+      "reason": "The nonnegative reciprocal norm and subsequent 5-degree filter reject zero-angle reflections."
+    },
+    {
+      "id": "432",
+      "status": "Survived",
+      "reason": "The subsequent 5-degree filter still rejects sin(theta)=0."
+    },
+    {
+      "id": "434",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    },
+    {
+      "id": "435",
+      "status": "Survived",
+      "reason": "sin(theta)=1 gives 180 degrees, rejected by the later 80-degree filter."
+    },
+    {
+      "id": "446",
+      "status": "Survived",
+      "reason": "Exact 80-degree equality is skipped by adjacent asin inputs on the measured Node22 runtime; retained numerical boundary limitation."
+    },
+    {
+      "id": "462",
+      "status": "Survived",
+      "reason": "The origin reciprocal vector is still rejected by the sin(theta) and angular filters."
+    },
+    {
+      "id": "491",
+      "status": "Survived",
+      "reason": "The all-zero origin is already excluded by the first disjunct."
+    },
+    {
+      "id": "499",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    },
+    {
+      "id": "503",
+      "status": "Survived",
+      "reason": "Reachable capped-k endpoint assertion gap; killed by the separately retained all-axis supplemental run."
+    },
+    {
+      "id": "505",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    },
+    {
+      "id": "511",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    },
+    {
+      "id": "531",
+      "status": "Survived",
+      "reason": "Angles in the supported interval have binary64 spacing at least 2^-50; their near-zero difference cannot equal the finer binary representation of 1e-7."
+    },
+    {
+      "id": "546",
+      "status": "Survived",
+      "reason": "An empty merged array maps to an empty array; nonempty retained intensities are positive."
+    },
+    {
+      "id": "558",
+      "status": "Survived",
+      "reason": "Removing the empty-expanded-atom shortcut still produces an empty peak array when no atoms contribute; public input validation also rejects unavailable sites."
+    },
+    {
+      "id": "564",
+      "status": "Survived",
+      "reason": "Smaller dMin only enlarges enumeration to the same cap; the unchanged angular filter removes extra out-of-range reflections. Extra-work behavior, not a numerical assertion kill."
+    },
+    {
+      "id": "573",
+      "status": "Timeout",
+      "reason": "Measured timeout remains separate from assertion kills; removing early range filters, enlarging bounds or reversing increments increases/nonterminates work."
+    }
+  ],
+  "supplement": "simplification-axis.json"
+}

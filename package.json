@@ -34,6 +34,7 @@
     "test:coverage": "vitest run --coverage",
     "test:mutation": "node scripts/quality/run-mutation.mjs",
     "quality:regression": "node scripts/quality/regression.mjs",
+    "quality:duplication": "node scripts/quality/duplication.mjs",
     "quality:regression:capture": "node scripts/quality/regression.mjs --capture",
     "quality:unused": "npm run typecheck && knip",
     "quality:unused:test": "node scripts/verify-unused-checks.mjs",

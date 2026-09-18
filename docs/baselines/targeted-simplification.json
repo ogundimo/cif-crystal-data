@@ -1,0 +1,2072 @@
+{
+  "schemaVersion": 1,
+  "baseCommit": "5e23e57dfc7927d1f51fbc10a7b3f0e7e6d64eff",
+  "node": "v22.23.2",
+  "tools": {
+    "vitest": "4.1.11",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "@typescript-eslint/parser": "8.70.0",
+    "eslint-plugin-sonarjs": "4.2.0",
+    "jscpd": "4.3.0"
+  },
+  "characterization": {
+    "baseCommit": "5e23e57dfc7927d1f51fbc10a7b3f0e7e6d64eff",
+    "node": "v22.23.2",
+    "tolerance": "Exact deep equality, including labels, diagnostics and exported text; zero numerical tolerance.",
+    "parser": {
+      "hashes": {
+        "before": "caf94325d317bf8aa8232e095258e37f45389169014170cabd2cbdadfa62d0f0",
+        "after": "dae5dac31df7a7cd7ad4d1ba0b30cf7020a70074674dc567d59fa56a43385b22"
+      },
+      "fixtures": [
+        {
+          "file": "docs/samples/rocksalt-demo.cif",
+          "sha256": "6a09dc49acc7af11c5f8f778eecf10e076ba8c17cc3c26f3f5964ca7e5a4222d",
+          "cases": 97
+        },
+        {
+          "file": "src/parser/__fixtures__/synthetic-test.cif",
+          "sha256": "bc88f245023eb77ef8e190383fc753fed671d2737b4cf633df35baaf5481235f",
+          "cases": 97
+        }
+      ]
+    },
+    "pxrd": {
+      "hashes": {
+        "before": "f48ceb8364807574c211e2468842f22d571b993254b5864cdf516156a7ab382e",
+        "after": "a4075aba7ba08abda013abfe665345d8eb6a602076a9444459ce6bb9db3dfbea"
+      },
+      "models": [
+        {
+          "name": "cubic",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4,
+            "cell_b_angstrom": 4,
+            "cell_c_angstrom": 4,
+            "cell_angle_alpha": 90,
+            "cell_angle_beta": 90,
+            "cell_angle_gamma": 90,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 1,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            }
+          ]
+        },
+        {
+          "name": "triclinic mixed sites",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4.1,
+            "cell_b_angstrom": 5.3,
+            "cell_c_angstrom": 6.7,
+            "cell_angle_alpha": 73,
+            "cell_angle_beta": 82,
+            "cell_angle_gamma": 67,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 1,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            },
+            {
+              "type_symbol": "Fe",
+              "site_label": "Na1",
+              "fract_x": 0.17,
+              "fract_y": 0.23,
+              "fract_z": 0.37,
+              "occupancy": 0.6,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0.8
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            }
+          ]
+        },
+        {
+          "name": "body-centred extinction",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4,
+            "cell_b_angstrom": 4,
+            "cell_c_angstrom": 4,
+            "cell_angle_alpha": 90,
+            "cell_angle_beta": 90,
+            "cell_angle_gamma": 90,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 1,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            },
+            {
+              "operation_xyz": "x+1/2,y+1/2,z+1/2"
+            }
+          ]
+        },
+        {
+          "name": "thirds translations",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4,
+            "cell_b_angstrom": 4,
+            "cell_c_angstrom": 4,
+            "cell_angle_alpha": 90,
+            "cell_angle_beta": 90,
+            "cell_angle_gamma": 90,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 1,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            },
+            {
+              "operation_xyz": "x,y,z+1/3"
+            },
+            {
+              "operation_xyz": "x,y,z+2/3"
+            }
+          ]
+        },
+        {
+          "name": "capped search",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4,
+            "cell_b_angstrom": 4,
+            "cell_c_angstrom": 60,
+            "cell_angle_alpha": 90,
+            "cell_angle_beta": 90,
+            "cell_angle_gamma": 90,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 1,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            }
+          ]
+        },
+        {
+          "name": "invalid geometry",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4,
+            "cell_b_angstrom": 4,
+            "cell_c_angstrom": 4,
+            "cell_angle_alpha": 90,
+            "cell_angle_beta": 90,
+            "cell_angle_gamma": 0,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 1,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            }
+          ]
+        },
+        {
+          "name": "zero occupancy",
+          "entry": {
+            "sg_number": 1,
+            "cell_a": 0.4,
+            "cell_b": 0.4,
+            "cell_c": 0.4,
+            "cell_a_angstrom": 4,
+            "cell_b_angstrom": 4,
+            "cell_c_angstrom": 4,
+            "cell_angle_alpha": 90,
+            "cell_angle_beta": 90,
+            "cell_angle_gamma": 90,
+            "radiation_wavelength_angstrom": 1.5406
+          },
+          "sites": [
+            {
+              "type_symbol": "Na",
+              "site_label": "Na1",
+              "fract_x": 0,
+              "fract_y": 0,
+              "fract_z": 0,
+              "occupancy": 0,
+              "u_iso_or_equiv": 0,
+              "b_iso_or_equiv": 0
+            }
+          ],
+          "operations": [
+            {
+              "operation_xyz": "x,y,z"
+            }
+          ]
+        }
+      ],
+      "cases": [
+        {
+          "model": "cubic",
+          "wavelength": 1.5406,
+          "peaks": 10,
+          "status": "complete"
+        },
+        {
+          "model": "cubic",
+          "wavelength": 0.7107,
+          "peaks": 45,
+          "status": "complete"
+        },
+        {
+          "model": "cubic",
+          "wavelength": 1.7902,
+          "peaks": 7,
+          "status": "complete"
+        },
+        {
+          "model": "cubic",
+          "wavelength": 0.5609,
+          "peaks": 72,
+          "status": "complete"
+        },
+        {
+          "model": "triclinic mixed sites",
+          "wavelength": 1.5406,
+          "peaks": 160,
+          "status": "complete"
+        },
+        {
+          "model": "triclinic mixed sites",
+          "wavelength": 0.7107,
+          "peaks": 1593,
+          "status": "complete"
+        },
+        {
+          "model": "triclinic mixed sites",
+          "wavelength": 1.7902,
+          "peaks": 97,
+          "status": "complete"
+        },
+        {
+          "model": "triclinic mixed sites",
+          "wavelength": 0.5609,
+          "peaks": 3219,
+          "status": "complete"
+        },
+        {
+          "model": "body-centred extinction",
+          "wavelength": 1.5406,
+          "peaks": 5,
+          "status": "complete"
+        },
+        {
+          "model": "body-centred extinction",
+          "wavelength": 0.7107,
+          "peaks": 25,
+          "status": "complete"
+        },
+        {
+          "model": "body-centred extinction",
+          "wavelength": 1.7902,
+          "peaks": 4,
+          "status": "complete"
+        },
+        {
+          "model": "body-centred extinction",
+          "wavelength": 0.5609,
+          "peaks": 40,
+          "status": "complete"
+        },
+        {
+          "model": "thirds translations",
+          "wavelength": 1.5406,
+          "peaks": 8,
+          "status": "complete"
+        },
+        {
+          "model": "thirds translations",
+          "wavelength": 0.7107,
+          "peaks": 35,
+          "status": "complete"
+        },
+        {
+          "model": "thirds translations",
+          "wavelength": 1.7902,
+          "peaks": 5,
+          "status": "complete"
+        },
+        {
+          "model": "thirds translations",
+          "wavelength": 0.5609,
+          "peaks": 56,
+          "status": "complete"
+        },
+        {
+          "model": "capped search",
+          "wavelength": 1.5406,
+          "peaks": 218,
+          "status": "incomplete"
+        },
+        {
+          "model": "capped search",
+          "wavelength": 0.7107,
+          "peaks": 817,
+          "status": "incomplete"
+        },
+        {
+          "model": "capped search",
+          "wavelength": 1.7902,
+          "peaks": 156,
+          "status": "incomplete"
+        },
+        {
+          "model": "capped search",
+          "wavelength": 0.5609,
+          "peaks": 1243,
+          "status": "incomplete"
+        },
+        {
+          "model": "invalid geometry",
+          "wavelength": 1.5406,
+          "peaks": 0,
+          "status": "unsupported"
+        },
+        {
+          "model": "invalid geometry",
+          "wavelength": 0.7107,
+          "peaks": 0,
+          "status": "unsupported"
+        },
+        {
+          "model": "invalid geometry",
+          "wavelength": 1.7902,
+          "peaks": 0,
+          "status": "unsupported"
+        },
+        {
+          "model": "invalid geometry",
+          "wavelength": 0.5609,
+          "peaks": 0,
+          "status": "unsupported"
+        },
+        {
+          "model": "zero occupancy",
+          "wavelength": 1.5406,
+          "peaks": 0,
+          "status": "complete"
+        },
+        {
+          "model": "zero occupancy",
+          "wavelength": 0.7107,
+          "peaks": 0,
+          "status": "complete"
+        },
+        {
+          "model": "zero occupancy",
+          "wavelength": 1.7902,
+          "peaks": 0,
+          "status": "complete"
+        },
+        {
+          "model": "zero occupancy",
+          "wavelength": 0.5609,
+          "peaks": 0,
+          "status": "complete"
+        }
+      ]
+    }
+  },
+  "boundaryReference": {
+    "node": "v22.23.2",
+    "reflectionCounts": [
+      {
+        "scale": 4.003265380859375,
+        "count": 10000,
+        "minAngle": 5.037121924177924,
+        "maxAngle": 79.99816698244447,
+        "minimumGap": 8.487530891443384e-7
+      },
+      {
+        "scale": 4.0035400390625,
+        "count": 10003,
+        "minAngle": 5.036776135572382,
+        "maxAngle": 79.99837387424874,
+        "minimumGap": 8.486696856380149e-7
+      }
+    ],
+    "rawIntensity": 1e-8,
+    "adjacentAngles": [
+      79.99999999999999,
+      80.00000000000001
+    ]
+  },
+  "measurements": {
+    "before": {
+      "coverage": {
+        "lines": {
+          "total": 3074,
+          "covered": 1720,
+          "pct": 55.95
+        },
+        "statements": {
+          "total": 3809,
+          "covered": 2081,
+          "pct": 54.63
+        },
+        "functions": {
+          "total": 851,
+          "covered": 364,
+          "pct": 42.77
+        },
+        "branches": {
+          "total": 2896,
+          "covered": 1435,
+          "pct": 49.55
+        }
+      },
+      "complexity": {
+        "cyclomatic": [
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 220,
+            "column": 8,
+            "value": 45,
+            "message": "Function 'calculatePxrd' has a complexity of 45. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 66,
+            "column": 8,
+            "value": 44,
+            "message": "Function 'normalizeCif' has a complexity of 44. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 132,
+            "column": 1,
+            "value": 28,
+            "message": "Function 'calculatePeaks' has a complexity of 28. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 112,
+            "column": 1,
+            "value": 16,
+            "message": "Function 'reciprocalBasis' has a complexity of 16. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 47,
+            "column": 1,
+            "value": 14,
+            "message": "Function 'parseCoordinate' has a complexity of 14. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 86,
+            "column": 1,
+            "value": 14,
+            "message": "Function 'expandAtoms' has a complexity of 14. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 275,
+            "column": 8,
+            "value": 13,
+            "message": "Function 'createPxrdProfile' has a complexity of 13. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 195,
+            "column": 1,
+            "value": 11,
+            "message": "Function 'validOperation' has a complexity of 11. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 29,
+            "column": 8,
+            "value": 9,
+            "message": "Function 'buildReference' has a complexity of 9. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 6,
+            "column": 8,
+            "value": 6,
+            "message": "Function 'calculateUnitCellVolume' has a complexity of 6. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 77,
+            "column": 1,
+            "value": 5,
+            "message": "Function 'elementAtomicNumber' has a complexity of 5. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 96,
+            "column": 51,
+            "value": 4,
+            "message": "Arrow function has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 234,
+            "column": 25,
+            "value": 4,
+            "message": "Arrow function has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 305,
+            "column": 8,
+            "value": 4,
+            "message": "Function 'serializePxrdProfile' has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 68,
+            "column": 1,
+            "value": 3,
+            "message": "Function 'applySymmetry' has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 213,
+            "column": 51,
+            "value": 3,
+            "message": "Arrow function has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 248,
+            "column": 63,
+            "value": 3,
+            "message": "Arrow function has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 281,
+            "column": 23,
+            "value": 3,
+            "message": "Arrow function has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 30,
+            "column": 58,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 57,
+            "column": 1,
+            "value": 2,
+            "message": "Function 'cleanDoi' has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 212,
+            "column": 54,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 243,
+            "column": 63,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 252,
+            "column": 23,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 14,
+            "column": 37,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 31,
+            "column": 22,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 31,
+            "column": 60,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 38,
+            "column": 69,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 53,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'normalizedSpaceGroupSymbol' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 35,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'cross' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 39,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'dot' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 43,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'scale' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 71,
+            "column": 35,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 72,
+            "column": 48,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 87,
+            "column": 61,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 98,
+            "column": 40,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 144,
+            "column": 39,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 178,
+            "column": 19,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 191,
+            "column": 47,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 192,
+            "column": 49,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 199,
+            "column": 38,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 200,
+            "column": 30,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 203,
+            "column": 33,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 203,
+            "column": 52,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 212,
+            "column": 32,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 213,
+            "column": 27,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 216,
+            "column": 76,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 224,
+            "column": 36,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 233,
+            "column": 25,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 235,
+            "column": 88,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 240,
+            "column": 54,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 250,
+            "column": 23,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 251,
+            "column": 23,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 255,
+            "column": 39,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 257,
+            "column": 43,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 259,
+            "column": 35,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 270,
+            "column": 8,
+            "value": 1,
+            "message": "Function 'simulatePxrd' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 297,
+            "column": 53,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 306,
+            "column": 36,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 311,
+            "column": 48,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          }
+        ],
+        "cognitive": [
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 132,
+            "column": 10,
+            "value": 36,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 36 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 220,
+            "column": 17,
+            "value": 35,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 35 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 66,
+            "column": 17,
+            "value": 26,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 26 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 47,
+            "column": 10,
+            "value": 25,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 86,
+            "column": 10,
+            "value": 17,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 17 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 29,
+            "column": 17,
+            "value": 7,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 7 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 275,
+            "column": 17,
+            "value": 5,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 5 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 195,
+            "column": 10,
+            "value": 4,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 4 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 77,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 112,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 213,
+            "column": 51,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 305,
+            "column": 17,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 6,
+            "column": 17,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 96,
+            "column": 51,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 68,
+            "column": 10,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 212,
+            "column": 54,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 234,
+            "column": 25,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 248,
+            "column": 63,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 252,
+            "column": 23,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          }
+        ]
+      },
+      "duplication": {
+        "settings": {
+          "minLines": 5,
+          "minTokens": 70,
+          "maxLines": 1000000,
+          "maxSize": "10mb",
+          "mode": "weak",
+          "format": [
+            "typescript",
+            "tsx"
+          ],
+          "reporters": [],
+          "silent": true,
+          "noTips": true,
+          "absolute": true,
+          "gitignore": false
+        },
+        "inputs": [
+          "src/main/batchExport.ts",
+          "src/main/batchExportValidation.ts",
+          "src/main/bibliographyMigration.ts",
+          "src/main/database/connection.ts",
+          "src/main/database/metadata.ts",
+          "src/main/database/preservation.ts",
+          "src/main/database/query.ts",
+          "src/main/database/restraints.ts",
+          "src/main/database/search.ts",
+          "src/main/database/sources.ts",
+          "src/main/database/writer.ts",
+          "src/main/databaseDiagnostics.ts",
+          "src/main/db.ts",
+          "src/main/exportCif.ts",
+          "src/main/importRunner.ts",
+          "src/main/importWorker.ts",
+          "src/main/importWorkerProtocol.ts",
+          "src/main/index.ts",
+          "src/main/ingest.ts",
+          "src/main/migrations.ts",
+          "src/main/publicationResolver.ts",
+          "src/main/runtimeTrace.ts",
+          "src/main/searchFilterValidation.ts",
+          "src/main/sourceIdentity.ts",
+          "src/parser/cif/blocks.ts",
+          "src/parser/cif/entry.ts",
+          "src/parser/cif/formula.ts",
+          "src/parser/cif/loops.ts",
+          "src/parser/cif/scanner.ts",
+          "src/parser/cif/types.ts",
+          "src/parser/cif/values.ts",
+          "src/parser/cifParser.ts",
+          "src/preload/index.ts",
+          "src/renderer/src/App.tsx",
+          "src/renderer/src/bootstrap.ts",
+          "src/renderer/src/components/AboutDialog.tsx",
+          "src/renderer/src/components/BatchExportDialog.tsx",
+          "src/renderer/src/components/CompoundInfoPanel.tsx",
+          "src/renderer/src/components/CrystalAxes.tsx",
+          "src/renderer/src/components/CrystalLegend.tsx",
+          "src/renderer/src/components/DataGrid.tsx",
+          "src/renderer/src/components/ImportProgressIndicator.tsx",
+          "src/renderer/src/components/ImportResultsPanel.tsx",
+          "src/renderer/src/components/JSmolViewer.tsx",
+          "src/renderer/src/components/PublicationReference.tsx",
+          "src/renderer/src/components/PxrdPattern.tsx",
+          "src/renderer/src/components/QuickSearchDialog.tsx",
+          "src/renderer/src/components/QuickSearchFields.tsx",
+          "src/renderer/src/components/QuickSearchParts.tsx",
+          "src/renderer/src/components/QuickSearchPreview.tsx",
+          "src/renderer/src/components/ResultsWorkspace.tsx",
+          "src/renderer/src/components/quickSearchForm.ts",
+          "src/renderer/src/components/useSearchRestraints.ts",
+          "src/renderer/src/debouncedRequest.ts",
+          "src/renderer/src/formatFormula.tsx",
+          "src/renderer/src/jsmol/geometry.ts",
+          "src/renderer/src/jsmol/latestOnlyScheduler.ts",
+          "src/renderer/src/jsmol/lifecycle.ts",
+          "src/renderer/src/jsmol/runtime.ts",
+          "src/renderer/src/jsmol/scripts.ts",
+          "src/renderer/src/jsmol/status.ts",
+          "src/renderer/src/layoutPreferences.ts",
+          "src/renderer/src/main.tsx",
+          "src/renderer/src/patternComparison.ts",
+          "src/renderer/src/pxrd.ts",
+          "src/renderer/src/pxrdTask.ts",
+          "src/renderer/src/pxrdWorker.ts",
+          "src/renderer/src/scattering.ts",
+          "src/renderer/src/searchController.ts",
+          "src/renderer/src/virtualRows.ts",
+          "src/shared/exportFilename.ts",
+          "src/shared/searchValidation.ts",
+          "src/shared/types.ts"
+        ],
+        "total": {
+          "lines": 9548,
+          "tokens": 129773,
+          "sources": 90,
+          "clones": 1,
+          "duplicatedLines": 26,
+          "duplicatedTokens": 181,
+          "percentage": 0.27,
+          "percentageTokens": 0.14,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        },
+        "clones": [
+          {
+            "format": "typescript",
+            "a": {
+              "file": "src/main/database/writer.ts",
+              "start": 154,
+              "end": 180
+            },
+            "b": {
+              "file": "src/main/database/writer.ts",
+              "start": 123,
+              "end": 148
+            }
+          }
+        ]
+      }
+    },
+    "after": {
+      "coverage": {
+        "lines": {
+          "total": 3091,
+          "covered": 1737,
+          "pct": 56.2
+        },
+        "statements": {
+          "total": 3826,
+          "covered": 2098,
+          "pct": 54.84
+        },
+        "functions": {
+          "total": 863,
+          "covered": 376,
+          "pct": 43.57
+        },
+        "branches": {
+          "total": 2898,
+          "covered": 1437,
+          "pct": 49.59
+        }
+      },
+      "complexity": {
+        "cyclomatic": [
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 244,
+            "column": 8,
+            "value": 45,
+            "message": "Function 'calculatePxrd' has a complexity of 45. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 112,
+            "column": 1,
+            "value": 16,
+            "message": "Function 'reciprocalBasis' has a complexity of 16. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 47,
+            "column": 1,
+            "value": 14,
+            "message": "Function 'parseCoordinate' has a complexity of 14. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 86,
+            "column": 1,
+            "value": 14,
+            "message": "Function 'expandAtoms' has a complexity of 14. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 299,
+            "column": 8,
+            "value": 13,
+            "message": "Function 'createPxrdProfile' has a complexity of 13. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 219,
+            "column": 1,
+            "value": 11,
+            "message": "Function 'validOperation' has a complexity of 11. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 120,
+            "column": 1,
+            "value": 10,
+            "message": "Function 'normalizeSpaceGroup' has a complexity of 10. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 29,
+            "column": 8,
+            "value": 9,
+            "message": "Function 'buildReference' has a complexity of 9. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 141,
+            "column": 1,
+            "value": 9,
+            "message": "Function 'normalizePublication' has a complexity of 9. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 167,
+            "column": 1,
+            "value": 9,
+            "message": "Function 'excludedFriedelMember' has a complexity of 9. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 79,
+            "column": 1,
+            "value": 7,
+            "message": "Function 'normalizeLengths' has a complexity of 7. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 156,
+            "column": 1,
+            "value": 7,
+            "message": "Function 'normalizeRadiation' has a complexity of 7. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 6,
+            "column": 8,
+            "value": 6,
+            "message": "Function 'calculateUnitCellVolume' has a complexity of 6. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 100,
+            "column": 1,
+            "value": 6,
+            "message": "Function 'normalizeGeometry' has a complexity of 6. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 150,
+            "column": 1,
+            "value": 6,
+            "message": "Function 'reflectionPeak' has a complexity of 6. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 171,
+            "column": 1,
+            "value": 6,
+            "message": "Function 'enumerateReflections' has a complexity of 6. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 203,
+            "column": 1,
+            "value": 6,
+            "message": "Function 'calculatePeaks' has a complexity of 6. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 77,
+            "column": 1,
+            "value": 5,
+            "message": "Function 'elementAtomicNumber' has a complexity of 5. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 185,
+            "column": 1,
+            "value": 5,
+            "message": "Function 'mergeReflections' has a complexity of 5. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 65,
+            "column": 1,
+            "value": 4,
+            "message": "Function 'normalizeFormula' has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 102,
+            "column": 51,
+            "value": 4,
+            "message": "Arrow function has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 169,
+            "column": 1,
+            "value": 4,
+            "message": "Function 'normalizeAuthors' has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 183,
+            "column": 8,
+            "value": 4,
+            "message": "Function 'normalizeCif' has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 258,
+            "column": 25,
+            "value": 4,
+            "message": "Arrow function has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 329,
+            "column": 8,
+            "value": 4,
+            "message": "Function 'serializePxrdProfile' has a complexity of 4. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 68,
+            "column": 1,
+            "value": 3,
+            "message": "Function 'applySymmetry' has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 237,
+            "column": 51,
+            "value": 3,
+            "message": "Arrow function has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 272,
+            "column": 63,
+            "value": 3,
+            "message": "Arrow function has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 305,
+            "column": 23,
+            "value": 3,
+            "message": "Arrow function has a complexity of 3. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 30,
+            "column": 58,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 57,
+            "column": 1,
+            "value": 2,
+            "message": "Function 'cleanDoi' has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 132,
+            "column": 1,
+            "value": 2,
+            "message": "Function 'reflectionIntensity' has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 236,
+            "column": 54,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 267,
+            "column": 63,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 276,
+            "column": 23,
+            "value": 2,
+            "message": "Arrow function has a complexity of 2. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 14,
+            "column": 37,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 31,
+            "column": 22,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 31,
+            "column": 60,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 38,
+            "column": 69,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 53,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'normalizedSpaceGroupSymbol' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 35,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'cross' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 39,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'dot' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 43,
+            "column": 1,
+            "value": 1,
+            "message": "Function 'scale' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 71,
+            "column": 35,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 72,
+            "column": 48,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 87,
+            "column": 61,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 98,
+            "column": 40,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 186,
+            "column": 19,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 199,
+            "column": 47,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 200,
+            "column": 49,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 215,
+            "column": 39,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 223,
+            "column": 38,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 224,
+            "column": 30,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 227,
+            "column": 33,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 227,
+            "column": 52,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 236,
+            "column": 32,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 237,
+            "column": 27,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 240,
+            "column": 76,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 248,
+            "column": 36,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 257,
+            "column": 25,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 259,
+            "column": 88,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 264,
+            "column": 54,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 274,
+            "column": 23,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 275,
+            "column": 23,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 279,
+            "column": 39,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 281,
+            "column": 43,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 283,
+            "column": 35,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 294,
+            "column": 8,
+            "value": 1,
+            "message": "Function 'simulatePxrd' has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 321,
+            "column": 53,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 330,
+            "column": 36,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 335,
+            "column": 48,
+            "value": 1,
+            "message": "Arrow function has a complexity of 1. Maximum allowed is 0."
+          }
+        ],
+        "cognitive": [
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 244,
+            "column": 17,
+            "value": 35,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 35 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 47,
+            "column": 10,
+            "value": 25,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 86,
+            "column": 10,
+            "value": 17,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 17 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 171,
+            "column": 10,
+            "value": 14,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 14 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 29,
+            "column": 17,
+            "value": 7,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 7 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 185,
+            "column": 10,
+            "value": 6,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 6 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 100,
+            "column": 10,
+            "value": 5,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 5 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 120,
+            "column": 10,
+            "value": 5,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 5 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 299,
+            "column": 17,
+            "value": 5,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 5 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 79,
+            "column": 10,
+            "value": 4,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 4 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 156,
+            "column": 10,
+            "value": 4,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 4 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 219,
+            "column": 10,
+            "value": 4,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 4 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 65,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 169,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 77,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 112,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 150,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 167,
+            "column": 10,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 237,
+            "column": 51,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 329,
+            "column": 17,
+            "value": 3,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 3 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 6,
+            "column": 17,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 102,
+            "column": 51,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/parser/cif/entry.ts",
+            "line": 183,
+            "column": 17,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 68,
+            "column": 10,
+            "value": 2,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 2 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 132,
+            "column": 10,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 203,
+            "column": 10,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 236,
+            "column": 54,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 258,
+            "column": 25,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 272,
+            "column": 63,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          },
+          {
+            "file": "src/renderer/src/pxrd.ts",
+            "line": 276,
+            "column": 23,
+            "value": 1,
+            "message": "Refactor this function to reduce its Cognitive Complexity from 1 to the 0 allowed."
+          }
+        ]
+      },
+      "duplication": {
+        "settings": {
+          "minLines": 5,
+          "minTokens": 70,
+          "maxLines": 1000000,
+          "maxSize": "10mb",
+          "mode": "weak",
+          "format": [
+            "typescript",
+            "tsx"
+          ],
+          "reporters": [],
+          "silent": true,
+          "noTips": true,
+          "absolute": true,
+          "gitignore": false
+        },
+        "inputs": [
+          "src/main/batchExport.ts",
+          "src/main/batchExportValidation.ts",
+          "src/main/bibliographyMigration.ts",
+          "src/main/database/connection.ts",
+          "src/main/database/metadata.ts",
+          "src/main/database/preservation.ts",
+          "src/main/database/query.ts",
+          "src/main/database/restraints.ts",
+          "src/main/database/search.ts",
+          "src/main/database/sources.ts",
+          "src/main/database/writer.ts",
+          "src/main/databaseDiagnostics.ts",
+          "src/main/db.ts",
+          "src/main/exportCif.ts",
+          "src/main/importRunner.ts",
+          "src/main/importWorker.ts",
+          "src/main/importWorkerProtocol.ts",
+          "src/main/index.ts",
+          "src/main/ingest.ts",
+          "src/main/migrations.ts",
+          "src/main/publicationResolver.ts",
+          "src/main/runtimeTrace.ts",
+          "src/main/searchFilterValidation.ts",
+          "src/main/sourceIdentity.ts",
+          "src/parser/cif/blocks.ts",
+          "src/parser/cif/entry.ts",
+          "src/parser/cif/formula.ts",
+          "src/parser/cif/loops.ts",
+          "src/parser/cif/scanner.ts",
+          "src/parser/cif/types.ts",
+          "src/parser/cif/values.ts",
+          "src/parser/cifParser.ts",
+          "src/preload/index.ts",
+          "src/renderer/src/App.tsx",
+          "src/renderer/src/bootstrap.ts",
+          "src/renderer/src/components/AboutDialog.tsx",
+          "src/renderer/src/components/BatchExportDialog.tsx",
+          "src/renderer/src/components/CompoundInfoPanel.tsx",
+          "src/renderer/src/components/CrystalAxes.tsx",
+          "src/renderer/src/components/CrystalLegend.tsx",
+          "src/renderer/src/components/DataGrid.tsx",
+          "src/renderer/src/components/ImportProgressIndicator.tsx",
+          "src/renderer/src/components/ImportResultsPanel.tsx",
+          "src/renderer/src/components/JSmolViewer.tsx",
+          "src/renderer/src/components/PublicationReference.tsx",
+          "src/renderer/src/components/PxrdPattern.tsx",
+          "src/renderer/src/components/QuickSearchDialog.tsx",
+          "src/renderer/src/components/QuickSearchFields.tsx",
+          "src/renderer/src/components/QuickSearchParts.tsx",
+          "src/renderer/src/components/QuickSearchPreview.tsx",
+          "src/renderer/src/components/ResultsWorkspace.tsx",
+          "src/renderer/src/components/quickSearchForm.ts",
+          "src/renderer/src/components/useSearchRestraints.ts",
+          "src/renderer/src/debouncedRequest.ts",
+          "src/renderer/src/formatFormula.tsx",
+          "src/renderer/src/jsmol/geometry.ts",
+          "src/renderer/src/jsmol/latestOnlyScheduler.ts",
+          "src/renderer/src/jsmol/lifecycle.ts",
+          "src/renderer/src/jsmol/runtime.ts",
+          "src/renderer/src/jsmol/scripts.ts",
+          "src/renderer/src/jsmol/status.ts",
+          "src/renderer/src/layoutPreferences.ts",
+          "src/renderer/src/main.tsx",
+          "src/renderer/src/patternComparison.ts",
+          "src/renderer/src/pxrd.ts",
+          "src/renderer/src/pxrdTask.ts",
+          "src/renderer/src/pxrdWorker.ts",
+          "src/renderer/src/scattering.ts",
+          "src/renderer/src/searchController.ts",
+          "src/renderer/src/virtualRows.ts",
+          "src/shared/exportFilename.ts",
+          "src/shared/searchValidation.ts",
+          "src/shared/types.ts"
+        ],
+        "total": {
+          "lines": 9582,
+          "tokens": 129889,
+          "sources": 90,
+          "clones": 1,
+          "duplicatedLines": 26,
+          "duplicatedTokens": 181,
+          "percentage": 0.27,
+          "percentageTokens": 0.14,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        },
+        "clones": [
+          {
+            "format": "typescript",
+            "a": {
+              "file": "src/main/database/writer.ts",
+              "start": 154,
+              "end": 180
+            },
+            "b": {
+              "file": "src/main/database/writer.ts",
+              "start": 123,
+              "end": 148
+            }
+          }
+        ]
+      }
+    }
+  },
+  "validation": {
+    "passed": [
+      "Locked npm ci on Node 22.23.2",
+      "554 unit tests with full coverage collection",
+      "23 quality policy/tooling probes",
+      "Incremental coverage and complexity gates against origin/main",
+      "Duplication gate and deliberate clone probes",
+      "TypeScript checks",
+      "Startup benchmark comparison probes",
+      "Architecture gate and deliberate-regression probes",
+      "Electron UI suite",
+      "Production import-worker/native preservation suite including build",
+      "Self-contained JSmol viewer suite including build",
+      "Unused-code gate and deliberate-regression probes",
+      "194 parser and 28 PXRD exact-output characterizations",
+      "Independent PXRD boundary oracle",
+      "Comparable 96-mutant boundary runs",
+      "Final documentation links and whitespace/diff review",
+      "Completed default three-file post-extraction mutation pilot; see simplification-mutation.json",
+      "Final capped-axis supplemental mutation: 3 killed, 1 timeout, 1 compile error; full pilot survivor 503 becomes killed."
+    ],
+    "resolvedFailures": [
+      "Unused-code first pass found two standalone scripts not registered as entry points and one unnecessary export; corrected and rerun."
+    ],
+    "notRun": [
+      "Windows packaging and packaged smoke: no packaging, dependency or persistence implementation changed."
+    ],
+    "pending": []
+  }
+}
