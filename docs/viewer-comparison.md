@@ -1,5 +1,8 @@
 # PXRD comparison and crystal viewer usability
 
+Current guidance: comparison and viewer interaction behavior. The polyhedra
+investigation and validation evidence record the implementation review.
+
 Milestone 4 covers #64–#71 and the teardown follow-up #77. Calculated intensity
 assumptions remain those in [scientific validity](scientific-validity.md); a visual
 overlay is not a fit, phase identification or experimental validation.

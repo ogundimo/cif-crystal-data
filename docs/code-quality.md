@@ -1,5 +1,8 @@
 # Code-quality measurements
 
+Current guidance: measurement commands, interpretation and enforced gates. Original
+measurements and earlier proposals are linked separately; they are not live status reports.
+
 Coverage and function complexity now have [incremental regression gates](regression-protection.md).
 The collection command remains a measurement step; CI enforces the versioned policy separately.
 The [duplication gate](duplication-policy.md) now rejects new or changed clone pairs;
@@ -30,8 +33,8 @@ Open `reports/quality/summary.md` for the overview and
 are retained in [the baseline snapshot](quality-baseline.md).
 
 See [Regression protection](regression-protection.md) for enforced coverage and
-complexity policy and the advisory mutation policy. [Quality targets and next
-steps](quality-targets.md) retains the earlier proposals and historical measurements.
+complexity policy and the advisory mutation policy. [Quality targets and historical
+proposals](quality-targets.md) retains the earlier proposals and measurements.
 
 The [#14 test-gap review](test-gap-review.md) records follow-up coverage, added
 behavioral checks, the viewer CI decision, and remaining gaps. Its measurements
@@ -137,14 +140,15 @@ measurements and policy regressions fail CI. The same gates run in the existing
 required Test and build job, so no branch-protection status rename is needed.
 
 The historical policy proposal [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20)
-is closed; its numerical proposals are not blanket accepted limits. The adopted policy
+records numerical proposals, not blanket accepted limits. The adopted policy
 implements coverage [#44](https://github.com/ogundimo/cif-crystal-data-public/issues/44),
 cyclomatic complexity [#45](https://github.com/ogundimo/cif-crystal-data-public/issues/45),
 cognitive complexity [#46](https://github.com/ogundimo/cif-crystal-data-public/issues/46),
 and mutation policy [#48](https://github.com/ogundimo/cif-crystal-data-public/issues/48).
-Duplication policy remains [#47](https://github.com/ogundimo/cif-crystal-data-public/issues/47). The
-[quality-targets record](quality-targets.md) compares the original and current evidence
-and links the remaining test, refactor and measurement work.
+The [duplication policy](duplication-policy.md) implements #47 and records the
+writer review. The [quality-targets record](quality-targets.md) preserves earlier
+evidence and proposals. Live scope and status belong to the
+[GitHub issues](https://github.com/ogundimo/cif-crystal-data/issues).
 
 The [architecture dependency gate](architecture.md) implements #24; the unused-code
 gate is described below. The [#19 mutation pilot](mutation-testing.md) completed in

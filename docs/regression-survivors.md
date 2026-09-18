@@ -1,5 +1,9 @@
 # Formula and IT92 mutation survivor review
 
+Historical evidence: formula and IT92 survivor decisions for the recorded populations.
+Use [Regression protection](regression-protection.md) for current policy; mutant IDs
+and scores do not transfer to a different source revision.
+
 This review addresses #50 and #78 without modifying production formula or
 diffraction behavior. Historical IDs belong to their original reports, not to
 newly generated populations. The original [formula report](mutation-results.json)

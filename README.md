@@ -3,6 +3,9 @@
 A local desktop database for crystallographic data extracted from CIF files, built with
 Electron, React, TypeScript, Tailwind CSS, and better-sqlite3.
 
+See the [documentation index](docs/README.md) for current guidance, historical evidence
+and proposals.
+
 Released under the [MIT License](LICENSE).
 
 ![CIF Crystal Data workspace showing a selected synthetic sodium chloride structure, unit-cell parameters, atomic sites, crystal viewer, and simulated powder-diffraction pattern.](docs/images/workspace.png)

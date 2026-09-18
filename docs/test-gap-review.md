@@ -127,7 +127,7 @@ final test deliberately rejects with a non-Error value and verifies the supporte
 fallback, selected filename, disabled controls and subsequent recovery. No production
 behavior was changed to satisfy the test. Hosted CI for this change has not yet run.
 
-## Remaining gaps and prerequisites
+## Gaps and prerequisites at the review date
 
 - Most renderer components, preload, worker events and migrations retain low unit
   coverage. Electron smoke tests cover selected paths, not every lifecycle transition,
@@ -153,6 +153,9 @@ behavior was changed to satisfy the test. Hosted CI for this change has not yet 
   Network publication resolution remains mocked in unit tests; live service availability
   is not part of these deterministic checks.
 
-#14 supplies regression evidence for the next refactors; #19 still owns mutation
-testing and #20 owns calibrated numerical gates. Passing this review does not mean
-all test gaps are closed or that any new numerical threshold has been adopted.
+These gaps describe the #14 snapshot, not the current backlog. Later work is
+documented in [Import and search reliability](import-search-reliability.md),
+[Scientific validity](scientific-validity.md), [Scientific recovery](scientific-recovery.md),
+and [Regression protection](regression-protection.md). Follow the
+[GitHub issues](https://github.com/ogundimo/cif-crystal-data/issues) for live scope
+and status; historical smoke passes do not establish exhaustive coverage.

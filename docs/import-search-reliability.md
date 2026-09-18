@@ -1,8 +1,10 @@
 # Import and search reliability
 
-This work addresses #15, #40, #49 and #61. Cold-start acceptance for #40 remains
-open until actual packaged cold-cache samples and an agreed usability budget exist.
-A successful fresh-process smoke test does not close that requirement.
+Current guidance: import, bibliography, tracing and search behavior. Coverage and
+packaged acceptance records below are historical evidence; GitHub tracks remaining work.
+
+Implementation provenance: #15, #40, #49 and #61. A successful fresh-process
+smoke test does not establish cold-cache startup acceptance.
 
 ## Import lifecycle
 
@@ -94,6 +96,8 @@ page offsets/sort requests, busy/error transitions, selection, resets, empty res
 retry and same-tick duplicate paging exclusion. Stale successes and failures cannot
 replace a newer generation. Failed sorting clears the old order, preventing mixed pages.
 
+### Historical coverage comparison
+
 Comparable unit-only runs: base `0c4b83f` (333 tests) and the working implementation
 (366 tests in 30 files), Node 22.23.2, Vitest/V8 4.1.11, identical coverage configuration.
 
@@ -109,7 +113,7 @@ The formerly unexecuted App search orchestration now has a separately tested con
 has zero unit coverage; Electron UI evidence is separate and is not merged into these
 numbers. New migration/worker tests also contribute to the overall increase.
 
-## Remaining acceptance evidence
+## Historical packaged acceptance record (2026-09-17)
 
 See [cold-start protocol](cold-start-protocol.md) and the
 [packaged validation record](packaged-startup-validation.md). Authorized isolated
@@ -120,10 +124,12 @@ Instrumented unpacked launches are fast in the tested cases, while the portable
 launcher has an unresolved pre-application delay. On 2026-09-17 the owner accepted
 current packaged performance as sufficient to continue the roadmap and moved #40
 to the dedicated [Startup performance and validation milestone](https://github.com/ogundimo/cif-crystal-data/milestone/11).
-Its outstanding acceptance requirements remain open there, with measurements in
-PR #74; they no longer block the import/search milestone. This reprioritization
+Live acceptance status and subsequent measurements belong to
+[issue #40](https://github.com/ogundimo/cif-crystal-data/issues/40) and
+[PR #74](https://github.com/ogundimo/cif-crystal-data/pull/74). This reprioritization
 does not claim that cold-start validation passed or that the portable delay is fixed.
-Further development-startup optimization is deferred and non-blocking under #72.
+Development-startup work is tracked in
+[issue #72](https://github.com/ogundimo/cif-crystal-data/issues/72).
 
 ## Reproducible installation
 

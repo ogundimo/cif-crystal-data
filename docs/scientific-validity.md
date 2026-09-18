@@ -1,5 +1,8 @@
 # PXRD scientific contract and validation (#39)
 
+Current guidance: scientific assumptions, supported inputs and validation limits.
+Reference comparisons are evidence for the stated fixtures and tolerances only.
+
 The calculated pattern is an ideal, monochromatic, unpolarized X-ray powder
 model. It is not an experimental measurement, phase identification, quantitative
 phase analysis, or a prediction of instrument-specific intensities.

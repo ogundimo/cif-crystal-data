@@ -1,5 +1,9 @@
 # PXRD survivor review (#51)
 
+Historical evidence: analytic survivor tests and replacement-model measurements.
+Use [Scientific validity](scientific-validity.md) for the current model contract and
+[Regression protection](regression-protection.md) for current mutation policy.
+
 The [decision record](pxrd-mutation-review.json) classifies all 78 surviving PXRD
 mutants from the original measurement by ID, location and replacement. It retains
 the before/after status and rationale for each; no mutant was suppressed.

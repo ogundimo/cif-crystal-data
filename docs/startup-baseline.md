@@ -1,5 +1,8 @@
 # Startup baseline and regression comparisons
 
+Current guidance: repeatable development-startup comparison and interpretation.
+The original reference samples below are historical evidence, not packaged cold-start acceptance.
+
 The machine-readable baseline is [startup-dev-v1.json](baselines/startup-dev-v1.json).
 It records a specific development-startup protocol, not a universal speed target.
 Keep this original record; future bug fixes and features should compare against it

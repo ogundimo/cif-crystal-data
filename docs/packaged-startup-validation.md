@@ -1,5 +1,9 @@
 # Packaged validation record (2026-09-17)
 
+Historical evidence for the builds and date below, not current merge or issue status.
+Use the [cold-start protocol](cold-start-protocol.md) for reproduction and
+[issue #40](https://github.com/ogundimo/cif-crystal-data/issues/40) for live acceptance tracking.
+
 Application build: `6679c8b295d82f3ef57e74b0e51907c4da42803d`, version 1.1.0.
 Validation head `fdfa05b` additionally replaces UI-test timing assumptions with
 bounded waits for deferred details and exact keyboard selection; application code
@@ -69,7 +73,7 @@ Local raw evidence is retained in the temporary directory
 `cif-packaged-visible-iOBdPB`. Do not upload raw logs without path review. The original
 development baseline is unchanged and remains a different protocol under #72.
 
-## Remaining merge evidence
+## Evidence still missing at this snapshot
 
 The fixed-build restart kit includes three separately prepared profiles per case:
 empty, 168 entries with refresh off/on, unavailable source, bibliography upgrade,
@@ -81,5 +85,7 @@ attributed to application startup behavior.
 Genuine OS-cold samples, visible interaction observations, agreed workload budgets,
 before/after assessment and tracing-overhead checks remain required by #40. The
 portable launch delay remains unresolved; distribution priority is awaiting the
-owner's decision. PR #63 is still draft and unmerged. Development optimization is
-explicitly deferred and non-blocking under #72.
+owner's decision at this snapshot. Subsequent decisions and delivery status belong
+to [issue #40](https://github.com/ogundimo/cif-crystal-data/issues/40),
+[PR #63](https://github.com/ogundimo/cif-crystal-data/pull/63) and
+[issue #72](https://github.com/ogundimo/cif-crystal-data/issues/72).

@@ -1,4 +1,4 @@
-# Quality targets and next steps
+# Quality targets and historical proposals
 
 Current coverage, cyclomatic/cognitive complexity and mutation policies are in
 [Regression protection](regression-protection.md). The historical snapshots and
@@ -16,7 +16,7 @@ separate from the newer snapshot at revision
 `0b4458d79f4f1b96a85341b43831721b599787ee`. It does not claim that future revisions
 have the same scores.
 
-## Evidence and enforcement
+## Historical evidence and enforcement snapshot
 
 - [Main quality report](https://github.com/ogundimo/cif-crystal-data-public/actions/runs/35046896794): coverage, complexity,
   duplication and inventory at the snapshot revision.
@@ -44,7 +44,7 @@ boundary problems or dynamically used code.
 No numerical target below was blocking at that snapshot. Use consistent analyzer versions and scope;
 complexity reporting thresholds of zero collect findings and are not accepted limits.
 
-| Metric | Initial baseline | Snapshot at 0b4458d | Proposed target / next owner |
+| Metric | Initial baseline | Snapshot at 0b4458d | Proposal at the snapshot / related issue |
 | --- | --- | --- | --- |
 | Cyclomatic complexity per function | Maximum 43 (`parseCif`) | Maximum 43 (`normalizeCif`) | Aspirational <=10 for new/substantially changed functions; review above 20. Historical <22 ceiling remains unadopted; [#45] calibrates policy, [#52] owns the normalization refactor |
 | Cognitive complexity per function | Maximum 44 (`simulatePxrd`) | Maximum 44 (`simulatePxrd`) | Aspirational <=15; review above 20. Historical <22 ceiling remains unadopted; [#46] calibrates policy, [#53] owns the PXRD refactor |
@@ -77,7 +77,8 @@ hosted run matched the local outcome totals:
 | 442 | 94 | 0 | 6 | 167 | 0 | 0 |
 
 There are 709 mutants. Of the 94 survivors, 12 are reviewed equivalents and 82
-remain open. Timeouts count as detected under Stryker's definition; invalid and
+were unresolved at that snapshot. Timeouts count as detected under Stryker's
+definition; invalid and
 ignored mutants are outside the score denominator. See the
 [mutation record](mutation-testing.md) and historical
 [machine-readable comparison](mutation-results.json) for scope and decisions.
@@ -94,13 +95,15 @@ ignored mutants are outside the score denominator. See the
 These are distinct clocks from the [same successful run](https://github.com/ogundimo/cif-crystal-data-public/actions/runs/35048065514),
 created at 2026-09-16 02:27:41 UTC and completed at 02:44:49 UTC. The local
 follow-up's internal Stryker timer was 21m04s. One hosted observation does not
-guarantee future runtime or justify a new schedule/threshold by itself. The workflow
-remains manual with a 30-minute job limit; [#48] owns any policy change.
-[#50] and [#51] own unresolved formula and PXRD survivor investigations.
+guarantee future runtime or justify a new schedule/threshold by itself. For current
+command behavior and cadence, see
+[Regression protection](regression-protection.md#mutation-policy). Later decisions
+are recorded in [Formula and IT92 survivor review](regression-survivors.md) and
+[PXRD survivor review](pxrd-mutation-review.md); [#50] and [#51] retain issue provenance.
 
-## Deferred measurements
+## Proposed measurements
 
-| Metric | Availability | Next owner |
+| Metric | Measurement limitation | Tracking |
 | --- | --- | --- |
 | Halstead difficulty | No validated TypeScript/TSX operator-and-operand measurement | [#54] validates reporting before considering the historical reference value of 80 |
 | CRAP | No validated function-level complexity/coverage join | [#55] validates attribution before considering the historical target of <25 |
@@ -129,45 +132,23 @@ regressions are detected. Baseline updates must be explicit and reviewable; do n
 silently reset them to hide regressions. This document does not authorize changes
 to thresholds or branch protection.
 
-## Work ownership and sequence
+## Provenance and live tracking
 
-#13, #14, #16, #17, #18, #19, #24 and #25 are completed. The
+The [#43 refresh](https://github.com/ogundimo/cif-crystal-data/issues/43) preserved
+the PR #42 coverage snapshot and first hosted mutation timing above. Historical
+proposal [#20](https://github.com/ogundimo/cif-crystal-data/issues/20) was closed
+with a completed state reason; that closure did not adopt its numerical targets.
+
+Current policies are [Regression protection](regression-protection.md) and
+[Duplication policy](duplication-policy.md). Refactor rationale and later evidence
+remain in [Targeted simplification](targeted-simplification.md), the
 [test-gap review](test-gap-review.md), [quick-search refactor](quick-search-refactor.md),
-[database refactor](database-refactor.md) and [parser refactor](parser-refactor.md)
-retain their evidence and limitations.
+[database refactor](database-refactor.md) and [parser refactor](parser-refactor.md).
 
-[#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20) is **closed** with a completed state reason.
-Its closure does not mean its proposed numerical gates were implemented. It remains
-a historical proposal; the focused issues below own the remaining work. This update
-neither reopens #20 nor treats it as an active implementation owner.
-
-| Issue | Single deliverable |
-| --- | --- |
-| [#43] | This documentation refresh |
-| [#44] | Incremental unit-coverage regression gate |
-| [#45] | Incremental cyclomatic-complexity gate |
-| [#46] | Incremental cognitive-complexity gate |
-| [#47] | Incremental duplication regression gate |
-| [#48] | Evidence-based mutation regression policy |
-| [#49] | Renderer search-orchestration unit regressions |
-| [#50] | Formula-parser mutation survivor investigation |
-| [#51] | PXRD mutation survivor investigation |
-| [#52] | Reduce branching complexity in `normalizeCif` |
-| [#53] | Reduce control-flow complexity in `simulatePxrd` |
-| [#54] | Trustworthy Halstead difficulty reporting |
-| [#55] | Trustworthy function-level CRAP reporting |
-| [#56] | Semantic review of the existing database-writer clone |
-| [#15](https://github.com/ogundimo/cif-crystal-data-public/issues/15) | Existing runtime-tracing workstream |
-| [#39](https://github.com/ogundimo/cif-crystal-data-public/issues/39) | Existing PXRD scientific-validation workstream |
-
-Finish #43 first, then begin #44. Follow each issue's dependencies: the PXRD
-refactor follows its survivor tests and cognitive policy; the writer clone review
-follows duplication policy. Runtime tracing and deferred-measurement validation
-can proceed independently. Do not duplicate scientific model work owned by #39 or
-recovery/responsiveness work in #41.
-
-Update this record when measurements, policies or work status change, preserving
-the immutable initial baseline and historical mutation comparison.
+Use [GitHub issues](https://github.com/ogundimo/cif-crystal-data/issues) and
+[milestones](https://github.com/ogundimo/cif-crystal-data/milestones) for ownership,
+dependencies, delivery order and completion status. Preserve these historical
+measurements when adding new evidence; follow the [maintenance convention](README.md#maintenance).
 
 [#43]: https://github.com/ogundimo/cif-crystal-data-public/issues/43
 [#44]: https://github.com/ogundimo/cif-crystal-data-public/issues/44

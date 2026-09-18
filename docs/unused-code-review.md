@@ -1,5 +1,8 @@
 # Unused-code review — issue #12
 
+Historical evidence: the dated cleanup and automation reviews below. Current
+commands and enforcement are in [Code-quality measurements](code-quality.md#unused-code-regression-gate-25).
+
 Review date: 2026-09-10. Scope: first-party tracked source, scripts, configuration,
 documentation, and icon assets. Tracking: https://github.com/ogundimo/cif-crystal-data-public/issues/12.
 

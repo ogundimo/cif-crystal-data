@@ -1,5 +1,8 @@
 # Batch CIF export and CSV summaries
 
+Current guidance: selection, export and recovery behavior. The recorded packaged
+run is historical evidence for its stated build and workload.
+
 Run a Quick search, then use **Batch export…** below the toolbar. Choose
 **Selected structures** or **All matching the current search**, review the exact
 request count, and choose CIF files plus a CSV summary, CIF files plus a compact

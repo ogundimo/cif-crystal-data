@@ -1,5 +1,8 @@
 # Quick-search responsibility refactor (#16)
 
+Historical evidence: the #16 responsibility extraction and its recorded checks.
+Current search lifecycle guidance is in [Import and search reliability](import-search-reliability.md).
+
 Baseline: `cab5ee1090ac27fb714ab40d1881e1f322e83da3` (PR #31), measured on
 2026-09-14 with Node 22.23.2. Tracking issue:
 [#16](https://github.com/ogundimo/cif-crystal-data-public/issues/16).
