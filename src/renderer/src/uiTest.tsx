@@ -132,12 +132,16 @@ function UiTestApp() {
 function GridShortcutTest() {
   const [state, setState] = React.useState({ids:gridRows.map(row=>row.id),selectedId:5000 as number|null,totalRows:10000,loadingMore:false});
   const calls=React.useRef({select:0,load:0,sort:0});
+  // Match the real search controller's same-tick paging exclusion, before React
+  // commits loadingMore. Resize/scroll events may arrive in the same frame.
+  const loading = React.useRef(state.loadingMore);
+  loading.current = state.loadingMore;
   Object.assign(window,{gridShortcut:{state,calls:calls.current,update:(next:Partial<typeof state>)=>setState(previous=>({...previous,...next}))}});
   return <div className="flex h-screen flex-col">
     <input aria-label="Shortcut scope test" />
     <DataGrid rows={state.ids.map(id=>gridRows[id-1])} selectedId={state.selectedId} totalRows={state.totalRows} loadingMore={state.loadingMore}
       onSelect={row=>{calls.current.select++;setState(previous=>({...previous,selectedId:row.id}));}}
-      onLoadMore={()=>{calls.current.load++;}} onSortChange={()=>{calls.current.sort++;}} />
+      onLoadMore={()=>{if (loading.current) return; loading.current=true; calls.current.load++;setState(previous=>({...previous,loadingMore:true}));}} onSortChange={()=>{calls.current.sort++;}} />
   </div>;
 }
 
