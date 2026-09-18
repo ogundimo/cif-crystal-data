@@ -105,3 +105,45 @@ large physical CIFs or expensive filters can delay main-process responses. The
 benchmark uses small synthetic CIFs, not an experimental corpus or an upper bound
 for arbitrary inputs. Native dialog interaction, removable filesystems, installer
 interaction and exhaustive crash/power-loss behavior are not claimed.
+
+## Recorded packaged run (2026-09-18 UTC)
+
+The [retained benchmark record](evidence/batch-export-benchmark.json) identifies
+clean revision `bf78f0dea13dce109062abb091af5485bddb90b8`, application code revision
+`385b86b74c5f49d1407d9c09916027fc39b02dbc`, and the tested `app.asar` SHA-256.
+Later evidence-only documentation changes do not change the tested application.
+The run used Node 22.23.2, Electron 44.1.0, Windows 10.0.26200 and an Intel
+i7-1165G7. Its 1,205 synthetic files contained 1,206 structures and 2,439,739 input
+bytes. All outputs passed count/content checks, and both selected blocks reopened
+through the packaged import worker with unchanged text.
+
+| Scope and format | Structures | Elapsed | Sampled main-process peak RSS | Largest main timer gap | Largest renderer timer gap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Selected CIFs + summary | 2 | 0.039 s | 132.9 MiB | 17.6 ms | 24.0 ms |
+| All matching CIFs + summary | 1,206 | 7.355 s | 135.9 MiB | 24.0 ms | 24.0 ms |
+| All matching CSV only | 1,206 | 0.138 s | 134.2 MiB | 10.3 ms | 14.0 ms |
+
+These are single-run observations, not performance budgets or cold-cache results.
+Heartbeat timers requested 10 ms intervals; RSS samples cover the entire main
+process, not solely the exporter. The hidden-window harness disables background
+timer throttling. A preceding successful run measured 9.101 s for the same large
+CIF export, illustrating filesystem/cache variability. The latest run also checked
+real IPC cancellation and a picker cancellation that created no batch folder.
+The packaged dialog's completed result was captured and visually reviewed.
+
+Validation found and corrected a production chunk dependency on the Electron entry:
+the filename sanitizer now lives in the portable shared chunk. Production
+worker/recovery checks passed after that correction. A subsequent packaged test
+repeat exposed a test timing assumption: it clicked the export button before the
+asynchronous count preview was ready. The committed smoke test waits for the
+enabled button and the final clean-revision run passed. This was a harness fix;
+it did not bypass the application's count validation.
+
+Final local validation passed: 457 unit tests, four startup-tool tests, both
+TypeScript projects, Electron UI checks, production worker/preservation regressions,
+the separate JSmol viewer suite, architecture (75 inputs, zero violations), unused
+code, both gates' regression probes, production build and Windows packaging. The
+final unpacked package includes the dialog focus-return change; the full installer
+build preceded that renderer-only refinement. The packaged acceptance run above
+tests the final unpacked app. Hosted CI remains a publication-time check. Existing
+development dependency audit alerts remain tracked in [#80](https://github.com/ogundimo/cif-crystal-data/issues/80).
