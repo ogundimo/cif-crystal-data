@@ -2,7 +2,7 @@
 
 This policy builds on the [quality baseline](quality-baseline.md) and the
 [#25 unused-code gate](code-quality.md#unused-code-regression-gate-25), merged in
-PR #28. Numerical complexity and coverage scores remain advisory. Architecture
+PR #28. Numerical complexity and coverage use the [incremental regression policy](regression-protection.md). Architecture
 violations are blocking after the zero-finding review below. No application
 restructuring or changes to Electron runtime settings were needed.
 

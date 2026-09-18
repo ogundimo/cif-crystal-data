@@ -1,5 +1,9 @@
 # Targeted mutation testing (#19)
 
+Current command behavior and cadence are adopted in [Regression protection](regression-protection.md).
+See [the later survivor review](regression-survivors.md) for #50/#78 decisions.
+The original pilot measurements below remain historical evidence.
+
 The milestone-3 follow-up is recorded in [PXRD survivor review](pxrd-mutation-review.md).
 It retains the original results below, measures new analytic tests against the
 unchanged source, and separately validates the replacement IT92 model.
@@ -161,7 +165,8 @@ GitHub recorded creation at 2026-09-16 02:27:41 UTC, job start at 02:27:45 and
 completion at 02:44:49. The internal Stryker timer is comparable to the local
 21m04s timer; the command-step and total durations also include other work.
 This is one hosted observation, not a guaranteed runtime. The manual cadence and
-30-minute job limit remain unchanged pending #48. The historical local comparison
+30-minute job limit were retained at that stage and are preserved by the later
+[adopted policy](regression-protection.md). The historical local comparison
 and its input hashes remain intact; this hosted run used the corrected lockfile.
 
 ## Dependency exception

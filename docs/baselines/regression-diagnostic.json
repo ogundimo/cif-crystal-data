@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "note": "Separate line-range validation of the radiation-default status assertion; not a full-population score or policy pilot.",
+  "configuration": {
+    "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+    "mutate": [
+      "src/renderer/src/pxrd.ts:228-228"
+    ],
+    "testRunner": "vitest",
+    "vitest": {
+      "configFile": "vitest.config.ts"
+    },
+    "checkers": [
+      "typescript"
+    ],
+    "tsconfigFile": "tsconfig.mutation.json",
+    "typescriptChecker": {
+      "prioritizePerformanceOverAccuracy": false
+    },
+    "coverageAnalysis": "perTest",
+    "concurrency": 2,
+    "timeoutMS": 5000,
+    "timeoutFactor": 1.5,
+    "reporters": [
+      "clear-text",
+      "progress",
+      "html",
+      "json"
+    ],
+    "htmlReporter": {
+      "fileName": "reports/scientific/regression-diagnostic.html"
+    },
+    "jsonReporter": {
+      "fileName": "reports/scientific/regression-diagnostic.json"
+    },
+    "thresholds": {
+      "high": 90,
+      "low": 70,
+      "break": 0
+    },
+    "ignorePatterns": [
+      "reports/**",
+      "dist/**",
+      "dist-electron/**",
+      "release/**",
+      ".dist/**",
+      "third_party/**",
+      "src/renderer/public/**"
+    ]
+  },
+  "inputHashes": {
+    "src/parser/cif/formula.ts": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+    "src/parser/cif/formula.test.ts": "012fae290b85d61dd7cffbe60e914d78cb4cab571e4261620932a6a725a040b0",
+    "src/renderer/src/pxrd.ts": "f48ceb8364807574c211e2468842f22d571b993254b5864cdf516156a7ab382e",
+    "src/renderer/src/pxrd.test.ts": "6f33dfe948fcb2ef21d44263734fda9386ec91519c77c14bff4bfd5aa40e3240",
+    "src/renderer/src/scattering.ts": "06c1398b010731ff0086e08c0308aa457a364ddf9fcda824f71a45256390f369",
+    "src/renderer/src/scattering.test.ts": "7f16adffc0c28501a9c89a1000361c1bedf5825d7f973743a238d762d2115180",
+    "src/shared/it92.json": "30929d70b204f683f443b99b19c528ae856429325bcaddcddc0a2df9b51ae75c",
+    "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+    "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+    "tsconfig.mutation.json": "fe0b211244af68a8472f0a34a0a2da4c925603800085df5bda3a2fe90ffb2568",
+    "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+  },
+  "execution": {
+    "exit": 0,
+    "durationSeconds": 33.205
+  },
+  "rawReportSha256Lf": "9173baae5d28b7169257483ee3cebdd0222382203549fecc4251974420a3ee14",
+  "counts": {
+    "CompileError": 3,
+    "Killed": 1
+  },
+  "target": {
+    "fullRunId": "690",
+    "location": {
+      "end": {
+        "column": 89,
+        "line": 228
+      },
+      "start": {
+        "column": 47,
+        "line": 228
+      }
+    },
+    "replacement": "\"\"",
+    "before": "Survived",
+    "after": "Killed"
+  }
+}

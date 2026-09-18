@@ -91,7 +91,11 @@ describe('batch export contracts', () => {
     expect(csv).not.toContain('Changed');
     expect(csv.split('\r\n').filter(Boolean)).toHaveLength(1206);
     expect(countBatchExport({ kind: 'matching', filter: { ...filter, referenceQuery: 'nonexistent' } }, f.db)).toBe(0);
-  }, 30_000);
+  // This integration case fsyncs and atomically publishes 1,205 real CIF files.
+  // Hosted Windows disk latency can exceed 30 seconds under coverage; elapsed
+  // time is not its contract. Keep every file/snapshot assertion and allow I/O
+  // to finish before fixture teardown closes and removes the temporary database.
+  }, 120_000);
   it('handles corrupt and legacy blocks per entry, but CSV-only still exports metadata', async () => {
     const f = fixture();
     f.db.exec("UPDATE imported_files SET block_hash='bad' WHERE entry_id=1; UPDATE imported_files SET content_hash=NULL WHERE entry_id=2");

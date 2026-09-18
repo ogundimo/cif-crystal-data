@@ -38,6 +38,16 @@ try {
     node: process.version, platform: process.platform, tools,
     sourceSha256: createHash('sha256').update(JSON.stringify(production)).digest('hex'),
     lockSha256: createHash('sha256').update(await readFile('package-lock.json')).digest('hex') };
+  const normalizedHash = text => createHash('sha256').update(text.replaceAll('\r\n', '\n')).digest('hex');
+  metadata.regressionContract = Object.fromEntries(await Promise.all(
+    ['scripts/quality/scope.mjs', 'scripts/quality/analyzers.mjs', 'vitest.config.ts',
+      'package-lock.json', 'tsconfig.web.json', 'tsconfig.node.json']
+      .map(async file => [file, normalizedHash(await readFile(file, 'utf8'))])));
+  metadata.regressionTests = normalizedHash(JSON.stringify(await Promise.all(
+    files.filter(file => /^src\/.*\.test\.tsx?$/.test(file)).map(async file => [file, normalizedHash(await readFile(file, 'utf8'))]))));
+  metadata.regressionInputs = normalizedHash(JSON.stringify(await Promise.all(
+    files.filter(file => file.startsWith('src/') && !file.startsWith('src/renderer/public/vendor/'))
+      .map(async file => [file, createHash('sha256').update(await readFile(file)).digest('hex')]))));
   await json('inventory.json', inventory);
   await json('metadata.json', metadata);
 
@@ -97,7 +107,7 @@ try {
   const summary = [
     '# Code-quality baseline', '', `Commit: \`${metadata.commit}\` · working tree: **${metadata.dirty ? 'modified (see source hashes)' : 'clean'}**`,
     `Node ${metadata.node} on ${metadata.platform}. Source fingerprint: \`${metadata.sourceSha256}\`.`, '',
-    '**Advisory measurements; no score thresholds enforced.** Coverage is from Vitest unit tests only; separate Electron UI/worker/viewer runs are not included.', '',
+    '**Measurement report.** Coverage and function-complexity enforcement runs separately through `quality:regression`; duplication and deferred metrics remain advisory. Coverage is from Vitest unit tests only; separate Electron UI/worker/viewer runs are not included.', '',
     '## Coverage', '', '| Module | Lines | Statements | Functions | Branches |', '| --- | ---: | ---: | ---: | ---: |',
     ...Object.entries({ ...modules, total: totals }).map(([name, data]) => `| ${name} | ${percent(data.lines)} | ${percent(data.statements)} | ${percent(data.functions)} | ${percent(data.branches)} |`), '',
     'Untested executable production files are included. Declaration-only modules have no executable denominator.', '',
