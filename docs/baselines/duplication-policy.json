@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contract": {
+    "scripts/quality/scope.mjs": "ef3f40ad957e66edd33fa1f0f0f928b517b25f3439a0ddcc98e13f5787a8882a",
+    "scripts/quality/analyzers.mjs": "3f16c8fc9c0b692ec49f9f1eea69def7cb6defb6a7f58382622db1d0bb40318b",
+    "scripts/quality/duplication-policy.mjs": "8bc1273d6a52ccf42867900fe885ce72a20da783276f56bc31ccb77b7fb648c6",
+    "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+  },
+  "review": {
+    "issue": "https://github.com/ogundimo/cif-crystal-data/issues/56",
+    "sourceCommit": "5e23e57dfc7927d1f51fbc10a7b3f0e7e6d64eff",
+    "detectorLines": 26,
+    "detectorTokens": 181
+  },
+  "allowances": [
+    {
+      "key": "c4910402a712bbd1dfb4625b58006f260ae334b9be96952901b796fa6de43fb2",
+      "format": "typescript",
+      "a": {
+        "file": "src/main/database/writer.ts",
+        "start": 123,
+        "end": 148,
+        "fingerprint": "d1cde6bcf297da0a532d23b1f48e2dc5b7f0016f34200b4054210cd77af4f1c3"
+      },
+      "b": {
+        "file": "src/main/database/writer.ts",
+        "start": 154,
+        "end": 180,
+        "fingerprint": "d3f393c3fb662b03ca4721b6a764c45182e7599fc3516a1aa163745c7ded1484"
+      },
+      "count": 1,
+      "reason": "The 26 persisted fields are repeated beside their distinct INSERT and UPDATE SQL parameter contracts. Insert allocates a new ID and prefixes source_filename; update preserves the ID and appends it. Related-row replacement and per-file transactions are already shared. Retain explicit mappings for auditability; see docs/duplication-policy.md.",
+      "reviewTrigger": "Any token/path change, schema/field mapping change or additional clone; no blanket writer exclusion.",
+      "issue": "https://github.com/ogundimo/cif-crystal-data/issues/56"
+    }
+  ]
+}

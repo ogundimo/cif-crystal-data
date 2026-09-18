@@ -129,52 +129,60 @@ function reciprocalBasis(entry: EntryRow): [Vec3, Vec3, Vec3] | null {
   return [scale(cross(bv, cv), 1 / volume), scale(cross(cv, av), 1 / volume), scale(cross(av, bv), 1 / volume)];
 }
 
-function calculatePeaks(
-  entry: EntryRow,
-  sites: AtomSiteRow[],
-  operations: SymmetryOperationRow[],
-  wavelength: number
-): PxrdPeak[] {
-  const basis = reciprocalBasis(entry);
-  const atoms = expandAtoms(sites, operations);
-  if (!basis || atoms.length === 0) return [];
-  const thetaMax = MAX_TWO_THETA * DEG / 2;
-  const dMin = wavelength / (2 * Math.sin(thetaMax));
-  const lengths = [entry.cell_a_angstrom ?? entry.cell_a * 10, entry.cell_b_angstrom ?? entry.cell_b * 10, entry.cell_c_angstrom ?? entry.cell_c * 10];
-  const limits = lengths.map((length) => Math.min(36, Math.max(1, Math.ceil(length / dMin) + 1)));
+function reflectionIntensity(indices: Vec3, atoms: ExpandedAtom[], qLength: number, theta: number): number {
+  const [h, k, l] = indices;
+  const scattering = qLength / 2;
+  let real = 0;
+  let imaginary = 0;
+  for (const atom of atoms) {
+    const formFactor = xrayFormFactor(atom.symbol, scattering ** 2)!;
+    const temperature = Math.exp(-atom.bIso * scattering ** 2);
+    const phase = 2 * Math.PI * (h * atom.position[0] + k * atom.position[1] + l * atom.position[2]);
+    const amplitude = atom.occupancy * formFactor * temperature;
+    real += amplitude * Math.cos(phase);
+    imaginary += amplitude * Math.sin(phase);
+  }
+  const lp = (1 + Math.cos(2 * theta) ** 2) / Math.max(1e-8, Math.sin(theta) ** 2 * Math.cos(theta));
+  const intensity = (real ** 2 + imaginary ** 2) * lp;
+  return intensity;
+}
+
+function reflectionPeak(indices: Vec3, basis: [Vec3, Vec3, Vec3], atoms: ExpandedAtom[], wavelength: number): PxrdPeak | null {
+  const [h, k, l] = indices;
+  const q: Vec3 = [
+    h * basis[0][0] + k * basis[1][0] + l * basis[2][0],
+    h * basis[0][1] + k * basis[1][1] + l * basis[2][1],
+    h * basis[0][2] + k * basis[1][2] + l * basis[2][2]
+  ];
+  const qLength = Math.sqrt(dot(q, q));
+  const sinTheta = wavelength * qLength / 2;
+  if (sinTheta <= 0 || sinTheta >= 1) return null;
+  const theta = Math.asin(sinTheta);
+  const twoTheta = 2 * theta / DEG;
+  if (twoTheta < MIN_TWO_THETA || twoTheta > MAX_TWO_THETA) return null;
+  const intensity = reflectionIntensity(indices, atoms, qLength, theta);
+  return intensity > 1e-8 ? { twoTheta, intensity, hkl: `${h} ${k} ${l}` } : null;
+}
+
+function excludedFriedelMember(h: number, k: number, l: number): boolean {
+  return (h === 0 && k === 0 && l === 0) || h < 0 || (h === 0 && k < 0) || (h === 0 && k === 0 && l < 0);
+}
+
+function enumerateReflections(basis: [Vec3, Vec3, Vec3], atoms: ExpandedAtom[], limits: number[], wavelength: number): PxrdPeak[] {
   const raw: PxrdPeak[] = [];
   for (let h = -limits[0]; h <= limits[0]; h += 1) {
     for (let k = -limits[1]; k <= limits[1]; k += 1) {
       for (let l = -limits[2]; l <= limits[2]; l += 1) {
-        if ((h === 0 && k === 0 && l === 0) || h < 0 || (h === 0 && k < 0) || (h === 0 && k === 0 && l < 0)) continue;
-        const q: Vec3 = [
-          h * basis[0][0] + k * basis[1][0] + l * basis[2][0],
-          h * basis[0][1] + k * basis[1][1] + l * basis[2][1],
-          h * basis[0][2] + k * basis[1][2] + l * basis[2][2]
-        ];
-        const qLength = Math.sqrt(dot(q, q));
-        const sinTheta = wavelength * qLength / 2;
-        if (sinTheta <= 0 || sinTheta >= 1) continue;
-        const theta = Math.asin(sinTheta);
-        const twoTheta = 2 * theta / DEG;
-        if (twoTheta < MIN_TWO_THETA || twoTheta > MAX_TWO_THETA) continue;
-        const scattering = qLength / 2;
-        let real = 0;
-        let imaginary = 0;
-        for (const atom of atoms) {
-          const formFactor = xrayFormFactor(atom.symbol, scattering ** 2)!;
-          const temperature = Math.exp(-atom.bIso * scattering ** 2);
-          const phase = 2 * Math.PI * (h * atom.position[0] + k * atom.position[1] + l * atom.position[2]);
-          const amplitude = atom.occupancy * formFactor * temperature;
-          real += amplitude * Math.cos(phase);
-          imaginary += amplitude * Math.sin(phase);
-        }
-        const lp = (1 + Math.cos(2 * theta) ** 2) / Math.max(1e-8, Math.sin(theta) ** 2 * Math.cos(theta));
-        const intensity = (real ** 2 + imaginary ** 2) * lp;
-        if (intensity > 1e-8) raw.push({ twoTheta, intensity, hkl: `${h} ${k} ${l}` });
+        if (excludedFriedelMember(h, k, l)) continue;
+        const peak = reflectionPeak([h, k, l], basis, atoms, wavelength);
+        if (peak) raw.push(peak);
       }
     }
   }
+  return raw;
+}
+
+function mergeReflections(raw: PxrdPeak[]): PxrdPeak[] {
   raw.sort((a, b) => a.twoTheta - b.twoTheta);
   const merged: PxrdPeak[] = [];
   for (const peak of raw) {
@@ -190,6 +198,22 @@ function calculatePeaks(
   }
   const maximum = merged.reduce((value, peak) => Math.max(value, peak.intensity), 0);
   return maximum === 0 ? [] : merged.map((peak) => ({ ...peak, intensity: peak.intensity * 100 / maximum }));
+}
+
+function calculatePeaks(
+  entry: EntryRow,
+  sites: AtomSiteRow[],
+  operations: SymmetryOperationRow[],
+  wavelength: number
+): PxrdPeak[] {
+  const basis = reciprocalBasis(entry);
+  const atoms = expandAtoms(sites, operations);
+  if (!basis || atoms.length === 0) return [];
+  const thetaMax = MAX_TWO_THETA * DEG / 2;
+  const dMin = wavelength / (2 * Math.sin(thetaMax));
+  const lengths = [entry.cell_a_angstrom ?? entry.cell_a * 10, entry.cell_b_angstrom ?? entry.cell_b * 10, entry.cell_c_angstrom ?? entry.cell_c * 10];
+  const limits = lengths.map((length) => Math.min(36, Math.max(1, Math.ceil(length / dMin) + 1)));
+  return mergeReflections(enumerateReflections(basis, atoms, limits, wavelength));
 }
 
 function validOperation(operation: string, entry: EntryRow): boolean {

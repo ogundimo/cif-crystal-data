@@ -62,10 +62,7 @@ function cleanDoi(value: string | null): string {
     .replace(/[\s.,;]+$/, '');
 }
 
-/** Normalize scanned CIF values into the fields this app persists. */
-export function normalizeCif(raw: RawCif): CifEntry {
-  const { tags, hasAnisoLabel, atomSites, publAuthors, symmetryOperations, atomSiteAnisotropic } = raw;
-
+function normalizeFormula(tags: Map<string, string>) {
   const sumRaw = getRaw(tags, '_chemical_formula_sum');
   const moietyRaw = getRaw(tags, '_chemical_formula_moiety');
   if (!hasCifValue(sumRaw) && !hasCifValue(moietyRaw)) {
@@ -76,6 +73,10 @@ export function normalizeCif(raw: RawCif): CifEntry {
     : parseFormulaMoiety(moietyRaw as string);
   const formula = formatFormula(elements);
 
+  return { formula, elements };
+}
+
+function normalizeLengths(tags: Map<string, string>) {
   const aRaw = getRaw(tags, '_cell_length_a');
   const bRaw = getRaw(tags, '_cell_length_b');
   const cRaw = getRaw(tags, '_cell_length_c');
@@ -93,6 +94,11 @@ export function normalizeCif(raw: RawCif): CifEntry {
   if (!Number.isFinite(cell_b)) throw new Error('Invalid _cell_length_b');
   if (!Number.isFinite(cell_c)) throw new Error('Invalid _cell_length_c');
 
+  return { cell_a, cell_b, cell_c, cellAAngstrom, cellBAngstrom, cellCAngstrom };
+}
+
+function normalizeGeometry(tags: Map<string, string>, lengths: ReturnType<typeof normalizeLengths>) {
+  const { cellAAngstrom, cellBAngstrom, cellCAngstrom } = lengths;
   const validAngle = (tag: string): number | null => {
     const value = nullableNumber(getRaw(tags, tag));
     return value !== null && value > 0 && value < 180 ? value : null;
@@ -108,6 +114,10 @@ export function normalizeCif(raw: RawCif): CifEntry {
         ? calculateUnitCellVolume(cellAAngstrom, cellBAngstrom, cellCAngstrom, cellAlpha, cellBeta, cellGamma)
         : null;
 
+  return { cellAlpha, cellBeta, cellGamma, cellVolume };
+}
+
+function normalizeSpaceGroup(tags: Map<string, string>) {
   const spgRaw = getRaw(tags, '_space_group_name_H-M_alt') ??
     getRaw(tags, '_symmetry_space_group_name_H-M');
   if (!hasCifValue(spgRaw)) {
@@ -125,9 +135,10 @@ export function normalizeCif(raw: RawCif): CifEntry {
       : 'Unresolved space-group number');
   }
 
-  const reference = buildReference(tags);
-  const level = hasAnisoLabel ? LEVEL_FULL : LEVEL_CELL;
-  const sampleType = hasAnisoLabel ? 'Sample crystal' : 'Powder';
+  return { space_group, sg_number };
+}
+
+function normalizePublication(tags: Map<string, string>) {
   const crystalColour = getClean(tags, '_exptl_crystal_colour') ?? '';
   const publTitle = getClean(tags, '_citation_title') ??
     getClean(tags, '_publ_section_title') ?? '';
@@ -138,6 +149,11 @@ export function normalizeCif(raw: RawCif): CifEntry {
   const databaseCodeCsd = getClean(tags, '_database_code_csd') ?? '';
   const databaseCodeIcsd = getClean(tags, '_database_code_icsd') ?? '';
   const journalLanguage = getClean(tags, '_journal_language') ?? '';
+  return { crystalColour, publTitle, citationDoi, databaseCodeCcdc, databaseCodeCsd,
+    databaseCodeIcsd, journalLanguage, reference: buildReference(tags) };
+}
+
+function normalizeRadiation(tags: Map<string, string>) {
   const formulaUnitsValue = nullableNumber(getRaw(tags, '_cell_formula_units_z'));
   const formulaUnitsZ = formulaUnitsValue !== null && formulaUnitsValue > 0 ? formulaUnitsValue : null;
   const radiationType = getClean(tags, '_diffrn_radiation_type') ??
@@ -147,6 +163,10 @@ export function normalizeCif(raw: RawCif): CifEntry {
   const radiationWavelengthAngstrom = wavelengthValue !== null && wavelengthValue > 0
     ? wavelengthValue
     : null;
+  return { formulaUnitsZ, radiationType, radiationWavelengthAngstrom };
+}
+
+function normalizeAuthors({ tags, publAuthors }: RawCif) {
   // A single-author paper may state the tags as scalars instead of a loop.
   const scalarAuthorName = getClean(tags, '_citation_author_name') ??
     getClean(tags, '_publ_author_name');
@@ -156,38 +176,28 @@ export function normalizeCif(raw: RawCif): CifEntry {
       ? [{ name: scalarAuthorName, address: normalizeAddress(getClean(tags, '_publ_author_address')) }]
       : [];
 
+  return authors;
+}
+
+/** Normalize scanned CIF values into the fields this app persists. */
+export function normalizeCif(raw: RawCif): CifEntry {
+  const formula = normalizeFormula(raw.tags);
+  const lengths = normalizeLengths(raw.tags);
+  const geometry = normalizeGeometry(raw.tags, lengths);
+  const spaceGroup = normalizeSpaceGroup(raw.tags);
   return {
-    formula,
-    elements,
-    cell_a,
-    cell_b,
-    cell_c,
-    cellAAngstrom,
-    cellBAngstrom,
-    cellCAngstrom,
-    cellAlpha,
-    cellBeta,
-    cellGamma,
-    cellVolume,
-    sg_number,
-    space_group,
-    reference,
-    level,
-    sampleType,
-    crystalColour,
-    publTitle,
-    citationDoi,
-    databaseCodeCcdc,
-    databaseCodeCsd,
-    databaseCodeIcsd,
-    journalLanguage,
-    formulaUnitsZ,
-    radiationType,
-    radiationWavelengthAngstrom,
-    publAuthors: authors,
+    ...formula,
+    ...lengths,
+    ...geometry,
+    ...spaceGroup,
+    ...normalizePublication(raw.tags),
+    ...normalizeRadiation(raw.tags),
+    level: raw.hasAnisoLabel ? LEVEL_FULL : LEVEL_CELL,
+    sampleType: raw.hasAnisoLabel ? 'Sample crystal' : 'Powder',
+    publAuthors: normalizeAuthors(raw),
     dataAuthors: raw.dataAuthors ?? [],
-    atomSites,
-    symmetryOperations,
-    atomSiteAnisotropic
+    atomSites: raw.atomSites,
+    symmetryOperations: raw.symmetryOperations,
+    atomSiteAnisotropic: raw.atomSiteAnisotropic
   };
 }

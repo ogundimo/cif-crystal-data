@@ -3,6 +3,8 @@
 Current coverage, cyclomatic/cognitive complexity and mutation policies are in
 [Regression protection](regression-protection.md). The historical snapshots and
 proposals below remain evidence, not the current enforcement configuration.
+Milestone 7's parser/PXRD extraction, boundary evidence and duplication decision
+are recorded in [Targeted simplification](targeted-simplification.md).
 
 The historical record below follows completed [PR #42](https://github.com/ogundimo/cif-crystal-data-public/pull/42) and the first successful
 hosted mutation run. Numerical targets remain proposals; this documentation update

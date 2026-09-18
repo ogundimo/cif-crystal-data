@@ -49,8 +49,12 @@ jobs:
         run: |
           if ($env:POLICY_BASE -and $env:POLICY_BASE -notmatch '^0+$') {
             npm run quality:regression -- --base $env:POLICY_BASE
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm run quality:duplication -- --base $env:POLICY_BASE
           } else {
             npm run quality:regression
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm run quality:duplication
           }
 
       - name: Retain regression policy evidence

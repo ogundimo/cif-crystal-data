@@ -2125,16 +2125,6 @@
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
-        "file": "src/parser/cif/entry.ts",
-        "line": 66,
-        "column": 8,
-        "value": 44,
-        "message": "Function 'normalizeCif' has a complexity of 44. Maximum allowed is 0.",
-        "key": "src/parser/cif/entry.ts::normalizeCif#1",
-        "reason": "CIF normalization covers metadata variants; targeted simplification belongs to #52.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
         "file": "src/parser/cif/scanner.ts",
         "line": 40,
         "column": 8,
@@ -2211,18 +2201,8 @@
         "value": 45,
         "message": "Function 'calculatePxrd' has a complexity of 45. Maximum allowed is 0.",
         "key": "src/renderer/src/pxrd.ts::calculatePxrd#1",
-        "reason": "Scientific input validation and explicit diagnostic/resource bounds; coordinate refactor with #53.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/pxrd.ts",
-        "line": 132,
-        "column": 1,
-        "value": 28,
-        "message": "Function 'calculatePeaks' has a complexity of 28. Maximum allowed is 0.",
-        "key": "src/renderer/src/pxrd.ts::calculatePeaks#1",
-        "reason": "Reflection enumeration, interference and degeneracy accumulation require reference-backed refactoring (#53).",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
+        "reason": "Reviewed in milestone 7: ordered public scientific input validation, diagnostic precedence and resource admission remain cohesive; reflection calculation stages are extracted separately.",
+        "reviewTrigger": "Any increase, rename/move, analyzer change, scientific validation/diagnostic or resource-policy change."
       }
     ],
     "cognitive": [
@@ -2274,16 +2254,6 @@
         "message": "Refactor this function to reduce its Cognitive Complexity from 22 to the 0 allowed.",
         "key": "src/main/searchFilterValidation.ts::validateSearchFilter#1",
         "reason": "Main-side validation must reject malformed IPC fields independently.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/parser/cif/entry.ts",
-        "line": 66,
-        "column": 17,
-        "value": 26,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 26 to the 0 allowed.",
-        "key": "src/parser/cif/entry.ts::normalizeCif#1",
-        "reason": "CIF normalization covers metadata variants; targeted simplification belongs to #52.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2378,23 +2348,13 @@
       },
       {
         "file": "src/renderer/src/pxrd.ts",
-        "line": 132,
-        "column": 10,
-        "value": 36,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 36 to the 0 allowed.",
-        "key": "src/renderer/src/pxrd.ts::calculatePeaks#1",
-        "reason": "Reflection enumeration, interference and degeneracy accumulation require reference-backed refactoring (#53).",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/pxrd.ts",
         "line": 220,
         "column": 17,
         "value": 35,
         "message": "Refactor this function to reduce its Cognitive Complexity from 35 to the 0 allowed.",
         "key": "src/renderer/src/pxrd.ts::calculatePxrd#1",
-        "reason": "Scientific input validation and explicit diagnostic/resource bounds; coordinate refactor with #53.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
+        "reason": "Reviewed in milestone 7: ordered public scientific input validation, diagnostic precedence and resource admission remain cohesive; reflection calculation stages are extracted separately.",
+        "reviewTrigger": "Any increase, rename/move, analyzer change, scientific validation/diagnostic or resource-policy change."
       },
       {
         "file": "src/renderer/src/pxrd.ts",
@@ -2403,8 +2363,8 @@
         "value": 25,
         "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 0 allowed.",
         "key": "src/renderer/src/pxrd.ts::parseCoordinate#1",
-        "reason": "Symmetry grammar, translations and wrapping require reference-backed refactoring (#53).",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
+        "reason": "Reviewed in milestone 7: symmetry-expression grammar and wrapping are outside the selected reflection-stage extraction; boundary regressions retain numerical behavior.",
+        "reviewTrigger": "Any increase, rename/move, analyzer change or supported symmetry-grammar/wrapping change."
       }
     ]
   },

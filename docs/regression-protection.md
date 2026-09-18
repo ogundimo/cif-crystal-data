@@ -2,8 +2,9 @@
 
 This policy implements #44–#46 and #48. The formula and replacement-model
 survivor reviews are recorded in [mutation survivor review](regression-survivors.md).
-Historical measurements remain unchanged. Duplication and the old 60/60/50/50
-coverage goals remain advisory; there is no blanket 100% mutation target.
+Historical measurements remain unchanged. The [duplication policy](duplication-policy.md)
+implements #47 separately. The old 60/60/50/50 coverage goals remain advisory;
+there is no blanket 100% mutation target.
 
 ## Reproduce and review
 
@@ -65,7 +66,9 @@ policy uses that review boundary for new functions instead of forcing all existi
 functions below the previously proposed 22. Lower aspirations (10 cyclomatic,
 15 cognitive) remain guidance. The two metrics are compared independently.
 
-There are 15 existing cyclomatic and 18 cognitive exceptions. Each records the
+There are 13 existing cyclomatic and 16 cognitive exceptions after
+[targeted simplification](targeted-simplification.md) removed the two parser/PXRD
+allowances from each metric. Each records the
 function identity, source location, measured maximum, responsibility-based reason
 and review trigger in the baseline. Existing exceptions cannot grow beyond their
 recorded value. All accepted exceptions remain visible in console output and
@@ -79,7 +82,8 @@ transferred heuristically. Reordering anonymous siblings can require explicit
 review. Class field initializers and static blocks are included as the analyzer's
 implicit functions. Changed functions retain their identity and allowance; new
 functions must meet 20. Existing functions below 20 can grow up to that ceiling.
-Parser and PXRD simplification remains separately tracked in #52 and #53.
+The parser and PXRD extraction and retained-hotspot decisions are recorded in
+[targeted simplification](targeted-simplification.md).
 
 ## Baseline governance
 
