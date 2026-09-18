@@ -1,0 +1,55 @@
+{
+  "applicationRevision": "023f149556352a3dc14cac73929dc4e79e6cd1b0",
+  "sourceTree": "efc6503f7935274423502837aa4d6d7847d6b09f",
+  "applicationSourceDirty": false,
+  "electron": "44.1.0",
+  "platform": "win32",
+  "contentSize": [
+    1440,
+    1000
+  ],
+  "deviceScaleFactor": 1,
+  "inputSha256": {
+    "docs/samples/rocksalt-demo.cif": "6a09dc49acc7af11c5f8f778eecf10e076ba8c17cc3c26f3f5964ca7e5a4222d",
+    "docs/samples/synthetic-comparison.xy": "fc140a4c2cad72957bf11056690a05d29492e23305c38e483749b057a77068c7",
+    "scripts/capture-readme-screenshots.cjs": "5e7832595c44307ceb07e50ae9d3c18eaedf52b17bacadfd14d7039cea837035",
+    "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68"
+  },
+  "captures": [
+    {
+      "file": "workspace.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 94153,
+      "sha256": "c1372b7dfe1ae2c47225123ac228fdd8092e4701cd2f0f6f91c7c3a9b1364470"
+    },
+    {
+      "file": "powder-diffraction.png",
+      "width": 708,
+      "height": 340,
+      "bytes": 15363,
+      "sha256": "dc8e7f52f9b7cf10fc4e8eaee0d8e08ff7ce12ae97b1864cc49fe2feedc478be"
+    },
+    {
+      "file": "quick-search.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 130987,
+      "sha256": "7e2ac2af6803b7715d04f851d8c3a2f34ddbebabb58a64da0d83619b26dc148f"
+    },
+    {
+      "file": "crystal-viewer.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 354205,
+      "sha256": "ebc26169dbf36923d88ffab7351cb3dd93623250420cfeca82b9bdf1f6122ae6"
+    },
+    {
+      "file": "batch-export.png",
+      "width": 1440,
+      "height": 1000,
+      "bytes": 66177,
+      "sha256": "2832870dbcc922a8a23891adb7d79f1d0a49a4fb547dd47fbf7e95780f0963ff"
+    }
+  ]
+}
