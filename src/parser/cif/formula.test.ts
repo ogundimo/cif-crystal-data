@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { formatFormula, parseFormulaMoiety, parseFormulaSum } from './formula';
 
 describe('formula composition', () => {
+  it('returns no sum atoms for empty quoted or whitespace-only fields', () => {
+    for (const text of ['', '  ', "' '"]) expect(parseFormulaSum(text)).toEqual([]);
+  });
+
+  it('filters whitespace at the edges of a multiplied component', () => {
+    expect(parseFormulaMoiety('2 ( H2 O ), Na 1+')).toEqual([
+      { element: 'H', count: 4 }, { element: 'Na', count: 1 }, { element: 'O', count: 2 }
+    ]);
+  });
+
+  it.each(['Na, C 1+oops', 'Na, C oops1+', 'Na, 1+', 'Na, 2 (1+)'])
+    ('does not let a valid component conceal an invalid one: %s', formula => {
+      expect(() => parseFormulaMoiety(formula)).toThrow('Unable to parse formula');
+    });
   it('retains fractional counts, implicit ones and alphabetical ordering', () => {
     const pairs = parseFormulaSum('"Na.5  O\tC1.25 H"');
     expect(pairs).toEqual([

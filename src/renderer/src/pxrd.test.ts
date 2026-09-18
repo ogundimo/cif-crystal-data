@@ -299,6 +299,189 @@ describe('independent Gemmi 0.7.5 references', () => {
 });
 
 describe('scientific diagnostics and reproducibility', () => {
+  it('retains high-order cubic reflections at a short supported wavelength', () => {
+    const wavelength=.5609;
+    // d800=a/8=0.5 A; independently apply Bragg's law.
+    const angle=2*Math.asin(wavelength)*180/Math.PI;
+    expect(calculatePxrd(entry,[site],identity,wavelength).peaks.some(p=>Math.abs(p.twoTheta-angle)<1e-7)).toBe(true);
+  });
+  it('reports the exact reflection-bound limit and retains the positive capped plane', () => {
+    const dMin=1.5406/(2*Math.sin(40*Math.PI/180));
+    expect(calculatePxrd({...entry,cell_a_angstrom:dMin*34.5},[site],identity).status).toBe('complete');
+    expect(calculatePxrd({...entry,cell_a_angstrom:dMin*35.5},[site],identity).status).toBe('incomplete');
+    const length=dMin*36.5;
+    const result=calculatePxrd({...entry,cell_a_angstrom:length},[site],identity);
+    const angle=2*Math.asin(1.5406*36/(2*length))*180/Math.PI;
+    expect(result.peaks.some(p=>Math.abs(p.twoTheta-angle)<1e-7)).toBe(true);
+  });
+  it('enforces operation and expanded-atom limits at their inclusive boundaries', () => {
+    expect(calculatePxrd(entry,[site],Array.from({length:384},()=>identity[0])).status).toBe('complete');
+    expect(calculatePxrd(entry,[site],Array.from({length:385},()=>identity[0])).diagnostics)
+      .toContain('Malformed or cell-incompatible symmetry operations; no partial pattern is calculated.');
+    // Tiny synthetic cell has no reflections in range; this tests resource admission,
+    // not the physical plausibility of 10,000 coincident sites.
+    const tiny={...entry,cell_a_angstrom:.1,cell_b_angstrom:.1,cell_c_angstrom:.1};
+    expect(calculatePxrd(tiny,Array.from({length:10000},()=>site),identity).status).toBe('complete');
+    expect(calculatePxrd(tiny,Array.from({length:10001},()=>site),identity).diagnostics)
+      .toContain('Structure exceeds the supported calculation work limit (50 million atom/reflection evaluations).');
+  });
+  it('retains actionable wavelength and missing-symmetry rejection reasons', () => {
+    expect(calculatePxrd(entry,[site],identity,0).diagnostics).toContain('Wavelength must be finite, positive and at most 10 Å.');
+    expect(calculatePxrd(entry,[site],identity,.1).diagnostics)
+      .toContain('The requested range exceeds the IT92 form-factor limit sin(θ)/λ < 2 Å⁻¹. Increase the wavelength.');
+    expect(calculatePxrd({...entry,sg_number:225},[site],[]).diagnostics)
+      .toContain('Explicit symmetry operations are required outside P1; reimport a CIF containing them.');
+  });
+  it('rejects integer-coefficient overflow before admitting a symmetry operation', () => {
+    const huge='1'+'0'.repeat(308);
+    // Each coefficient is finite, but their sum overflows when the rotation
+    // matrix is evaluated at a unit vector. At the origin both terms are zero.
+    const operation_xyz=`${huge}x+${huge}x,y,z`;
+    const result=calculatePxrd(entry,[site],[{...identity[0],operation_xyz}]);
+    expect(result.status).toBe('unsupported');
+    expect(result.diagnostics).toContain('Malformed or cell-incompatible symmetry operations; no partial pattern is calculated.');
+  });
+  it('validates non-reduced cells whose rotation determinant has two nonzero cross terms', () => {
+    // R(y,z)=(y-2z,y-z), R^2=-I; G=[[16,-16],[-16,32]] satisfies R^T G R=G.
+    const crystal={...entry,cell_b_angstrom:4,cell_c_angstrom:Math.sqrt(32),cell_angle_alpha:135};
+    const original={...site,fract_x:.1,fract_y:.2,fract_z:.3};
+    const operations=['x,y,z','x,y-2z,y-z','x,-y,-z','x,-y+2z,-y+z'].map(operation_xyz=>({...identity[0],operation_xyz}));
+    const expanded=[[.2,.3],[.6,.9],[.8,.7],[.4,.1]].map(([fract_y,fract_z])=>({...original,fract_y,fract_z}));
+    const actual=calculatePxrd(crystal,[original],operations),expected=calculatePxrd(crystal,expanded,identity);
+    expect(actual.status).toBe('complete');
+    expect(actual.peaks).toHaveLength(expected.peaks.length);
+    actual.peaks.forEach((peak,i)=>expect(peak.intensity).toBeCloseTo(expected.peaks[i].intensity,7));
+  });
+  it('scales the metric tolerance by the largest squared length for rounded cells', () => {
+    // Swapping b/c differs by about 0.00032 A^2, below 1e-5*a^2=0.001,
+    // but above a tolerance based on the shortest length (0.00016).
+    const crystal={...entry,cell_a_angstrom:10,cell_b_angstrom:4,cell_c_angstrom:4.00004};
+    expect(calculatePxrd(crystal,[site],[{...identity[0],operation_xyz:'x,z,y'}]).status).toBe('complete');
+    expect(calculatePxrd({...crystal,cell_c_angstrom:4.001},[site],[{...identity[0],operation_xyz:'x,z,y'}]).status).toBe('unsupported');
+  });
+  it('matches explicitly expanded mixed sites under signed fractional translations', () => {
+    const sites=[{...site,fract_x:.13,fract_y:.21,fract_z:.37},
+      {...site,type_symbol:'Fe',fract_x:.27,fract_y:.19,fract_z:.41}];
+    const operations=[...identity,{...identity[0],operation_xyz:'-x+1/3,y+1/4,-z+1/5'}];
+    const expanded=sites.flatMap(atom=>[atom,{...atom,fract_x:1/3-atom.fract_x,
+      fract_y:atom.fract_y+1/4,fract_z:1+1/5-atom.fract_z}]);
+    const actual=calculatePxrd(entry,sites,operations), expected=calculatePxrd(entry,expanded,identity);
+    expect(actual.status).toBe('complete');
+    expect(actual.peaks).toHaveLength(expected.peaks.length);
+    actual.peaks.forEach((peak,i)=>expect(peak.intensity).toBeCloseTo(expected.peaks[i].intensity,8));
+  });
+  it('deduplicates rounded sites across the periodic boundary', () => {
+    const sites=[site,{...site,type_symbol:'Fe',fract_x:.2,fract_y:.3,fract_z:.4}];
+    const operations=[...identity,{...identity[0],operation_xyz:'x+999999999/1000000000,y,z'}];
+    const actual=calculatePxrd(entry,sites,operations),expected=calculatePxrd(entry,sites,identity);
+    expect(actual.status).toBe('complete');
+    expect(actual.peaks).toHaveLength(expected.peaks.length);
+    actual.peaks.forEach((peak,i)=>expect(peak.intensity).toBeCloseTo(expected.peaks[i].intensity,8));
+  });
+  it('reports missing atoms, malformed types and inferred labels explicitly', () => {
+    expect(calculatePxrd(entry, [], identity).diagnostics).toContain('Atomic positions are unavailable.');
+    expect(calculatePxrd(entry, [{...site, type_symbol:'Na?'}], identity).diagnostics)
+      .toContain('Unrecognized atom type; supply an element symbol with an optional ionic charge.');
+    const inferred = calculatePxrd(entry, [site, {...site, type_symbol:null, site_label:'Fe2', fract_x:.2}], identity);
+    expect(inferred.status).toBe('complete');
+    expect(inferred.diagnostics).toContain('Some elements inferred from atom labels.');
+    expect(calculatePxrd(entry, [site], identity).diagnostics).not.toContain('Some elements inferred from atom labels.');
+  });
+  it.each(['a','b','c'] as const)('converts legacy %s lengths consistently for metric validation and peaks', axis => {
+    const crystal = {...entry, cell_a_angstrom:4, cell_b_angstrom:5, cell_c_angstrom:6,
+      cell_a:.4, cell_b:.5, cell_c:.6};
+    const operations = [...identity, {...identity[0],operation_xyz:'-x,-y,z'}];
+    const expected = calculatePxrd(crystal,[site],operations);
+    const result = calculatePxrd({...crystal,[`cell_${axis}_angstrom`]:null},[site],operations);
+    expect(result.status).toBe('complete');
+    expect(result.peaks).toEqual(expected.peaks);
+    expect(result.diagnostics).toContain('Legacy nanometre cell lengths converted to ångströms.');
+    expect(expected.diagnostics).not.toContain('Legacy nanometre cell lengths converted to ångströms.');
+    // Exchanging unequal axes must remain incompatible after conversion.
+    expect(calculatePxrd({...crystal,[`cell_${axis}_angstrom`]:null},[site],
+      [{...identity[0],operation_xyz:'y,z,x'}]).status).toBe('unsupported');
+  });
+  it.each(['12+x,y,z','1/12+x,y,z','1+x,y,z','x+12,y,z','x+1/12,y,z'])
+    ('accepts translations before and after variables: %s', operation_xyz => {
+      // A common origin shift multiplies F by a unit phase, preserving |F| squared.
+      const result = calculatePxrd(entry,[site],[{...identity[0],operation_xyz}]);
+      const expected = calculatePxrd(entry,[site],identity);
+      expect(result.status).toBe('complete');
+      expect(result.peaks).toHaveLength(expected.peaks.length);
+      result.peaks.forEach((peak,i) => expect(peak.intensity).toBeCloseTo(expected.peaks[i].intensity,8));
+    });
+  it.each(['xray','x-ray','x ray','synchrotron','CuK','Mo K','Ag  K'])('accepts recorded X-ray radiation %s', radiation_type => {
+    const result = calculatePxrd({...entry,radiation_type},[site],identity);
+    expect(result.status).toBe('complete');
+    expect(result.diagnostics).not.toContain('Radiation assumed: monochromatic X-rays.');
+  });
+  it.each(['neutron X-ray','electron synchrotron','unknown','x?ray'])('rejects unsupported radiation %s', radiation_type => {
+    expect(calculatePxrd({...entry,radiation_type},[site],identity).diagnostics)
+      .toContain('Only monochromatic X-ray scattering is supported; the recorded radiation type is unsupported.');
+  });
+  it.each(['Na+','Na+12','Na12+','Na-','Na2-'])('accepts charged element notation %s as neutral scattering', type_symbol => {
+    expect(calculatePxrd(entry,[{...site,type_symbol}],identity).peaks).toEqual(calculatePxrd(entry,[site],identity).peaks);
+  });
+  it.each(['?Na','Na?','Na+x','Na12x','Na1?','Na+Na'])('rejects malformed atom symbols %s', type_symbol => {
+    expect(calculatePxrd(entry,[site,{...site,type_symbol}],identity).status).toBe('unsupported');
+  });
+  it('includes Cf and zero occupancy in the supported domain', () => {
+    expect(calculatePxrd(entry,[{...site,type_symbol:'Cf'}],identity).status).toBe('complete');
+    const zero = calculatePxrd(entry,[{...site,occupancy:0}],identity);
+    expect(zero.status).toBe('complete');
+    expect(zero.peaks).toEqual([]);
+    expect(zero.diagnostics).toContain('No nonzero reflections in the requested 5–80° range.');
+    expect(calculatePxrd(entry,[site],identity).diagnostics).not.toContain('No nonzero reflections in the requested 5–80° range.');
+  });
+  it('reports only defaults actually used, including mixed site metadata', () => {
+    const explicit = calculatePxrd({...entry,radiation_type:'X-ray'},[site],identity);
+    expect(explicit.diagnostics).toEqual(['Neutral atoms; isotropic displacement only; no anomalous scattering, texture, absorption or instrumental corrections. Supplied symmetry must describe the complete cell.']);
+    const mixed = calculatePxrd(entry,[site,{...site,occupancy:null,b_iso_or_equiv:null,u_iso_or_equiv:null}],identity);
+    expect(mixed.diagnostics).toContain('Missing occupancies assumed to be one.');
+    expect(mixed.diagnostics).toContain('Missing isotropic displacement assumed to be zero.');
+    for (const displacement of [{b_iso_or_equiv:null,u_iso_or_equiv:.01},{b_iso_or_equiv:1,u_iso_or_equiv:null}]) {
+      expect(calculatePxrd(entry,[{...site,...displacement}],identity).diagnostics)
+        .not.toContain('Missing isotropic displacement assumed to be zero.');
+    }
+    expect(calculatePxrd({...entry,radiation_wavelength_angstrom:null},[site],identity,1).diagnostics)
+      .not.toContain('Wavelength assumed: 1.5406 Å.');
+    expect(calculatePxrd(entry,[site],identity,10).status).toBe('complete');
+  });
+  it.each([NaN,Infinity,-1,0,180,200])('rejects invalid cell angle %s with an actionable diagnostic', cell_angle_alpha => {
+    expect(calculatePxrd({...entry,cell_angle_alpha},[site],identity).diagnostics).toContain('Invalid or degenerate unit cell.');
+  });
+  it.each(['a','b','c'] as const)('rejects invalid %s cell lengths before calculation', axis => {
+    for (const length of [-1,0,NaN,Infinity]) {
+      expect(calculatePxrd({...entry,[`cell_${axis}_angstrom`]:length},[site],identity).diagnostics)
+        .toContain('Invalid or degenerate unit cell.');
+    }
+  });
+  it.each([
+    [{fract_x:null},'Missing or non-finite atomic coordinates; no partial pattern is calculated.'],
+    [{occupancy:2},'Atomic occupancy must lie between zero and one.'],
+    [{b_iso_or_equiv:-1},'Displacement parameters must be finite and nonnegative.'],
+    [{type_symbol:'Es'},'An atom has no supported neutral-atom form factor (H–Cf).']
+  ] as const)('retains rejection reason for %j', (invalid,message) => {
+    expect(calculatePxrd(entry,[site,{...site,...invalid}],identity).diagnostics).toContain(message);
+  });
+  it.each([NaN,Infinity,-1,0,.0009,75.01])('rejects invalid profile sampling step %s', step => {
+    expect(createPxrdProfile([{twoTheta:40,intensity:100,hkl:'1 0 0'}],.1,step)).toEqual([]);
+  });
+  it.each([{twoTheta:NaN,intensity:1},{twoTheta:40,intensity:Infinity},{twoTheta:40,intensity:-1}])
+    ('does not hide invalid profile peaks among valid ones: %j', invalid => {
+      expect(createPxrdProfile([{twoTheta:40,intensity:100,hkl:'1 0 0'},{...invalid,hkl:'0 1 0'}])).toEqual([]);
+    });
+  it('accepts inclusive sampling limits and zero intensity', () => {
+    const peak={twoTheta:5,intensity:1,hkl:'1 0 0'};
+    expect(createPxrdProfile([peak],.1,.001)).toHaveLength(75001);
+    expect(createPxrdProfile([peak],.1,75)).toHaveLength(2);
+    expect(createPxrdProfile([peak,{...peak,intensity:0}])).toEqual(createPxrdProfile([peak]));
+  });
+  it('keeps diagnostic headers on one line without erasing their text', () => {
+    const result=calculatePxrd(entry,[site],identity);
+    result.diagnostics=['first\r\nsecond'];
+    expect(serializePxrdProfile([],true,{result,fwhm:.1})).toContain('# first  second\n');
+  });
   it('keeps distinct periodic positions whose undelimited coordinate keys collide', () => {
     // Rounded keys [1,23456,7] and [12,3456,7] both concatenate to 1234567.
     const original = {...site,fract_x:.00001,fract_y:.23456,fract_z:.00007};

@@ -1,5 +1,9 @@
 # Targeted mutation testing (#19)
 
+Current command behavior and cadence are adopted in [Regression protection](regression-protection.md).
+See [the later survivor review](regression-survivors.md) for #50/#78 decisions.
+The original pilot measurements below remain historical evidence.
+
 The milestone-3 follow-up is recorded in [PXRD survivor review](pxrd-mutation-review.md).
 It retains the original results below, measures new analytic tests against the
 unchanged source, and separately validates the replacement IT92 model.

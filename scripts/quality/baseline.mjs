@@ -38,6 +38,12 @@ try {
     node: process.version, platform: process.platform, tools,
     sourceSha256: createHash('sha256').update(JSON.stringify(production)).digest('hex'),
     lockSha256: createHash('sha256').update(await readFile('package-lock.json')).digest('hex') };
+  const normalizedHash = text => createHash('sha256').update(text.replaceAll('\r\n', '\n')).digest('hex');
+  metadata.regressionContract = Object.fromEntries(await Promise.all(
+    ['scripts/quality/scope.mjs', 'scripts/quality/analyzers.mjs', 'vitest.config.ts']
+      .map(async file => [file, normalizedHash(await readFile(file, 'utf8'))])));
+  metadata.regressionTests = normalizedHash(JSON.stringify(await Promise.all(
+    files.filter(file => /^src\/.*\.test\.tsx?$/.test(file)).map(async file => [file, normalizedHash(await readFile(file, 'utf8'))]))));
   await json('inventory.json', inventory);
   await json('metadata.json', metadata);
 

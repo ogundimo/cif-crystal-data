@@ -1,5 +1,9 @@
 # Code-quality measurements
 
+Coverage and function complexity now have [incremental regression gates](regression-protection.md).
+The collection command remains a measurement step; CI enforces the versioned policy separately.
+Duplication and deferred measurements remain advisory.
+
 Issue [#13](https://github.com/ogundimo/cif-crystal-data-public/issues/13) establishes a
 repeatable baseline before introducing blocking quality targets. Measurements identify
 places to investigate; they do not prove correctness or dictate refactoring.
@@ -123,8 +127,9 @@ and manual dispatch. It verifies the reporting helpers, writes the overview to t
 job summary, and retains the report directory as `code-quality-<sha>` for 30 days. On PRs,
 the SHA is the checked-out merge commit, not necessarily the source branch's tip.
 
-**There are no score gates in this baseline.** High complexity, low coverage, and detected
-duplication do not fail it. Failed tests, parser/tool errors, or missing measurements do fail
+**The collection step itself has no score gates.** High complexity, low coverage, and detected
+duplication do not fail collection; the subsequent regression gate enforces the adopted
+coverage and function-complexity policy. Failed tests, parser/tool errors, or missing measurements do fail
 the reporting job visibly. The existing application CI remains in place. This new job should
 not be added as a required quality-score status check during initial baseline collection.
 

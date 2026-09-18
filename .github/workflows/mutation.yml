@@ -21,7 +21,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Run targeted mutation pilot (no score gate)
+      - name: Verify mutation policy failure handling
+        run: node --test scripts/quality/mutation-policy.test.mjs
+      - name: Run targeted mutation pilot with advisory comparison
         run: npm run test:mutation
       - name: Retain mutation reports
         if: always()

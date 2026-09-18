@@ -1,5 +1,9 @@
 # Quality targets and next steps
 
+Current coverage, cyclomatic/cognitive complexity and mutation policies are in
+[Regression protection](regression-protection.md). The historical snapshots and
+proposals below remain evidence, not the current enforcement configuration.
+
 This record follows completed [PR #42](https://github.com/ogundimo/cif-crystal-data-public/pull/42) and the first successful
 hosted mutation run. Numerical targets remain proposals; this documentation update
 introduces no thresholds or repository-setting changes.

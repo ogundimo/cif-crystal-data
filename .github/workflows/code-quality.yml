@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -28,8 +30,18 @@ jobs:
       - run: npm ci
       - name: Verify report tooling
         run: npm run quality:test
-      - name: Collect baseline (no score thresholds)
+      - name: Collect measurements
         run: npm run quality:baseline
+      - name: Enforce incremental coverage and complexity policy
+        env:
+          POLICY_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        shell: pwsh
+        run: |
+          if ($env:POLICY_BASE -and $env:POLICY_BASE -notmatch '^0+$') {
+            npm run quality:regression -- --base $env:POLICY_BASE
+          } else {
+            npm run quality:regression
+          }
       - name: Upload reports and failure diagnostics
         if: always()
         uses: actions/upload-artifact@v6
