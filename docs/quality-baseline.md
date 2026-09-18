@@ -1,5 +1,8 @@
 <!-- Snapshot from the first successful Node 22 collection; do not edit measured values by hand. -->
 
+Historical evidence: this immutable initial snapshot is not the current gate policy.
+See [Regression protection](regression-protection.md) for enforced limits.
+
 Measured on 2026-09-14 using Node 22.23.2. Production source is unchanged from the commit
 below; the dirty-tree flag reflects the new baseline tooling and documentation. Use the
 source fingerprint and pinned analyzer versions when comparing results. Commands, scope,

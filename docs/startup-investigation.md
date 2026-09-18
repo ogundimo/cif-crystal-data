@@ -1,9 +1,13 @@
 # Development startup investigation — 2026-09-16
 
+Historical evidence: the investigation, proposed experiments and subsequent
+implementation measurements at the revisions below. Use [Startup baseline](startup-baseline.md)
+for reproduction and [issue #72](https://github.com/ogundimo/cif-crystal-data/issues/72) for live tracking.
+
 The reported problem is an unusually long blank window after `npm run dev`, before
 the layout becomes usable. The approximate 45–60 seconds reported by the owner is
-context, not a reproduction threshold. Startup remains unresolved. This investigation
-identifies contributing phases; it does not establish a complete root cause or a fix.
+context, not a reproduction threshold. Startup was unresolved at the investigation
+date. The evidence identifies contributing phases, not a complete root cause or a fix.
 
 Investigated source: `2f67f7a471255742cbeb090b5c0bd0eb76e80d0e`, PR #63,
 tracking issue #40. The initial investigation was read-only; the implementation and
@@ -108,7 +112,11 @@ graph must finish loading before application controls or an explanatory message 
 appear. There is no initial loading indicator or startup phase/error display outside
 that graph. This amplifies the perceived failure during real loading delays.
 
-## Recommended next implementation experiments
+## Proposed experiments at the investigation date
+
+These proposals explain the subsequent implementation below; they are not a current
+work queue. Follow [issue #72](https://github.com/ogundimo/cif-crystal-data/issues/72)
+and [issue #40](https://github.com/ogundimo/cif-crystal-data/issues/40) for remaining scope.
 
 1. Add a minimal early startup display and a renderer-load failure path; measure
    first visible feedback separately from usable controls. This improves feedback,

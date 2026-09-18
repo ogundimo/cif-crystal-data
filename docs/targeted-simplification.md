@@ -1,5 +1,9 @@
 # Targeted code simplification
 
+Historical evidence: parser/PXRD extraction, characterization and mutation results.
+Current enforcement is in [Regression protection](regression-protection.md) and
+[Duplication policy](duplication-policy.md).
+
 Milestone 7 covers [#52](https://github.com/ogundimo/cif-crystal-data/issues/52),
 [#53](https://github.com/ogundimo/cif-crystal-data/issues/53),
 [#47](https://github.com/ogundimo/cif-crystal-data/issues/47),

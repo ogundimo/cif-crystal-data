@@ -1,5 +1,8 @@
 # Architecture dependency policy (#24)
 
+Current guidance: dependency boundaries and enforced architecture checks. The initial
+reviewed baseline and original validation below are historical evidence.
+
 This policy builds on the [quality baseline](quality-baseline.md) and the
 [#25 unused-code gate](code-quality.md#unused-code-regression-gate-25), merged in
 PR #28. Numerical complexity and coverage use the [incremental regression policy](regression-protection.md). Architecture
@@ -138,6 +141,8 @@ package imports, both Node builtin spellings, unresolved/test/literal dynamic im
 runtime and type-only cycles, and indirect worker-to-Electron coupling. It checks
 specific diagnostics and nonzero exit codes. Temporary copies live in the ignored
 report directory and are removed afterward; application source is never modified.
+
+### Historical validation of the initial gate
 
 Local validation for this change passed on Node 22.23.2: the architecture gate and
 all regression probes, both TypeScript projects, Knip and its regression probes,

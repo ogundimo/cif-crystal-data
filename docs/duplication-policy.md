@@ -1,5 +1,8 @@
 # Duplication regression policy and writer review
 
+Current guidance: the enforced clone-comparison contract. The database-writer
+decision section preserves historical evidence and its ongoing review trigger.
+
 Issues [#47](https://github.com/ogundimo/cif-crystal-data/issues/47) and
 [#56](https://github.com/ogundimo/cif-crystal-data/issues/56) introduce a pair-specific
 gate and retain the existing writer mapping after semantic review.
@@ -43,6 +46,8 @@ validation and a review trigger. Analyzer upgrades and file moves require the sa
 explicit migration rather than guessed identity matching.
 
 ## Database-writer decision
+
+Historical evidence supporting the retained allowance; the review trigger remains current.
 
 The pre-change detector at `5e23e57dfc7927d1f51fbc10a7b3f0e7e6d64eff` reports one
 pair, 26 detector lines and 181 detector tokens, in

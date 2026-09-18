@@ -67,19 +67,22 @@ Always inspect counts alongside it, especially timeouts and invalid mutations.
 
 The configured 90/70 display bands are presentation defaults, not adopted targets.
 `thresholds.break: 0` intentionally imposes no score gate. Tool failures and failing
-initial tests still fail the command. Numerical policy belongs to
-[#48](https://github.com/ogundimo/cif-crystal-data-public/issues/48), following the
-historical proposal in closed #20.
+initial tests still fail the command. Current numerical policy and execution-failure
+handling are documented in
+[Regression protection](regression-protection.md#mutation-policy); #48 records
+the adoption rationale following the historical #20 proposal.
 
 ## CI cadence
 
 `.github/workflows/mutation.yml` provides manual dispatch on Windows with Node 22,
-a 30-minute job limit and reports retained for 30 days. The pilot merged in PR #42;
-run it when changing a targeted module or its tests. Keep routine PR checks fast;
-consider a weekly run after several hosted measurements confirm runtime stability.
-Policy changes, including cadence and score calibration, belong to #48.
+a 30-minute job limit and reports retained for 30 days. Run it when changing a
+targeted module or its tests. The [current policy](regression-protection.md#mutation-policy)
+keeps manual cadence and advisory scores; there is no scheduled run.
 
 ## Initial measurement and follow-up
+
+Historical evidence: the remaining measurement, hosted-run and survivor sections
+record the original pilot. They do not describe the current mutation population.
 
 Measured on Windows with Node **22.23.2** on 2026-09-14. The production source is
 unchanged from `6716a927e6a3b2374756f7403e33e3465409809b` (merged parser PR #38).

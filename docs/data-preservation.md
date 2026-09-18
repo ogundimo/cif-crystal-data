@@ -1,5 +1,8 @@
 # Data identity and preservation
 
+Current guidance: source identity, managed bytes, migrations, exports and recovery
+contracts. Validation describes bounded checks, not exhaustive data-loss protection.
+
 ## Import identity
 
 Schema 10 identifies a structure by its physical source path and data-block identity,

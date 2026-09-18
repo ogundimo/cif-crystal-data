@@ -1,5 +1,8 @@
 # Incremental regression protection
 
+Current guidance: enforced coverage and complexity rules, baseline governance, and
+advisory mutation comparisons. Recorded pilot results remain historical evidence.
+
 This policy implements #44–#46 and #48. The formula and replacement-model
 survivor reviews are recorded in [mutation survivor review](regression-survivors.md).
 Historical measurements remain unchanged. The [duplication policy](duplication-policy.md)

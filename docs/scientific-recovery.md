@@ -1,5 +1,8 @@
 # Scientific calculation and desktop recovery (#41)
 
+Current guidance: failure, responsiveness and recovery contracts, with repeatable
+validation instructions. The dated validation section is historical evidence.
+
 This work combines deterministic failure injection with real Electron and
 packaged workflows. All databases and inputs are isolated temporary profiles
 containing authored synthetic fixtures. No research originals or normal

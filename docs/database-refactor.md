@@ -1,5 +1,8 @@
 # Database responsibility refactor (#17)
 
+Historical evidence: the #17 extraction, contracts and measurements at the revisions
+below. Later writer decisions are in [Duplication policy](duplication-policy.md).
+
 Baseline: `9afc736b8f4eae50135d9d8a2e4214f82d9780c6` (PR #32), measured on
 2026-09-14. Tracking issue:
 [#17](https://github.com/ogundimo/cif-crystal-data-public/issues/17).

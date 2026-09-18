@@ -1,8 +1,12 @@
 # Packaged Windows cold-start protocol (#40)
 
-Status: **awaiting actual cold samples and agreement on usability budgets**.
-Do not close #40 from warm CI, a new profile, a new Electron process, or the
-instrumented packaged smoke runner. Those do not establish cold filesystem caches.
+Current guidance: how to collect packaged cold-start acceptance evidence. The budget
+section contains proposals, not enforced CI limits. Track progress in
+[issue #40](https://github.com/ogundimo/cif-crystal-data/issues/40).
+
+Warm CI, a new profile, a new Electron process and the instrumented packaged
+smoke runner do not establish cold filesystem caches. Acceptance requires actual
+cold samples and agreement on usability budgets.
 
 ## Agreed startup definition (2026-09-17)
 
@@ -119,5 +123,5 @@ on the changed build. Compare tracing on/off to quantify diagnostic overhead.
 Attach raw traces, environment/workload manifest, interaction observations, sample
 summary and agreed-budget assessment to #40 and link #15/#41/#61 as applicable.
 If the delay cannot be reproduced, state exactly what was tested and what evidence
-is still missing. Keep #40 and the reliability milestone open until the explicit
-cold-start acceptance conditions are met.
+is still missing. Assess completion against the explicit cold-start acceptance
+conditions in the tracking issue.

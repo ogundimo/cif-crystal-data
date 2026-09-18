@@ -1,5 +1,8 @@
 # README screenshot capture
 
+Current guidance: screenshot reproduction and synthetic sample provenance.
+The checked-in captures are historical illustrations and may lag later UI changes.
+
 These PNGs are unretouched captures of the built Electron app, using its real preload
 bridge, SQLite importer, JSmol viewer, and powder-diffraction calculation. The diffraction
 image is cropped to the panel bounds; the other images show the entire app content area
@@ -39,7 +42,7 @@ Before committing updated screenshots:
 - Check that the README captions still describe the visible controls and sample.
 - Keep the repository-relative image paths and descriptive alternative text intact.
 - Preview the README on the pushed GitHub branch and open each image to verify its link
-  and rendering before closing issue #21.
+  and rendering.
 
 The initial four images total approximately 226 KiB. PNG preserves small UI text without
 JPEG artifacts; avoid committing full-resolution desktop captures or temporary profiles.

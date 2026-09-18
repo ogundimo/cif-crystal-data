@@ -1,5 +1,8 @@
 # Parser stage refactor (#18)
 
+Historical evidence: the #18 stage extraction and its recorded validation. Later
+normalization changes are in [Targeted simplification](targeted-simplification.md).
+
 Baseline: `04482c6a90b0b8d06c6bd89654b6efc7cc3aa4a9` (PR #33), measured on
 2026-09-14. Tracking issue:
 [#18](https://github.com/ogundimo/cif-crystal-data-public/issues/18).
