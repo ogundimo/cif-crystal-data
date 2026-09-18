@@ -8,6 +8,14 @@ import type {
 } from '../shared/types';
 
 const api: CifApi = {
+  countBatchExport: scope => ipcRenderer.invoke('cif:countBatchExport', scope),
+  batchExport: request => ipcRenderer.invoke('cif:batchExport', request),
+  cancelBatchExport: () => ipcRenderer.invoke('cif:cancelBatchExport'),
+  onBatchExportProgress: listener => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: Parameters<typeof listener>[0]) => listener(progress);
+    ipcRenderer.on('cif:batchExportProgress', handler);
+    return () => ipcRenderer.removeListener('cif:batchExportProgress', handler);
+  },
   traceMilestone: (name) => ipcRenderer.invoke('cif:traceMilestone', name),
   cancelImport: () => ipcRenderer.invoke('cif:cancelImport'),
   getStartupRefresh: () => ipcRenderer.invoke('cif:getStartupRefresh'),

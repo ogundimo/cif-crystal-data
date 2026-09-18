@@ -14,3 +14,4 @@ export { computeRestraints } from './database/restraints';
 
 export { readStoredCif, relinkSource } from './database/sources';
 export { backupProfile, restoreProfile } from './database/preservation';
+export { countBatchExport, runBatchExport } from './batchExport';

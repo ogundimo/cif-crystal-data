@@ -71,6 +71,17 @@ panels stay unchanged. The shortcut only applies to the focused results grid; it
 does not act in text fields or modal dialogs. Near either end, the row is shown as
 close to the center as the available scroll range permits.
 
+## Batch export
+
+After a Quick search, check rows for batch selection or choose **All matching the
+current search** in **Batch export…**. Review the exact count, then export CIFs,
+CIFs with a CSV summary, or CSV alone into a new subfolder. Progress and cancellation
+retain completed files and report failed and not-attempted entries. Checkbox
+selection survives paging and sorting and clears on new searches or data refresh.
+The highlighted detail row and single-entry **Export CIF** remain independent.
+See [Batch export](docs/batch-export.md) for snapshot behavior, CSV fields, reversible
+spreadsheet escaping, destination requirements and validation.
+
 ## Importing CIF files
 
 Click **Import CIFs...** in the toolbar, then choose a folder in the native folder picker.

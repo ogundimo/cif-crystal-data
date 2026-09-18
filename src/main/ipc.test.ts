@@ -6,7 +6,7 @@ const doubles = vi.hoisted(() => ({
   handlers: new Map<string, Handler>(), windowOptions: vi.fn(),
   readFile: vi.fn(), stat: vi.fn(), writeFile: vi.fn(),
   save: vi.fn(), open: vi.fn(), confirm: vi.fn(), error: vi.fn(), worker: vi.fn(),
-  db: { getStartupRefresh: vi.fn(), setStartupRefresh: vi.fn(), getDataAuthors: vi.fn(), readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
+  db: { countBatchExport: vi.fn(), runBatchExport: vi.fn(), getStartupRefresh: vi.fn(), setStartupRefresh: vi.fn(), getDataAuthors: vi.fn(), readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
     searchEntriesPage: vi.fn(), getImportFolder: vi.fn(), setImportFolder: vi.fn(), clearAllEntries: vi.fn() }
 }));
 vi.mock('electron', () => ({
@@ -33,7 +33,7 @@ vi.mock('./importRunner', () => ({
   ImportWorkerError: class extends Error { phase = 'import'; }
 }));
 
-const event = { sender: { isDestroyed: () => false, send: vi.fn() } };
+const event = { sender: { once: vi.fn(), removeListener: vi.fn(), isDestroyed: () => false, send: vi.fn() } };
 const sourcePath = join(process.cwd(), 'input', 'combined.cif');
 const destination = join(process.cwd(), 'export', 'selected.cif');
 const first = "data_first\n_chemical_formula_sum 'Na Cl'\n";
@@ -59,10 +59,42 @@ beforeEach(async () => {
   doubles.db.getImportFolder.mockReturnValue(join(process.cwd(), 'input'));
   doubles.db.searchEntriesPage.mockReturnValue({ rows: [], total: 0 });
   doubles.db.clearAllEntries.mockReturnValue(3);
+  doubles.db.countBatchExport.mockReturnValue(2);
   await import('./index');
 });
 
 describe('main-process IPC contracts', () => {
+  it('validates batch scopes before opening dialogs and writes nothing after picker cancellation', async () => {
+    await expect(invoke('cif:batchExport', { scope: { kind: 'selected', ids: [0] }, mode: 'both', expectedCount: 2 })).rejects.toThrow('Invalid');
+    expect(doubles.open).not.toHaveBeenCalled();
+    doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
+    const request = { scope: { kind: 'selected', ids: [1, 2] }, mode: 'both', expectedCount: 2 };
+    await expect(invoke('cif:batchExport', request)).resolves.toBeNull();
+    expect(doubles.db.runBatchExport).not.toHaveBeenCalled();
+    doubles.db.countBatchExport.mockReturnValue(3);
+    await expect(invoke('cif:batchExport', request)).rejects.toThrow('count changed');
+    await expect(invoke('cif:cancelBatchExport')).resolves.toBe(false);
+  });
+
+  it('excludes mutations throughout batch export, forwards cancellation, and releases the lock after failure', async () => {
+    doubles.open.mockResolvedValue({ canceled: false, filePaths: [destination] });
+    let reject!: (reason: Error) => void;
+    let signal!: AbortSignal;
+    doubles.db.runBatchExport.mockImplementation((_request, _destination, abort) => {
+      signal = abort; return new Promise((_resolve, no) => { reject = no; });
+    });
+    const operation = invoke('cif:batchExport', { scope: { kind: 'matching', filter }, mode: 'csv', expectedCount: 2 });
+    await vi.waitFor(() => expect(doubles.db.runBatchExport).toHaveBeenCalled());
+    for (const channel of ['cif:importCifFolder', 'cif:refreshCifFolder', 'cif:clearCifs', 'cif:restoreProfile', 'cif:backupProfile']) {
+      await expect(invoke(channel)).rejects.toThrow('already in progress');
+    }
+    await expect(invoke('cif:cancelBatchExport')).resolves.toBe(true);
+    expect(signal.aborted).toBe(true);
+    reject(new Error('write failure'));
+    await expect(operation).rejects.toThrow('write failure');
+    doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
+    await expect(invoke('cif:importCifFolder')).resolves.toBeNull();
+  });
   it('cancels relink and restore without changing the profile', async () => {
     doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
     await expect(invoke('cif:relinkSource', 1)).resolves.toBe(false);

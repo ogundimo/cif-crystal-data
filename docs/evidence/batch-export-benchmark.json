@@ -1,0 +1,81 @@
+{
+  "recordedAtUtc": "2026-09-18T02:31:42.3444894Z",
+  "commit": "bf78f0dea13dce109062abb091af5485bddb90b8",
+  "dirty": false,
+  "applicationCodeCommit": "385b86b74c5f49d1407d9c09916027fc39b02dbc",
+  "appAsarSha256": "e66e84fa116974cb86a6f2930536cc52fc695dd7ccd27af83675c0ff340195f1",
+  "node": "22.23.2",
+  "electron": "44.1.0",
+  "os": "10.0.26200",
+  "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+  "inputFiles": 1205,
+  "inputBytes": 2439739,
+  "benchmarks": [
+    {
+      "mode": "both",
+      "scope": "selected",
+      "count": 2,
+      "elapsedMs": 39.3099000000002,
+      "main": {
+        "peakRss": 139366400,
+        "maxGapMs": 17.61120000000028,
+        "ticks": 3,
+        "last": 5143.9943
+      },
+      "renderer": {
+        "maxGapMs": 24,
+        "ticks": 2,
+        "last": 4749
+      }
+    },
+    {
+      "mode": "both",
+      "scope": "matching",
+      "count": 1206,
+      "elapsedMs": 7354.788799999999,
+      "main": {
+        "peakRss": 142467072,
+        "maxGapMs": 24.04360000000088,
+        "ticks": 677,
+        "last": 12504.9975
+      },
+      "renderer": {
+        "maxGapMs": 24,
+        "ticks": 482,
+        "last": 12115.29999999702
+      }
+    },
+    {
+      "mode": "csv",
+      "scope": "matching",
+      "count": 1206,
+      "elapsedMs": 137.91579999999885,
+      "main": {
+        "peakRss": 140673024,
+        "maxGapMs": 10.313599999999497,
+        "ticks": 13,
+        "last": 12651.5441
+      },
+      "renderer": {
+        "maxGapMs": 14,
+        "ticks": 13,
+        "last": 12262.59999999404
+      }
+    }
+  ],
+  "cancelled": {
+    "total": 1206,
+    "completed": 26,
+    "failed": 0,
+    "notAttempted": 1180,
+    "cancelled": true,
+    "folderName": "cif-export-rTqdty",
+    "reportName": "summary.csv"
+  },
+  "reopened": 2,
+  "limitations": [
+    "Synthetic small CIFs, local filesystem, warm/uncontrolled caches.",
+    "Native pickers replaced with temporary destinations; inspector and GPU-disabled harness affect timing. Hidden-window timer throttling is disabled for heartbeat measurements.",
+    "Peak RSS is process-wide sampling, not an allocation bound; no real research corpus or removable filesystem was tested."
+  ]
+}

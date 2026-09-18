@@ -72,6 +72,8 @@ const columns = [
 
 export interface EmptyResultsMessage { title: string; description: string; }
 interface Props {
+  checkedIds?: ReadonlySet<number>;
+  onToggleChecked?: (id: number) => void;
   emptyMessage?: EmptyResultsMessage;
   rows: EntryRow[];
   selectedId?: number | null;
@@ -85,6 +87,8 @@ interface Props {
 }
 
 export default function DataGrid({
+  checkedIds,
+  onToggleChecked,
   rows,
   selectedId = null,
   onSelect,
@@ -176,9 +180,12 @@ export default function DataGrid({
       data-testid="data-grid-scroll"
       tabIndex={0}
       role="region"
-      aria-label="Search results. Use Up and Down arrow keys to select a row. Control+Shift+Enter shows the selected row."
+      aria-label="Search results. Use Up and Down arrow keys to select a row. Space toggles batch selection. Control+Shift+Enter shows the selected row."
       aria-keyshortcuts="Control+Shift+Enter"
       onKeyDown={(event) => {
+        if (event.target === event.currentTarget && event.key === ' ' && selectedId !== null && onToggleChecked) {
+          event.preventDefault(); onToggleChecked(selectedId); return;
+        }
         if (event.target === event.currentTarget && event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey && event.key === 'Enter' && !event.nativeEvent.isComposing) {
           if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
           const index = tableRows.findIndex(row => row.original.id === selectedId);
@@ -230,6 +237,7 @@ export default function DataGrid({
         <thead>
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
+              {onToggleChecked && <th className="sticky top-0 z-[2] w-9 bg-[#f6f6f6]" scope="col" title="Select for batch export">✓</th>}
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
@@ -257,7 +265,7 @@ export default function DataGrid({
           {virtualWindow.paddingTop > 0 && (
             <tr aria-hidden="true" className="pointer-events-none">
               <td
-                colSpan={columns.length}
+                colSpan={columns.length + (onToggleChecked ? 1 : 0)}
                 style={{ height: virtualWindow.paddingTop, padding: 0, border: 0 }}
               />
             </tr>
@@ -276,6 +284,10 @@ export default function DataGrid({
                   selectedId === row.original.id ? 'bg-accent-soft hover:bg-accent-soft' : ''
                 }`}
               >
+                {onToggleChecked && <td className="border-b border-r text-center" onClick={event => event.stopPropagation()}>
+                  <input type="checkbox" aria-label={`Select entry ${row.original.id} for batch export`} checked={checkedIds?.has(row.original.id) ?? false}
+                    onChange={() => onToggleChecked(row.original.id)} />
+                </td>}
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
@@ -296,7 +308,7 @@ export default function DataGrid({
           {virtualWindow.paddingBottom > 0 && (
             <tr aria-hidden="true" className="pointer-events-none">
               <td
-                colSpan={columns.length}
+                colSpan={columns.length + (onToggleChecked ? 1 : 0)}
                 style={{ height: virtualWindow.paddingBottom, padding: 0, border: 0 }}
               />
             </tr>
