@@ -31,6 +31,11 @@ cell angles; it does not validate that the supplied group is complete or that th
 structural model is scientifically correct. Missing operations are accepted only
 for P1, with an explicit identity assumption.
 
+Rotation coefficients are read from linear terms directly, avoiding floating-point
+subtraction of fractional translations. A regression compares three translations
+at 0, 1/3 and 2/3 against explicitly listed sites; valid thirds must not be rejected
+as noninteger rotations.
+
 The calculation includes the unpolarized powder Lorentz-polarization factor
 (1 + cos²2θ)/(sin²θ cosθ). Enumeration includes one member of each Friedel pair;
 with real neutral-atom factors, omitted partners have equal intensity and their

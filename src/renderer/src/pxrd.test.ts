@@ -41,6 +41,16 @@ const site = {
 const identity = [{ id: 1, entry_id: 1, operation_order: 0, operation_id: '1', operation_xyz: 'x,y,z' }] as SymmetryOperationRow[];
 
 describe('simulatePxrd', () => {
+  it('accepts integer rotations with thirds translations without subtraction roundoff', () => {
+    const operations = ['x,y,z', 'x,y,z+1/3', 'x,y,z+2/3'].map((operation_xyz, i) =>
+      ({ ...identity[0], operation_order: i, operation_xyz }));
+    const result = calculatePxrd(entry, [site], operations);
+    const explicit = calculatePxrd(entry, [0, 1/3, 2/3].map(fract_z => ({ ...site, fract_z })), identity);
+    expect(result.status).toBe('complete');
+    expect(result.peaks.length).toBeGreaterThan(0);
+    expect(result.peaks).toEqual(explicit.peaks);
+  });
+
   it('matches the general triclinic inverse metric and mixed-site interference', () => {
     const a = 4.1, b = 5.3, c = 6.7;
     const alpha = 73 * Math.PI / 180, beta = 82 * Math.PI / 180, gamma = 67 * Math.PI / 180;
