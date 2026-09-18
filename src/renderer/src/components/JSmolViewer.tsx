@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AtomSiteRow, EntryRow } from '../../../shared/types';
-import { CrystalViewerRuntime, type ViewerRequest, type ViewerResult } from '../jsmol/runtime';
+import { CrystalViewerRuntime, type PickingMode, type ViewerRequest, type ViewerResult } from '../jsmol/runtime';
 import type { CrystalAxis, CrystalRepresentation, CrystalSupercellSize } from '../jsmol/scripts';
 import CrystalLegend, { type CrystalLegendMode } from './CrystalLegend';
+import CrystalAxes from './CrystalAxes';
 
 interface Props {
   entry: EntryRow;
@@ -61,7 +62,9 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
   const [labelsVisible, setLabelsVisible] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [supercellSize, setSupercellSize] = useState<CrystalSupercellSize>(1);
-  const [polyhedraMode, setPolyhedraMode] = useState(false);
+  const [pickingMode, setPickingMode] = useState<PickingMode>('off');
+  const [pickingMessage, setPickingMessage] = useState('Picking off. Drag to rotate; scroll to zoom.');
+  const [rotation, setRotation] = useState([[1,0,0],[0,1,0],[0,0,1]]);
   const [view, setView] = useState<ViewState>(initialState);
   const [viewerSize, setViewerSize] = useState({ width: 0, height: 0 });
   const [legendSizes, setLegendSizes] = useState({
@@ -112,6 +115,8 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
       hostRef.current,
       (entryId) => window.cifApi.getViewerSource(entryId),
       {
+        picking: (mode, message) => { setPickingMode(mode); setPickingMessage(message); },
+        rotation: setRotation,
         requested: (fileName) => setView((current) => ({ phase: 'loading', pendingFileName: fileName, result: current.result })),
         loading: (fileName) => setView((current) => ({ phase: 'loading', pendingFileName: fileName, result: current.result })),
         ready: (result) => setView({ phase: 'ready', pendingFileName: result.fileName, result }),
@@ -192,10 +197,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
   }
 
   function togglePolyhedraMode(): void {
-    setPolyhedraMode((current) => {
-      runtimeRef.current?.setPolyhedraPicking(!current);
-      return !current;
-    });
+    runtimeRef.current?.setPolyhedraPicking(pickingMode !== 'polyhedra');
   }
 
   function axisButton(axis: CrystalAxis) {
@@ -224,7 +226,6 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
               runtimeRef.current?.setCellParametersVisible(false);
               runtimeRef.current?.setPolyhedraPicking(false);
               runtimeRef.current?.clearPolyhedra(representation);
-              setPolyhedraMode(false);
               setControlsOpen(false);
             }}
             aria-label="Back to quick search results"
@@ -259,10 +260,10 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
             ))}
           </div>
           <button
-            className={`btn-w32 px-2 ${polyhedraMode ? 'btn-on' : ''}`}
+            className={`btn-w32 px-2 ${pickingMode === 'polyhedra' ? 'btn-on' : ''}`}
             disabled={controlsDisabled}
             onClick={togglePolyhedraMode}
-            title="When enabled, double-click an atom to show its radius-based coordination polyhedron"
+            title="When enabled, click an atom to show its radius-based coordination polyhedron"
           >
             Polyhedra
           </button>
@@ -274,6 +275,8 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
             Clear polyhedra
           </button>
           <button className="btn-w32 px-2" disabled={controlsDisabled} onClick={() => runtimeRef.current?.fitReset()}>Fit / reset</button>
+          {(['distance', 'angle'] as const).map(mode => <button key={mode} className={`btn-w32 px-2 ${pickingMode === mode ? 'btn-on' : ''}`} aria-pressed={pickingMode === mode} disabled={controlsDisabled} onClick={() => runtimeRef.current?.setPickingMode(mode)}>{mode === 'distance' ? 'Distance' : 'Angle'}</button>)}
+          <button className="btn-w32 px-2" disabled={controlsDisabled || pickingMode === 'off'} onClick={() => runtimeRef.current?.setPickingMode('off')}>Cancel picking</button>
           <button
             className="btn-w32 px-2"
             disabled={controlsDisabled}
@@ -292,17 +295,18 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
       <div
         ref={viewportRef}
         className="relative min-h-0 flex-1 overflow-hidden bg-[#071018]"
+        onContextMenu={event => event.preventDefault()}
         onDoubleClickCapture={() => {
           if (!controlsOpen) {
             runtimeRef.current?.setCellParametersVisible(true);
-            runtimeRef.current?.setPolyhedraPicking(true);
-            setPolyhedraMode(true);
+            runtimeRef.current?.setPickingMode('off');
             setControlsOpen(true);
           }
         }}
         title={controlsOpen ? undefined : 'Double-click to open viewer controls'}
       >
         <div ref={hostRef} className="absolute inset-0" data-testid="jsmol-host" />
+        {view.phase === 'ready' && status?.unitCell && <CrystalAxes cell={status.unitCell} rotation={rotation} />}
         {view.phase === 'ready' && legendMode && (
           <div
             className="pointer-events-none absolute bottom-2 left-2 right-2 top-4 z-[9999] overflow-hidden"
@@ -333,7 +337,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
           </div>
         )}
         {controlsOpen && view.phase === 'ready' && (
-          <div className="pointer-events-none absolute bottom-2 left-2 rounded bg-black/70 px-2 py-1 text-white shadow">
+          <div className="pointer-events-none absolute bottom-2 right-2 z-[9998] rounded bg-black/70 px-2 py-1 text-white shadow">
             <strong className="block text-xs">{view.result.fileName}</strong>
             <span className="text-[10px] text-[#d7e3ee]">{supercellSize}×{supercellSize}×{supercellSize} unit-cell block</span>
           </div>
@@ -354,8 +358,9 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
         )}
         <div className="text-text-dim">
           Ball + stick connections and coordination polyhedra are radius-based visual suggestions, not verified chemical bonds.
-          {polyhedraMode && ' Double-click an atom to replace the current polyhedron.'}
+          {pickingMode === 'polyhedra' && ' Click an atom to replace the current polyhedron.'}
         </div>
+        <div data-testid="viewer-picking-status">{pickingMessage}</div>
       </div>}
     </section>
   );

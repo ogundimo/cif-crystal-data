@@ -28,6 +28,23 @@ then choose a representation, unit-cell block size, or crystallographic viewing 
 **Powder diffraction:** adjust wavelength and peak broadening, inspect reflections, and
 export the simulated pattern as a two-column `.xy` file.
 
+Choose Cu (1.5406 Å), Mo (0.7107 Å), Co (1.7902 Å), or Ag (0.5609 Å).
+Cu is the initial default; the selected preset stays in effect while browsing.
+**Import .xy** adds a red personal pattern beside the blue simulation. Imported
+angles stay unchanged when the simulation wavelength changes, so direct comparison
+requires matching wavelengths. **Clear imported pattern** removes that overlay;
+**Export .xy** still exports only the simulation.
+
+Personal patterns accept two whitespace-separated numeric columns (2θ in degrees,
+intensity), blank lines, `#` comments and an optional initial `2theta intensity`
+header, including this application's exports. Angles must increase strictly within
+0–180°, with at least two points and some positive intensity. Negative intensities
+are rejected without baseline correction. Limits are 4 MiB and 100,000 points.
+Original values are retained in memory; display intensities are scaled to a maximum
+of 100 and clipped to 5–80°. The overlay survives structure changes for this session.
+See [viewer and comparison validation](docs/viewer-comparison.md) for supported
+formula notation, viewer controls, synthetic references and limitations.
+
 See [screenshot capture instructions](docs/images/README.md) to regenerate these images.
 
 ## Dev mode

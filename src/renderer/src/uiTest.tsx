@@ -13,7 +13,7 @@ import './index.css';
 const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
   id: index + 1,
   source_filename: `${index + 1}.cif`,
-  formula: 'Fe1O1',
+  formula: index === 1 ? 'Fe2O3' : 'Fe1O1',
   cell_a: 0.1,
   cell_b: 0.2,
   cell_c: 0.3,
@@ -110,15 +110,17 @@ window.cifApi = {
 };
 
 function UiTestApp() {
+  const [mounted, setMounted] = React.useState(true);
+  Object.assign(window, { viewerMountHarness: { setMounted } });
   const [selectedId, setSelectedId] = React.useState<number | null>(gridRows[0].id);
 
   return (
     <div className="flex h-screen flex-col">
-    <ResultsWorkspace
+    {mounted && <ResultsWorkspace
       rows={gridRows}
       selectedId={selectedId}
       onSelect={(entry) => setSelectedId(entry.id)}
-    />
+    />}
     <div className="fixed left-2 top-2">
       <ImportProgressIndicator
         progress={{ processed: 800, total: 1_000, importedCount: 90, skippedCount: 700, failureCount: 10 }}
@@ -149,8 +151,9 @@ const appRegressionMode = new URLSearchParams(location.search).has('app-regressi
 const pxrdRegressionMode = new URLSearchParams(location.search).has('pxrd-regression');
 function PxrdRegression() {
   const [entry,setEntry] = React.useState({...gridRows[0],cell_a_angstrom:5.64,cell_b_angstrom:5.64,cell_c_angstrom:5.64});
-  Object.assign(window,{pxrdHarness:{entry,setEntry}});
-  return <div className="grid h-screen"><PxrdPattern entry={entry}/></div>;
+  const [mounted,setMounted] = React.useState(true);
+  Object.assign(window,{pxrdHarness:{entry,setEntry,setMounted}});
+  return <div className="grid h-screen">{mounted && <PxrdPattern entry={entry}/>}</div>;
 }
 const gridShortcutMode = new URLSearchParams(location.search).has('grid-shortcut');
 if (appRegressionMode) {

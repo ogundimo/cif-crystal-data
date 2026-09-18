@@ -9,6 +9,8 @@ module.exports = async function(window,testUrl) {
   };
   await window.loadURL(testUrl+'?pxrd-regression');
   await wait("!!document.querySelector('[data-role=pxrd-profile]')");
+  assert.equal(await ui("document.querySelector('[data-testid=pxrd-wavelength-input]').value"),'1.5406');
+  assert.deepEqual(await ui("[...document.querySelector('[data-testid=pxrd-wavelength-input]').options].map(o=>o.textContent)"),['Cu (1.5406 Å)','Mo (0.7107 Å)','Co (1.7902 Å)','Ag (0.5609 Å)']);
   assert.match(await ui("document.querySelector('[data-testid=pxrd-diagnostics]').textContent"),/Neutral atoms/);
   // A late data response for a prior selection must never replace this one.
   await ui(`window.originalInput=window.cifApi.getDiffractionInput;
@@ -34,15 +36,69 @@ module.exports = async function(window,testUrl) {
   await wait("!!document.querySelector('[data-role=pxrd-profile]')");
   // Rapid wavelength edits: the final result and exported metadata must agree.
   await ui(`window.cifApi.exportPxrd=async(id,text)=>{window.exportedPattern={id,text};return {exported:true}};
-    window.setWavelength=value=>{const input=document.querySelector('[data-testid=pxrd-wavelength-input]');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,String(value));input.dispatchEvent(new Event('input',{bubbles:true}));};
-    window.setWavelength(1);`);
-  await ui('window.setWavelength(2);');
-  await ui('window.setWavelength(1.2);');
+    window.setWavelength=value=>{const input=document.querySelector('[data-testid=pxrd-wavelength-input]');Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(input,String(value));input.dispatchEvent(new Event('change',{bubbles:true}));};
+    window.setWavelength(0.7107);`);
+  await ui('window.setWavelength(1.7902);');
+  await ui('window.setWavelength(0.5609);');
   await wait("!!document.querySelector('[data-role=pxrd-profile]')");
   await ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Export .xy').click()");
   await wait('!!window.exportedPattern');
   const exported=await ui('window.exportedPattern');
-  assert.equal(exported.id,5); assert.match(exported.text,/wavelength_A=1.2;/);
+  assert.equal(exported.id,5); assert.match(exported.text,/wavelength_A=0.5609;/);
+  const importXY = async (text, name) => {
+    await ui(`(()=>{const input=document.querySelector('input[type=file]');const files=new DataTransfer();files.items.add(new File([${JSON.stringify(text)}],${JSON.stringify(name)},{type:'text/plain'}));input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
+  };
+  await importXY('# synthetic\n0 1\n5 5\n40 10\n80 2\n90 1','personal.xy');
+  await wait("!!document.querySelector('[data-role=pxrd-imported-profile]')");
+  // Error feedback can resize the plot. Compare the trace's relative geometry,
+  // not pixel coordinates, to verify preservation across that layout change.
+  const overlayGeometry = async () => ui(`(()=>{
+    const points=[...document.querySelector('[data-role=pxrd-imported-profile]').getAttribute('d').matchAll(/[ML](-?[\\d.]+),(-?[\\d.]+)/g)].map(match=>[Number(match[1]),Number(match[2])]);
+    const minimum=[0,1].map(axis=>Math.min(...points.map(point=>point[axis])));
+    const range=[0,1].map(axis=>Math.max(...points.map(point=>point[axis]))-minimum[axis]);
+    return points.map(point=>point.map((value,axis)=>Math.round((value-minimum[axis])/range[axis]*1000)/1000));
+  })()`);
+  const overlay = await overlayGeometry();
+  window.showInactive();
+  await new Promise(resolve=>setTimeout(resolve,300));
+  mkdirSync('reports/viewer',{recursive:true});
+  writeFileSync('reports/viewer/comparison.png',(await window.webContents.capturePage()).toPNG());
+  window.hide();
+  assert.equal(await ui("document.querySelector('[data-role=pxrd-imported-profile]').getAttribute('stroke')"),'#d00000');
+  // Cancel (no files) and an invalid replacement preserve the loaded pattern.
+  await ui("document.querySelector('input[type=file]').dispatchEvent(new Event('change',{bubbles:true}));");
+  await importXY('5 -1\n6 2','invalid.xy');
+  await wait("document.querySelector('[role=alert]')?.textContent.includes('negative')");
+  assert.deepEqual(await overlayGeometry(),overlay);
+  assert.equal(await ui("document.body.textContent.includes('personal.xy')"),true);
+  for (const wavelength of [1.5406,0.7107,1.7902,0.5609]) {
+    await ui(`window.exportedPattern=null;window.setWavelength(${wavelength});`);
+    await wait("!!document.querySelector('[data-role=pxrd-profile]')");
+    assert.deepEqual(await overlayGeometry(),overlay);
+    await ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Export .xy').click()");
+    await wait('!!window.exportedPattern');
+    assert.ok((await ui('window.exportedPattern.text')).includes('wavelength_A='+wavelength+';'));
+  }
+  // The app's own exported header format is accepted unchanged as an overlay.
+  await importXY(exported.text,'export-roundtrip.xy');
+  await wait("document.body.textContent.includes('export-roundtrip.xy')");
+  await importXY('100 1\n110 2','outside.xy');
+  await wait("document.body.textContent.includes('no overlap')");
+  await ui('window.pxrdHarness.setEntry({...window.pxrdHarness.entry,id:50,radiation_wavelength_angstrom:5});');
+  await wait("!!document.querySelector('[data-role=pxrd-profile]')");
+  assert.equal(await ui("document.querySelector('[data-testid=pxrd-wavelength-input]').value"),'0.5609');
+  assert.equal(await ui("document.body.textContent.includes('outside.xy')"),true);
+  await ui('window.pxrdHarness.setMounted(false);');
+  await wait("!document.querySelector('[data-testid=pxrd-pattern]')");
+  await ui('window.pxrdHarness.setMounted(true);');
+  await wait("!!document.querySelector('[data-role=pxrd-imported-profile]')");
+  assert.equal(await ui("document.querySelector('[data-testid=pxrd-wavelength-input]').value"),'0.5609');
+  assert.equal(await ui("document.body.textContent.includes('outside.xy')"),true);
+  window.setContentSize(650,650); await new Promise(resolve=>setTimeout(resolve,100));
+  assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),true);
+  window.setContentSize(1200,800);
+  await ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Clear imported pattern').click()");
+  assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),false);
   await ui('window.pxrdHarness.setEntry({...window.pxrdHarness.entry,cell_a_angstrom:60});');
   await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='incomplete'");
   assert.match(await ui("document.querySelector('[data-testid=pxrd-diagnostics] summary').textContent"),/Incomplete pattern/);
@@ -63,6 +119,10 @@ module.exports = async function(window,testUrl) {
   await ui('window.cifApi.getDiffractionInput=window.originalInput; window.pxrdHarness.setEntry({...window.pxrdHarness.entry});');
   await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='complete'");
 
+  // Keep the established responsiveness fixtures at their specified Cu wavelength.
+  // The preceding comparison checks deliberately leave the session on Ag.
+  await ui('window.setWavelength(1.5406);');
+  await wait("!!document.querySelector('[data-role=pxrd-profile]')");
   const measurements=await ui(`(async()=> {
     const {calculatePxrd}=await import('/src/pxrd.ts');
     const {startPxrdTask}=await import('/src/pxrdTask.ts');

@@ -4,7 +4,6 @@ export type CrystalSupercellSize = 1 | 2 | 3;
 
 const CRYSTAL_LOAD_PRECISION = 12;
 export const UNIT_CELL_LATTICE = '{555 555 1}';
-export const CRYSTAL_AXES_SCALE = 2.1;
 export const CRYSTAL_OVERVIEW_ZOOM = 60;
 export const MIN_STRUCTURE_ZOOM = 20;
 export const MAX_STRUCTURE_ZOOM = 400;
@@ -165,11 +164,7 @@ export function clearMeasurementsScript(): string {
 }
 
 export function polyhedraPickingScript(enabled: boolean): string {
-  if (!enabled) return 'unbind';
-  return [
-    'unbind',
-    'bind "LEFT+double+click" "polyhedra {*} DELETE;connect 15% 125% _ATOM {*} CREATE;polyhedra BONDS _ATOM TO {*} COLLAPSED EDGES;select _ATOM;color polyhedra translucent 0.45 [x66B5D8];select none"'
-  ].join(';');
+  return `unbind;unbind "LEFT+double+click";${enabled ? 'bind "LEFT+double+click" "_pickAtom";' : ''}set pickingstyle MEASURE OFF;set picking ${enabled ? 'IDENTIFY' : 'OFF'}`;
 }
 
 export function clearPolyhedraScript(representation: CrystalRepresentation): string {
@@ -189,9 +184,8 @@ export function initialAppearanceScript(
     cellParametersScript(cellParametersVisible),
     representationScript(representation),
     labelsScript(labelsVisible),
-    `set axesScale ${CRYSTAL_AXES_SCALE}`,
-    'axes unitcell',
-    'axes on',
+    'set disablePopupMenu true',
+    'axes off',
     'select all',
     'center selected',
     'translate x 0',

@@ -17,7 +17,8 @@ const server = await createServer({
   server: {
     host: '127.0.0.1',
     port: 0,
-    strictPort: false
+    strictPort: false,
+    watch: null
   }
 });
 
@@ -45,4 +46,3 @@ try {
 } finally {
   await server.close();
 }
-
