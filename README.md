@@ -158,8 +158,8 @@ installer and a portable executable, targeting Windows x64.
 The compound details workspace includes a reusable JSmol 16.4.15 HTML5 viewer.
 The pinned runtime is packaged under `dist/vendor/jsmol`; it does not use a CDN,
 PHP relay, remote rendering service, tracking endpoint, or database-loading URL.
-Fullscreen controls provide packed 1×1×1, 2×2×2, and 3×3×3 unit-cell blocks and an
-atom double-click mode for displaying radius-based coordination polyhedra.
+Fullscreen controls provide packed 1×1×1, 2×2×2, and 3×3×3 unit-cell blocks. Enable
+**Polyhedra**, then click an atom to display its radius-based coordination polyhedron.
 
 The Electron security boundary remains unchanged: context isolation is enabled
 and Node integration is disabled. The preload bridge exposes only
