@@ -122,6 +122,17 @@ schedule: the earlier hosted mutation step took 14m52s and the full replacement
 model local run took 28m44s. This evidence does not justify a stricter timeout or
 weekly automation. Run manually for changes to the pilot source or its tests.
 
+The initial [mutation comparison reference](baselines/mutation-policy.json) retains
+the completed historical 709-mutant pilot (442 killed, 94 survived, six timeouts,
+167 compile errors). Its source hashes and counts were checked against the retained
+raw report and [original record](mutation-results.json). Its old model and missing
+full-production fingerprint are explicitly **not comparable** to current IT92 runs.
+After a completed current pilot, review `reports/mutation/policy.json` alongside
+`execution.json` and the raw report, then update the reference in a PR with its
+provenance and rationale. Never copy a score from a failed run or overwrite the
+historical record. Test and fixture hashes are retained separately; production JSON
+coefficient tables participate in the comparison contract.
+
 Policy probes test completed advisory runs, deliberate survivors/uncovered mutants,
 failed execution, stale/missing reports, ignored/pending results and baseline/config
 changes without repeatedly spending a full mutation run. Analyzer probes actually

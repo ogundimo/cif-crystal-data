@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "policy": "advisory",
+  "counts": {
+    "Killed": 442,
+    "Survived": 94,
+    "NoCoverage": 0,
+    "Timeout": 6,
+    "CompileError": 167,
+    "RuntimeError": 0,
+    "Ignored": 0
+  },
+  "score": 82.65682656826569,
+  "populationHash": "9bd4d69c09484ec80f68275242ad6e386b20336b3430b6448de0a180f622b84e",
+  "sourceHashes": {
+    "src/parser/cif/formula.ts": "46cfd69c91e3c7718c7e6908c6cf2e590c43bc33ddce3a6fc867bc87b6809d1a",
+    "src/renderer/src/pxrd.ts": "d344ea26461bf59c6991cb63eb2aabfba363df193c0a998e1b44dd7148a95728",
+    "src/shared/searchValidation.ts": "b0c26f34e560d0a3de21608fc2cddc0d0fe3d104f6118dacbc3b8b309c4f57ba"
+  },
+  "contract": {
+    "nodeMajor": 22,
+    "tools": {
+      "@stryker-mutator/core": "10.0.0",
+      "@stryker-mutator/vitest-runner": "10.0.0",
+      "@stryker-mutator/typescript-checker": "10.0.0",
+      "vitest": "4.1.11",
+      "typescript": "5.9.3"
+    },
+    "configHashes": {
+      "stryker.config.json": "2f1ecf2c6bd6d7b7a2aec5b348ca4e0c51796348f40e1dcb18bb6a91399ee913",
+      "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+      "tsconfig.mutation.json": "fe0b211244af68a8472f0a34a0a2da4c925603800085df5bda3a2fe90ffb2568",
+      "package-lock.json": "d2cb21d0e4b989944d9a1934c1964937f120ac476d568023628b71352d85ca87"
+    },
+    "productionSha256": "not recorded for full production graph in historical pilot; intentionally not comparable"
+  },
+  "comparison": "initial measurement; no baseline",
+  "changes": null,
+  "notes": [
+    "Survivors and uncovered mutants remain advisory and visible.",
+    "Timeout is not an assertion kill; invalid outcomes are not detections.",
+    "Reviewed equivalents remain in the denominator."
+  ],
+  "provenance": {
+    "kind": "historical-reference",
+    "record": "docs/mutation-results.json",
+    "productionCommit": "6716a927e6a3b2374756f7403e33e3465409809b",
+    "date": "2026-09-14",
+    "rawReportSha256": "37e9533cf75923c8d2dae8c85a9348deed719c3a55b1bb9fba140f19d95f131d",
+    "review": "Preserve the completed 709-mutant pilot as the explicit prior reference. Current IT92 source and full production fingerprint differ, so current runs must report not comparable. Adopt a new baseline only from a completed reviewed policy.json and retain this historical record."
+  }
+}

@@ -62,7 +62,7 @@ function validate(snapshot) {
   }
   for (const metric of metrics) {
     const rows = snapshot.complexity[metric];
-    if (!Array.isArray(rows) || (metric === 'cyclomatic' && !rows.length)) fail(`Missing ${metric} measurements`);
+    if (!Array.isArray(rows) || (metric === 'cyclomatic' && !rows.length && !snapshot.exceptionsOnly)) fail(`Missing ${metric} measurements`);
     const seen = new Set();
     for (const row of rows) {
       if (!row.key || !row.file || !Number.isInteger(row.value) || row.value < 0 || seen.has(row.key)) fail(`Invalid/duplicate ${metric} function: ${row.key}`);

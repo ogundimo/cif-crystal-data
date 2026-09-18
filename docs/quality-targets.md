@@ -4,7 +4,7 @@ Current coverage, cyclomatic/cognitive complexity and mutation policies are in
 [Regression protection](regression-protection.md). The historical snapshots and
 proposals below remain evidence, not the current enforcement configuration.
 
-This record follows completed [PR #42](https://github.com/ogundimo/cif-crystal-data-public/pull/42) and the first successful
+The historical record below follows completed [PR #42](https://github.com/ogundimo/cif-crystal-data-public/pull/42) and the first successful
 hosted mutation run. Numerical targets remain proposals; this documentation update
 introduces no thresholds or repository-setting changes.
 
@@ -24,7 +24,7 @@ have the same scores.
 - [First hosted mutation run](https://github.com/ogundimo/cif-crystal-data-public/actions/runs/35048065514): successful manual
   run at the same snapshot revision.
 
-| Check | Current status | Policy / owner |
+| Check | Status at the historical snapshot | Policy / owner |
 | --- | --- | --- |
 | Strict typing, unused code and dependencies | Enforced; zero unused-code findings in the reviewed PR #42 checks | TypeScript and Knip; #25 completed in PR #28; [policy](code-quality.md#unused-code-regression-gate-25) |
 | Architecture boundaries and cycles | Enforced; 57 production inputs, zero violations in the reviewed #19 work | dependency-cruiser; #24 completed in PR #29; [policy](architecture.md) |
@@ -39,10 +39,10 @@ boundary problems or dynamically used code.
 
 ## Advisory targets and proposed ceilings
 
-No numerical target below is blocking. Use consistent analyzer versions and scope;
+No numerical target below was blocking at that snapshot. Use consistent analyzer versions and scope;
 complexity reporting thresholds of zero collect findings and are not accepted limits.
 
-| Metric | Initial baseline | Current snapshot | Proposed target / next owner |
+| Metric | Initial baseline | Snapshot at 0b4458d | Proposed target / next owner |
 | --- | --- | --- | --- |
 | Cyclomatic complexity per function | Maximum 43 (`parseCif`) | Maximum 43 (`normalizeCif`) | Aspirational <=10 for new/substantially changed functions; review above 20. Historical <22 ceiling remains unadopted; [#45] calibrates policy, [#52] owns the normalization refactor |
 | Cognitive complexity per function | Maximum 44 (`simulatePxrd`) | Maximum 44 (`simulatePxrd`) | Aspirational <=15; review above 20. Historical <22 ceiling remains unadopted; [#46] calibrates policy, [#53] owns the PXRD refactor |
@@ -60,7 +60,7 @@ while the pair and duplicated-line counts stayed the same: the detector denomina
 changed, not the clone count.
 
 Aspirational targets describe a preferred direction for new work; proposed ceilings
-describe possible enforcement limits. Neither is an approved gate. For integer
+describe possible enforcement limits. Neither had been adopted at that snapshot. For integer
 complexity scores, <22 would permit at most 21 if adopted.
 
 ## Mutation evidence and hosted timing

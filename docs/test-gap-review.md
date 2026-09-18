@@ -1,5 +1,8 @@
 # Test-gap review (#14)
 
+This is the historical #14 review. Later survivor work and current policy are in
+[Regression survivor review](regression-survivors.md) and [Regression protection](regression-protection.md).
+
 Reviewed on 2026-09-14 against `4c1a788019778ea822c8ff8f4dd57bda6ce42c72`
 (main after PR #30). The working tree contains the tests, runners, CI step and
 documentation described here. Production application code, dependency versions,

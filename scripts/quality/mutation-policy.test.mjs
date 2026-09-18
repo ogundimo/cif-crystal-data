@@ -18,6 +18,7 @@ test('failed initial tests, missing/stale reports, pending and ignored mutations
   assert.throws(()=>assessMutation(report(['Pending']),execution),/invalid mutant/);
   assert.throws(()=>assessMutation(report(['Ignored']),execution),/Ignored/);
   assert.throws(()=>assessMutation(report(['Killed']),{...execution,sourceHashes:{}}),/Stale/);
+  assert.throws(()=>assessMutation(report(['Killed']),execution,{counts:{}}),/Invalid mutation comparison baseline/);
 });
 test('comparable outcomes show regressions without failing scores; configuration changes invalidate comparison',()=>{
   const baseline=assessMutation(report(['Killed','Killed']),execution);
@@ -25,4 +26,5 @@ test('comparable outcomes show regressions without failing scores; configuration
   assert.equal(regression.comparison,'comparable');assert.equal(regression.changes.Survived,1);
   const changed=assessMutation(report(['Killed','Survived']),{...execution,contract:{version:2}},baseline);
   assert.match(changed.comparison,/not comparable/);assert.equal(changed.changes,null);
+  assert.throws(()=>assessMutation(report(['Killed','Killed']),execution,{...baseline,counts:{...baseline.counts,Killed:3}}),/Invalid baseline population/);
 });

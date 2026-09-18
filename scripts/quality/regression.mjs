@@ -10,7 +10,8 @@ const read = async file => JSON.parse(await readFile(file,'utf8'));
 const hash = text => createHash('sha256').update(text.replaceAll('\r\n','\n')).digest('hex');
 const git = (...args) => execFileSync('git',args,{encoding:'utf8',windowsHide:true}).trim();
 const baselinePath = 'docs/baselines/regression-policy.json';
-const contractFiles = ['scripts/quality/scope.mjs','scripts/quality/analyzers.mjs','vitest.config.ts'];
+const contractFiles = ['scripts/quality/scope.mjs','scripts/quality/analyzers.mjs','vitest.config.ts',
+  'package-lock.json','tsconfig.web.json','tsconfig.node.json'];
 
 async function snapshot() {
   const report = await read('reports/quality/baseline.json');
@@ -33,6 +34,11 @@ async function snapshot() {
   const testFiles = git('ls-files','--cached','--others','--exclude-standard','-z').split('\0').filter(f => /^src\/.*\.test\.tsx?$/.test(f)).sort();
   const testHash = hash(JSON.stringify(await Promise.all(testFiles.map(async file => [file,hash(await readFile(file,'utf8'))]))));
   if (testHash !== report.regressionTests) throw new Error('Stale test measurement; rerun quality:baseline');
+  const inputFiles = git('ls-files','--cached','--others','--exclude-standard','-z').split('\0')
+    .filter(file => file.startsWith('src/') && !file.startsWith('src/renderer/public/vendor/')).sort();
+  const inputHash = hash(JSON.stringify(await Promise.all(inputFiles.map(async file =>
+    [file,createHash('sha256').update(await readFile(file)).digest('hex')]))));
+  if (inputHash !== report.regressionInputs) throw new Error('Stale source/fixture input measurement; rerun quality:baseline');
   const declarationOnly=[];
   for (const file of inventory.filter(file => !report.coverage.files[file])) {
     const emitted=ts.transpileModule(contents.get(file),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX,removeComments:true}}).outputText.replace(/export\s*\{\s*\}\s*;?/g,'').trim();
@@ -44,7 +50,7 @@ async function snapshot() {
     complexity[metric]=inventory.flatMap(file => identifyFunctions(file,contents.get(file),report.complexity[metric].filter(row => row.file===file)));
   }
   return {schemaVersion:1,contract,production:inventory,declarationOnly,coverage:{total:report.coverage.total,files:report.coverage.files},complexity,
-    provenance:{commit:report.commit,sourceSha256:report.sourceSha256,node:report.node,testsSha256:testHash}};
+    provenance:{commit:report.commit,sourceSha256:report.sourceSha256,node:report.node,testsSha256:testHash,inputsSha256:inputHash}};
 }
 
 await mkdir(resolve('reports/quality'),{recursive:true});
@@ -55,10 +61,14 @@ try {
     const reason=process.argv[process.argv.indexOf('--capture')+1];
     if(!reason || reason.startsWith('--')) throw new Error('--capture requires an explicit review rationale');
     current.policy={cyclomatic:20,cognitive:20};
+    current.exceptionsOnly=true;
     current.review={reason,trigger:'Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification.'};
-    for(const metric of ['cyclomatic','cognitive']) for(const row of current.complexity[metric]) if(row.value>20) {
-      row.reason='Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.';
-      row.reviewTrigger=current.review.trigger;
+    for(const metric of ['cyclomatic','cognitive']) {
+      current.complexity[metric]=current.complexity[metric].filter(row=>row.value>20);
+      for(const row of current.complexity[metric]) {
+        row.reason='Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.';
+        row.reviewTrigger=current.review.trigger;
+      }
     }
     await writeFile(baselinePath,JSON.stringify(current,null,2)+'\n');
     console.log(`Candidate baseline written to ${baselinePath}; review its full diff before adoption.`);
@@ -79,8 +89,9 @@ try {
     await mkdir(resolve('reports/quality'),{recursive:true});
     await writeFile('reports/quality/regression.json',JSON.stringify(result,null,2)+'\n');
     console.log(result.accepted.join('\n'));
-    if(result.failures.length) throw new Error(result.failures.join('\n'));
-    console.log('Coverage and function-complexity regression gates passed. Accepted exceptions remain in regression.json.');
+    if(result.failures.length) {
+      console.error(result.failures.join('\n')); process.exitCode=1;
+    } else console.log('Coverage and function-complexity regression gates passed. Accepted exceptions remain in regression.json.');
   }
 } catch(error) {
   await writeFile('reports/quality/regression.json',JSON.stringify({failures:[error.message],accepted:[]},null,2)+'\n');

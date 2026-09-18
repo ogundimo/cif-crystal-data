@@ -28,10 +28,9 @@ Open `reports/quality/summary.md` for the overview and
 `reports/quality/coverage/index.html` for annotated source coverage. The initial results
 are retained in [the baseline snapshot](quality-baseline.md).
 
-See [Quality targets and next steps](quality-targets.md) for the proposed numerical
-targets, their baseline values, enforcement status, and the issues that track adoption.
-Future sessions should read that record before selecting quality improvements or
-introducing score gates.
+See [Regression protection](regression-protection.md) for enforced coverage and
+complexity policy and the advisory mutation policy. [Quality targets and next
+steps](quality-targets.md) retains the earlier proposals and historical measurements.
 
 The [#14 test-gap review](test-gap-review.md) records follow-up coverage, added
 behavioral checks, the viewer CI decision, and remaining gaps. Its measurements
@@ -129,17 +128,17 @@ the SHA is the checked-out merge commit, not necessarily the source branch's tip
 
 **The collection step itself has no score gates.** High complexity, low coverage, and detected
 duplication do not fail collection; the subsequent regression gate enforces the adopted
-coverage and function-complexity policy. Failed tests, parser/tool errors, or missing measurements do fail
-the reporting job visibly. The existing application CI remains in place. This new job should
-not be added as a required quality-score status check during initial baseline collection.
+coverage and function-complexity policy. Failed tests, parser/tool errors, missing
+measurements and policy regressions fail CI. The same gates run in the existing
+required Test and build job, so no branch-protection status rename is needed.
 
 The historical policy proposal [#20](https://github.com/ogundimo/cif-crystal-data-public/issues/20)
-is closed; its numerical proposals are not accepted limits. Coverage policy now belongs
-to [#44](https://github.com/ogundimo/cif-crystal-data-public/issues/44), cyclomatic complexity
-to [#45](https://github.com/ogundimo/cif-crystal-data-public/issues/45), cognitive complexity
-to [#46](https://github.com/ogundimo/cif-crystal-data-public/issues/46), duplication to
-[#47](https://github.com/ogundimo/cif-crystal-data-public/issues/47), and mutation policy to
-[#48](https://github.com/ogundimo/cif-crystal-data-public/issues/48). The
+is closed; its numerical proposals are not blanket accepted limits. The adopted policy
+implements coverage [#44](https://github.com/ogundimo/cif-crystal-data-public/issues/44),
+cyclomatic complexity [#45](https://github.com/ogundimo/cif-crystal-data-public/issues/45),
+cognitive complexity [#46](https://github.com/ogundimo/cif-crystal-data-public/issues/46),
+and mutation policy [#48](https://github.com/ogundimo/cif-crystal-data-public/issues/48).
+Duplication policy remains [#47](https://github.com/ogundimo/cif-crystal-data-public/issues/47). The
 [quality-targets record](quality-targets.md) compares the original and current evidence
 and links the remaining test, refactor and measurement work.
 
@@ -151,7 +150,7 @@ is needed for these reports.
 
 ## Unused-code regression gate (#25)
 
-Unlike the advisory numerical baseline, the unused-code gate fails on findings. Run:
+The unused-code gate fails on findings independently of the numerical policy. Run:
 
 ```powershell
 npm run quality:unused

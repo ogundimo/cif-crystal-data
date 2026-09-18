@@ -327,8 +327,10 @@ describe('scientific diagnostics and reproducibility', () => {
   });
   it('retains actionable wavelength and missing-symmetry rejection reasons', () => {
     expect(calculatePxrd(entry,[site],identity,0).diagnostics).toContain('Wavelength must be finite, positive and at most 10 Å.');
-    expect(calculatePxrd(entry,[site],identity,.1).diagnostics)
-      .toContain('The requested range exceeds the IT92 form-factor limit sin(θ)/λ < 2 Å⁻¹. Increase the wavelength.');
+    for (const wavelength of [.1,.25,Math.sin(40*Math.PI/180)/2]) {
+      expect(calculatePxrd(entry,[site],identity,wavelength).diagnostics)
+        .toContain('The requested range exceeds the IT92 form-factor limit sin(θ)/λ < 2 Å⁻¹. Increase the wavelength.');
+    }
     expect(calculatePxrd({...entry,sg_number:225},[site],[]).diagnostics)
       .toContain('Explicit symmetry operations are required outside P1; reimport a CIF containing them.');
   });
@@ -378,6 +380,17 @@ describe('scientific diagnostics and reproducibility', () => {
     expect(actual.peaks).toHaveLength(expected.peaks.length);
     actual.peaks.forEach((peak,i)=>expect(peak.intensity).toBeCloseTo(expected.peaks[i].intensity,8));
   });
+  it('deduplicates a special position reached with positive and negative coordinates', () => {
+    const sodium={...site,fract_x:.5};
+    const iron={...site,type_symbol:'Fe',fract_x:.2,fract_y:.13,fract_z:.27};
+    const operations=[...identity,{...identity[0],operation_xyz:'-x,y,z'}];
+    // +1/2 and -1/2 are one Na site; the Fe orbit has two distinct positions.
+    const actual=calculatePxrd(entry,[sodium,iron],operations);
+    const expected=calculatePxrd(entry,[sodium,iron,{...iron,fract_x:.8}],identity);
+    expect(actual.status).toBe('complete');
+    expect(actual.peaks).toHaveLength(expected.peaks.length);
+    actual.peaks.forEach((peak,i)=>expect(peak.intensity).toBeCloseTo(expected.peaks[i].intensity,8));
+  });
   it('reports missing atoms, malformed types and inferred labels explicitly', () => {
     expect(calculatePxrd(entry, [], identity).diagnostics).toContain('Atomic positions are unavailable.');
     expect(calculatePxrd(entry, [{...site, type_symbol:'Na?'}], identity).diagnostics)
@@ -397,6 +410,10 @@ describe('scientific diagnostics and reproducibility', () => {
     expect(result.peaks).toEqual(expected.peaks);
     expect(result.diagnostics).toContain('Legacy nanometre cell lengths converted to ångströms.');
     expect(expected.diagnostics).not.toContain('Legacy nanometre cell lengths converted to ångströms.');
+    // A cyclic axis permutation preserves this cubic metric. Converting just one
+    // legacy axis in the wrong direction makes it incorrectly incompatible.
+    expect(calculatePxrd({...entry,[`cell_${axis}_angstrom`]:null},[site],
+      [{...identity[0],operation_xyz:'y,z,x'}]).status).toBe('complete');
     // Exchanging unequal axes must remain incompatible after conversion.
     expect(calculatePxrd({...crystal,[`cell_${axis}_angstrom`]:null},[site],
       [{...identity[0],operation_xyz:'y,z,x'}]).status).toBe('unsupported');

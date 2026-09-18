@@ -24,14 +24,19 @@ try {
   const tools=Object.fromEntries(['@stryker-mutator/core','@stryker-mutator/vitest-runner','@stryker-mutator/typescript-checker','vitest','typescript']
     .map(name=>[name,lock.packages[`node_modules/${name}`].version]));
   execution.contract={nodeMajor:22,tools,configHashes:{}};
-  for(const file of ['stryker.config.json','vitest.config.ts','tsconfig.mutation.json','package-lock.json']) execution.contract.configHashes[file]=hash(await readFile(file,'utf8'));
+  for(const file of ['stryker.config.json','vitest.config.ts','scripts/quality/scope.mjs',
+    'tsconfig.mutation.json','tsconfig.web.json','tsconfig.node.json','package.json','package-lock.json']) {
+    execution.contract.configHashes[file]=hash(await readFile(file,'utf8'));
+  }
   const files=execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean).sort();
-  const inputs=await Promise.all(files.filter(file=>isProduction(file)||/^src\/.*\.test\.tsx?$/.test(file))
+  const productionInput=file=>isProduction(file)||(/^src\/.*\.json$/.test(file)&&!file.includes('/__fixtures__/')&&!file.includes('/public/vendor/'));
+  const inputs=await Promise.all(files.filter(file=>productionInput(file)||/^src\/.*\.test\.tsx?$/.test(file)||file.startsWith('src/')&&file.includes('/__fixtures__/'))
     .map(async file=>[file,hash(await readFile(file,'utf8'))]));
-  execution.contract.productionSha256=hash(JSON.stringify(inputs.filter(([file])=>isProduction(file))));
-  execution.testInputs=Object.fromEntries(inputs.filter(([file])=>!isProduction(file)));
+  execution.contract.productionSha256=hash(JSON.stringify(inputs.filter(([file])=>productionInput(file))));
+  execution.testInputs=Object.fromEntries(inputs.filter(([file])=>!productionInput(file)));
   execution.sourceHashes=Object.fromEntries(await Promise.all(scope.sort().map(async file=>[file,hash(await readFile(file,'utf8'))])));
   execution.commit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim();
+  await writeFile(`${output}/execution.json`,JSON.stringify(execution,null,2)+'\n');
   const run=spawnSync(process.execPath,[resolve('node_modules/@stryker-mutator/core/bin/stryker.js'),'run'],{stdio:'inherit',windowsHide:true});
   execution.exitCode=run.status;execution.completed=run.status===0 && !run.error;
   execution.finishedAt=new Date().toISOString();
@@ -39,6 +44,9 @@ try {
   await writeFile(`${output}/execution.json`,JSON.stringify(execution,null,2)+'\n');
   if(!execution.completed) throw new Error(`Mutation execution failed: ${run.error?.message??run.status}`);
   for(const [file,digest] of inputs) if(hash(await readFile(file,'utf8'))!==digest) throw new Error(`Inputs changed during mutation execution: ${file}`);
+  for(const [file,digest] of Object.entries(execution.contract.configHashes)) {
+    if(hash(await readFile(file,'utf8'))!==digest) throw new Error(`Configuration changed during mutation execution: ${file}`);
+  }
   let baseline;
   try { baseline=await read('docs/baselines/mutation-policy.json'); } catch(error) { if(error.code!=='ENOENT') throw error; }
   const assessment=assessMutation(await read(`${output}/mutation.json`),execution,baseline);

@@ -83,11 +83,12 @@ test('real analyzer detects injected branching and nesting in the correct stable
 });
 test('arrow properties, nested callbacks and implicit class initializers have distinct identities',async()=>{
   const file='src/fixture.ts';
-  const source='class Example { state = {ready: false}; run = () => [1].map(x => x ? 1 : 0); } const api = { get: () => true };';
+  const source='class Example { state = {ready: false}; run = () => [1].map(x => x ? 1 : 0); static { if (true) console.log(1); } } const api = { get: () => true };';
   const [result]=await createComplexityAnalyzer().lintText(source,{filePath:file});
   const rows=identifyFunctions(file,source,result.messages.filter(m=>m.ruleId==='complexity').map(m=>complexityFinding(file,m)));
   assert.equal(new Set(rows.map(row=>row.key)).size,rows.length);
   assert.ok(rows.some(row=>row.key.includes('state/<initializer>')));
   assert.ok(rows.some(row=>row.key.includes('run#1/<callback>#1')));
   assert.ok(rows.some(row=>row.key.includes('get#1')));
+  assert.ok(rows.some(row=>row.key.includes('<static-block-0>')));
 });

@@ -5,6 +5,11 @@ const sorted = object => JSON.stringify(Object.fromEntries(Object.entries(object
 export function assessMutation(report, execution, baseline) {
   if (!execution?.completed || execution.exitCode!==0 || !execution.startedAt || !execution.contract) throw new Error('Mutation execution failed or incomplete; no valid score');
   if (!report?.files || !Object.keys(report.files).length) throw new Error('Missing mutation report');
+  if (baseline && (baseline.schemaVersion!==1 || baseline.policy!=='advisory' || !baseline.contract ||
+    !baseline.sourceHashes || typeof baseline.populationHash!=='string' ||
+    mutationStates.some(state=>!Number.isSafeInteger(baseline.counts?.[state]) || baseline.counts[state]<0))) {
+    throw new Error('Invalid mutation comparison baseline; explicit review required');
+  }
   const counts=Object.fromEntries(mutationStates.map(state=>[state,0]));
   const sourceHashes={};
   const identities=[];
@@ -27,6 +32,7 @@ export function assessMutation(report, execution, baseline) {
   const comparable=Boolean(baseline && JSON.stringify(baseline.contract)===JSON.stringify(execution.contract) &&
     sorted(baseline.sourceHashes)===sorted(sourceHashes) && baseline.populationHash===populationHash);
   const changes=comparable ? Object.fromEntries(mutationStates.map(state=>[state,counts[state]-baseline.counts[state]])) : null;
+  if (comparable && Object.values(baseline.counts).reduce((a,b)=>a+b,0)!==identities.length) throw new Error('Invalid baseline population counts');
   return {schemaVersion:1,policy:'advisory',counts,score,populationHash,sourceHashes,contract:execution.contract,
     comparison:baseline ? (comparable?'comparable':'not comparable: source, mutation population or tool/configuration contract changed') : 'initial measurement; no baseline',changes,
     notes:['Survivors and uncovered mutants remain advisory and visible.','Timeout is not an assertion kill; invalid outcomes are not detections.','Reviewed equivalents remain in the denominator.']};
