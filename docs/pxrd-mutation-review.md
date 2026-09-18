@@ -68,6 +68,11 @@ new mutation opportunities; the score is advisory and does not certify these
 200 survivors as equivalent. Exhaustive classification of this new population
 is separate from the 78 historical decisions above.
 
+This retained measurement predates the PR-review correction that extracts rotation
+coefficients without subtracting fractional translations. Its hashes identify
+that measured source; the added thirds-translation regression is not included in
+these mutation counts. The measurement has not been rerun for that correction.
+
 The seven uncovered replacements concern the integer-rotation guard, legacy
 nanometre fallback inside symmetry metric validation, and three diagnostic
 strings. Some guards repeat prior validation; that alone does not establish all

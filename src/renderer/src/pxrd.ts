@@ -44,7 +44,7 @@ function scale(v: Vec3, amount: number): Vec3 {
   return [v[0] * amount, v[1] * amount, v[2] * amount];
 }
 
-function parseCoordinate(expression: string, point: Vec3, wrap = true): number | null {
+function parseCoordinate(expression: string, point: Vec3, wrap = true, includeTranslation = true): number | null {
   const compact = expression.toLowerCase().replace(/\s|\*/g, '');
   if (!/^[+-]?(?:\d*[xyz]|\d+(?:\/\d+)?)(?:[+-](?:\d*[xyz]|\d+(?:\/\d+)?))*$/.test(compact)) return null;
   let value = 0;
@@ -59,7 +59,7 @@ function parseCoordinate(expression: string, point: Vec3, wrap = true): number |
       const [numerator, denominator] = rawTerm.split('/').map(Number);
       const number = denominator === undefined ? numerator : numerator / denominator;
       if (!Number.isFinite(number)) return null;
-      value += number;
+      if (includeTranslation) value += number;
     }
   }
   return wrap ? ((value % 1) + 1) % 1 : value;
@@ -198,9 +198,11 @@ function validOperation(operation: string, entry: EntryRow): boolean {
   const origin: Vec3 = [0, 0, 0];
   const translation = parts.map(part => parseCoordinate(part, origin, false));
   if (translation.some(value => value === null)) return false;
-  const matrix = parts.map((part, i) => [0, 1, 2].map(j => {
+  // Read the linear terms directly: subtracting fractional translations can
+  // turn an exact integer coefficient into 0.9999999999999999 (e.g. z+2/3).
+  const matrix = parts.map(part => [0, 1, 2].map(j => {
     const point: Vec3 = [0, 0, 0]; point[j] = 1;
-    return parseCoordinate(part, point, false)! - translation[i]!;
+    return parseCoordinate(part, point, false, false)!;
   }));
   if (!matrix.flat().every(Number.isInteger)) return false;
   const determinant = dot(matrix[0] as Vec3, cross(matrix[1] as Vec3, matrix[2] as Vec3));
