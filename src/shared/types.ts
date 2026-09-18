@@ -200,6 +200,10 @@ export interface CifViewerSource {
 }
 
 export interface CifApi {
+  countBatchExport: (scope: BatchExportScope) => Promise<number>;
+  batchExport: (request: BatchExportRequest) => Promise<BatchExportResult | null>;
+  cancelBatchExport: () => Promise<boolean>;
+  onBatchExportProgress: (listener: (progress: BatchExportProgress) => void) => () => void;
   traceMilestone: (name: 'controls-ready' | 'search-results' | 'controls-restored') => Promise<void>;
   cancelImport: () => Promise<boolean>;
   getStartupRefresh: () => Promise<boolean>;
@@ -225,6 +229,25 @@ export interface CifApi {
   refreshCifFolder: () => Promise<ImportResult>;
   onImportProgress: (listener: (progress: ImportProgress) => void) => () => void;
   clearCifs: () => Promise<ClearCifsResult>;
+}
+
+export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter };
+export interface BatchExportRequest {
+  scope: BatchExportScope;
+  mode: 'cif' | 'both' | 'csv';
+  expectedCount: number;
+}
+export interface BatchExportProgress {
+  total: number;
+  completed: number;
+  failed: number;
+  notAttempted: number;
+}
+export interface BatchExportResult extends BatchExportProgress {
+  cancelled: boolean;
+  folderName: string;
+  reportName?: string;
+  error?: string;
 }
 
 declare global {

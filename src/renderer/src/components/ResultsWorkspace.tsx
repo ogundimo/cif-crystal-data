@@ -4,6 +4,8 @@ import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import DataGrid, { type EmptyResultsMessage } from './DataGrid';
 
 interface Props {
+  checkedIds?: ReadonlySet<number>;
+  onToggleChecked?: (id: number) => void;
   emptyMessage?: EmptyResultsMessage;
   rows: EntryRow[];
   selectedId: number | null;
@@ -30,7 +32,7 @@ class DetailsBoundary extends Component<{ children: React.ReactNode }, { failed:
   }
 }
 
-export default function ResultsWorkspace({ emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
+export default function ResultsWorkspace({ checkedIds, onToggleChecked, emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ y: number; height: number } | null>(null);
   const [panelHeight, setPanelHeight] = usePanelSize('details-height', workspaceRef, MIN_PANEL_HEIGHT, MIN_RESULTS_HEIGHT + 6, 'height');
@@ -67,6 +69,8 @@ export default function ResultsWorkspace({ emptyMessage, rows, selectedId, onSel
     >
       <div className="flex min-h-0 overflow-hidden">
         <DataGrid
+          checkedIds={checkedIds}
+          onToggleChecked={onToggleChecked}
           rows={rows}
           selectedId={selectedId}
           onSelect={onSelect}

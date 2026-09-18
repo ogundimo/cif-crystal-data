@@ -1,5 +1,6 @@
+import BatchExportDialog from './components/BatchExportDialog';
 import { createSearchController } from './searchController';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ResultsWorkspace from './components/ResultsWorkspace';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';
@@ -29,6 +30,11 @@ export default function App() {
 }
 
 function AppInner() {
+  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const [batchFilter, setBatchFilter] = useState<SearchFilter | null>(null);
+  const batchIds = useMemo(() => [...checkedIds], [checkedIds]);
   const startupScanStarted = useRef(false);
   const [startupRefresh, setStartupRefresh] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -87,6 +93,8 @@ function AppInner() {
   const controller = controllerRef.current;
   const clearAnswerSet = useCallback((resetSearchForm = false) => {
     controller.reset();
+    setCheckedIds(new Set());
+    setBatchFilter(null);
     setExportMessage(null);
     if (resetSearchForm) setSearchResetSignal(value => value + 1);
   }, [controller]);
@@ -228,6 +236,8 @@ function AppInner() {
   }
 
   async function handleSearch(filter: SearchFilter) {
+    setCheckedIds(new Set());
+    setBatchFilter(structuredClone(filter));
     setApiError(null);
     await controller.search(filter);
   }
@@ -254,7 +264,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
             onClick={handleExportCif}
-            disabled={selectedEntryId === null || importing || refreshing || clearing || preserving || exporting}
+            disabled={selectedEntryId === null || importing || refreshing || clearing || preserving || batchBusy || exporting}
             title={selectedEntryId === null ? 'Select a Quick Search result first' : 'Export the selected original CIF file'}
           >
             <span aria-hidden="true">⇩</span> {exporting ? 'Exporting...' : 'Export CIF'}
@@ -265,10 +275,10 @@ function AppInner() {
           <details className="relative">
             <summary className="btn-w32 cursor-pointer px-2.5">Sources &amp; backups</summary>
             <div className="absolute right-0 z-50 flex w-56 flex-col gap-1 border border-stroke bg-white p-2 shadow-lg">
-              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving} onClick={() => handlePreservation('backupProfile')}>Save portable backup...</button>
-              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving} onClick={() => handlePreservation('restoreProfile')}>Restore backup...</button>
-              <button className="btn-w32" disabled={selectedEntryId === null || importing || refreshing || clearing || preserving} onClick={() => handlePreservation('relinkSource')}>Relink selected source...</button>
-              <label className="text-xs"><input type="checkbox" checked={startupRefresh} disabled={importing || refreshing || clearing || preserving} onChange={async (event) => {
+              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving || batchBusy} onClick={() => handlePreservation('backupProfile')}>Save portable backup...</button>
+              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving || batchBusy} onClick={() => handlePreservation('restoreProfile')}>Restore backup...</button>
+              <button className="btn-w32" disabled={selectedEntryId === null || importing || refreshing || clearing || preserving || batchBusy} onClick={() => handlePreservation('relinkSource')}>Relink selected source...</button>
+              <label className="text-xs"><input type="checkbox" checked={startupRefresh} disabled={importing || refreshing || clearing || preserving || batchBusy} onChange={async (event) => {
                 const enabled = event.target.checked;
                 try { await window.cifApi.setStartupRefresh(enabled); setStartupRefresh(enabled); }
                 catch (error) { showApiError('save startup refresh preference', error); }
@@ -276,7 +286,7 @@ function AppInner() {
               <p className="text-xs">New imports keep a managed copy. Relinking requires identical content. Export and backup require new destination filenames.</p>
             </div>
           </details>
-          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing || preserving}>
+          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing || preserving || batchBusy}>
             <span aria-hidden="true">&#128193;</span>{' '}
             {importing && importProgress
               ? `Importing ${importProgress.processed}/${importProgress.total}...`
@@ -287,7 +297,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
             onClick={handleRefresh}
-            disabled={!importFolder || importing || refreshing || clearing || preserving}
+            disabled={!importFolder || importing || refreshing || clearing || preserving || batchBusy}
             title={importFolder ? `Scan again: ${importFolder}` : 'Choose a folder with Import CIFs first'}
           >
             <span aria-hidden="true">↻</span>{' '}
@@ -307,7 +317,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
             onClick={handleClearCifs}
-            disabled={importing || refreshing || clearing || preserving}
+            disabled={importing || refreshing || clearing || preserving || batchBusy}
             title="Remove all imported entries from the local database"
           >
             <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
@@ -323,7 +333,15 @@ function AppInner() {
         </span>
       </div>
 
+      <div className="flex items-center gap-3 px-3 pt-2 text-sm">
+        <button className="btn-w32" onClick={() => setBatchOpen(true)} disabled={!searchActive || importing || refreshing || clearing || preserving || batchBusy}>Batch export…</button>
+        <span role="status">{checkedIds.size} selected for batch export</span>
+        <button className="btn-w32" disabled={!checkedIds.size} onClick={() => setCheckedIds(new Set())}>Clear selection</button>
+        <span className="text-text-dim">Checkboxes select exports; the highlighted row shows details. Selection survives paging and sorting; new searches and data refresh clear it.</span>
+      </div>
       <ResultsWorkspace
+        checkedIds={checkedIds}
+        onToggleChecked={id => setCheckedIds(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; })}
         emptyMessage={loadingMore ? { title: 'Searching…', description: 'Finding matching structures.' } : searchActive ? { title: 'No matching results', description: 'Open Quick search to adjust or remove criteria.' } : databaseEntryCount === 0 ? { title: 'No structures imported', description: 'Use Import CIFs to add structures, then run a Quick search.' } : databaseEntryCount === null ? { title: 'Loading database…', description: 'Checking the available structures.' } : { title: 'Run a search', description: 'Use Quick search to filter the imported structures.' }}
         rows={entries}
         selectedId={selectedEntryId}
@@ -376,6 +394,7 @@ function AppInner() {
         </div>
       )}
       {importResult && <ImportResultsPanel result={importResult} onDismiss={() => setImportResult(null)} />}
+      {batchOpen && <BatchExportDialog ids={batchIds} filter={batchFilter} onClose={() => setBatchOpen(false)} onBusy={setBatchBusy} />}
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
   );

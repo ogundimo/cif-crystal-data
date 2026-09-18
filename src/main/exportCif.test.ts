@@ -1,5 +1,6 @@
+import { sanitizeFilenamePart } from '../shared/exportFilename';
 import { describe, expect, it } from 'vitest';
-import { buildCifExportFilename, buildPxrdExportFilename, sanitizeFilenamePart } from './exportCif';
+import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
 
 describe('CIF export filename', () => {
   it('uses Formula_SG-number.cif', () => {

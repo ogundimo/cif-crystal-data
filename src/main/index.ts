@@ -15,6 +15,7 @@ import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
 import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
 import { sourceKey } from './sourceIdentity';
 import { resolvePublication } from './publicationResolver';
+import { validateBatchRequest, validateBatchScope } from './batchExportValidation';
 
 if (process.env.CIF_TRACE_FILE && process.env.CIF_TEST_PROFILE) app.setPath('userData', process.env.CIF_TEST_PROFILE);
 traceEvent('main.loaded');
@@ -22,8 +23,9 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
 
 let importController: AbortController | null = null;
+let batchController: AbortController | null = null;
 let dbReady: Promise<DbModule> | null = null;
-let dataMutationInFlight: 'import' | 'refresh' | 'clear' | 'backup' | 'restore' | 'relink' | null = null;
+let dataMutationInFlight: 'import' | 'refresh' | 'clear' | 'backup' | 'restore' | 'relink' | 'export' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
 
 function databaseInitializationError(error: unknown): Error {
@@ -90,6 +92,34 @@ app.whenReady().then(() => {
     traceEvent('renderer.' + name);
   });
   handle('cif:cancelImport', () => { if (!importController) return false; importController.abort(); return true; });
+  handle('cif:countBatchExport', async (_event, scope: unknown) => {
+    const validated = validateBatchScope(scope);
+    return (await getDbModule()).countBatchExport(validated);
+  });
+  handle('cif:cancelBatchExport', () => { if (!batchController) return false; batchController.abort(); return true; });
+  handle('cif:batchExport', async (event, value: unknown) => {
+    const request = validateBatchRequest(value);
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    dataMutationInFlight = 'export';
+    batchController = new AbortController();
+    const abort = () => batchController?.abort();
+    event.sender.once('destroyed', abort);
+    try {
+      const database = await getDbModule();
+      if (database.countBatchExport(request.scope) !== request.expectedCount) throw new Error('The export count changed. Review the scope and count again.');
+      const options = { title: `Export ${request.expectedCount} structures into a new subfolder`, properties: ['openDirectory'] as ['openDirectory'] };
+      const win = BrowserWindow.fromWebContents(event.sender);
+      const destination = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+      if (destination.canceled || !destination.filePaths.length || batchController.signal.aborted) return null;
+      return await database.runBatchExport(request, destination.filePaths[0], batchController.signal, progress => {
+        if (!event.sender.isDestroyed()) event.sender.send('cif:batchExportProgress', progress);
+      });
+    } finally {
+      event.sender.removeListener('destroyed', abort);
+      batchController = null;
+      dataMutationInFlight = null;
+    }
+  });
   handle('cif:getStartupRefresh', async () => (await getDbModule()).getStartupRefresh());
   handle('cif:setStartupRefresh', async (_event, enabled: unknown) => {
     if (typeof enabled !== 'boolean') throw new TypeError('Invalid startup refresh preference');

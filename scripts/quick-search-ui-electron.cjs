@@ -659,7 +659,7 @@ async function run() {
   await window.webContents.executeJavaScript('window.appRegression.pending.shift()()');
   await pause(100);
   for (let index = 0; index < 3; index++) {
-    await window.webContents.executeJavaScript(`document.querySelector('th').click()`);
+    await window.webContents.executeJavaScript(`document.querySelector('th[title=Formula]').click()`);
     await pause(100);
   }
   const sortRequests = await window.webContents.executeJavaScript('window.appRegression.requests.filter(r => r.offset === 0).slice(-3).map(r => [r.sortColumn ?? null, r.sortDirection ?? null])');
@@ -725,11 +725,12 @@ async function run() {
   await pause(400);
   await search();
   await waitForRenderer(window, "!!document.querySelector('[data-testid=compound-info-panel]')", 'deferred details after reload');
-  const restored = await window.webContents.executeJavaScript("({width: document.querySelector('[data-testid=compound-info-panel]').getBoundingClientRect().width, column:parseFloat(document.querySelector('th').style.width), values:Array.from(document.querySelectorAll('[data-resize-handle]')).map(e=>({value:e.getAttribute('aria-valuenow'),target:!!document.getElementById(e.getAttribute('aria-controls'))}))})");
+  const restored = await window.webContents.executeJavaScript("({width: document.querySelector('[data-testid=compound-info-panel]').getBoundingClientRect().width, column:parseFloat(document.querySelector('th[title=Formula]').style.width), values:Array.from(document.querySelectorAll('[data-resize-handle]')).map(e=>({value:e.getAttribute('aria-valuenow'),target:!!document.getElementById(e.getAttribute('aria-controls'))}))})");
   assert.ok(Math.abs(restored.width - storedWidth) < 1);
   assert.equal(restored.column, 210);
   assert.ok(restored.values.every(e => e.target && Number(e.value) >= 0 && Number(e.value) <= 100));
   console.log('✓ About focus/Escape, persisted layout after reload, and splitter accessibility');
+  await require('./batch-export-ui.cjs')(window, { search, scrollToEnd, waitForRenderer, pause });
   await clickButton('Reset search');
   assert.ok(await window.webContents.executeJavaScript("document.body.textContent.includes('No structures imported')"));
   await window.webContents.executeJavaScript("window.cifApi.searchPage = async () => ({ rows: [], total: 0 }); undefined");
