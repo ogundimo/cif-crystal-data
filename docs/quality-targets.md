@@ -110,6 +110,9 @@ are recorded in [Formula and IT92 survivor review](regression-survivors.md) and
 
 These are unavailable measurements, not zero scores. Do not infer them from file
 size, repository coverage or other proxies. Neither has an enforced target.
+The later [additional measurement evaluation](additional-measurements.md) retains
+both deferrals with explicit TypeScript/TSX fixtures, counterexamples and provenance;
+the table above preserves the original proposal context.
 
 ## How to apply the proposals
 

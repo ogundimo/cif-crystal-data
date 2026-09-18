@@ -50,6 +50,7 @@ policy baseline JSON files are also active inputs to the documented gates.
 | Document | Evidence retained |
 | --- | --- |
 | [Initial quality baseline](quality-baseline.md) | Original coverage, complexity, duplication, inventory and analyzer versions. |
+| [Additional measurement evaluation](additional-measurements.md) | CRAP attribution contract, Halstead counting fixtures, reproducible candidate failures and retained deferral decisions. |
 | [Test-gap review](test-gap-review.md) | Review scope, added regressions, viewer CI decision and gaps at the review date. |
 | [Unused-code review](unused-code-review.md) | Removal/retention decisions and the later automation review. |
 | [Quick-search refactor](quick-search-refactor.md) | Responsibility boundaries, comparable measurements and UI regressions. |

@@ -1,0 +1,1308 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "commit": "a65f66d1be3466fa5ea0f46b624b3fc6d08d3964",
+    "dirty": true,
+    "node": "v22.23.2",
+    "platform": "win32",
+    "tools": {
+      "eslint": "10.10.0",
+      "@typescript-eslint/parser": "8.70.0",
+      "eslint-plugin-sonarjs": "4.2.0",
+      "vitest": "4.1.11",
+      "@vitest/coverage-v8": "4.1.11",
+      "typescript": "5.9.3"
+    },
+    "inputSha256": {
+      "scripts/quality/additional-fixtures.json": "8c55f82c61f985aa2f7feb65186ee74144c4f3595b12ddd705d4f3bf6fbf252e",
+      "scripts/quality/additional-measurements.mjs": "9d22617a6764381f2936221e0e7465aeaa3baaca181e06bab3cc61af7d27675d",
+      "scripts/quality/evaluate-additional.mjs": "acdd716779ce15543bbdede542832140ffbc420e886d639397b032dfa3ca0015",
+      "scripts/quality/analyzers.mjs": "3f16c8fc9c0b692ec49f9f1eea69def7cb6defb6a7f58382622db1d0bb40318b",
+      "scripts/quality/scope.mjs": "ef3f40ad957e66edd33fa1f0f0f928b517b25f3439a0ddcc98e13f5787a8882a",
+      "vitest.config.ts": "12d1ac50a3e4f30ecaec5b22a911ff9c09c0e86e11379376de262960106572c2",
+      "package-lock.json": "36de7418005af898e1b69a2bfa092d6e9057f54c0d635f0451820215db816b68",
+      "docs/evidence/additional-measurements/candidate-lock.json": "2932ea86f8d231c085c69cebdf30e5992f6eba72873560753f893e43959bbb7a"
+    },
+    "candidatePackages": {
+      "node_modules/@babel/helper-string-parser": "7.29.7",
+      "node_modules/@babel/helper-validator-identifier": "7.29.7",
+      "node_modules/@babel/parser": "7.29.8",
+      "node_modules/@babel/types": "7.29.8",
+      "node_modules/@typhonjs/babel-parser": "0.2.0",
+      "node_modules/babel-runtime": "6.26.0",
+      "node_modules/backbone-esnext-events": "0.3.5",
+      "node_modules/commander": "2.20.3",
+      "node_modules/core-js": "2.6.12",
+      "node_modules/escomplex-plugin-metrics-module": "0.1.0",
+      "node_modules/escomplex-plugin-metrics-project": "0.1.0",
+      "node_modules/escomplex-plugin-syntax-babylon": "0.1.0",
+      "node_modules/escomplex-plugin-syntax-estree": "0.1.0",
+      "node_modules/regenerator-runtime": "0.11.1",
+      "node_modules/typhonjs-ast-walker": "0.2.1",
+      "node_modules/typhonjs-escomplex": "0.1.0",
+      "node_modules/typhonjs-escomplex-commons": "0.1.1",
+      "node_modules/typhonjs-escomplex-module": "0.1.0",
+      "node_modules/typhonjs-escomplex-project": "0.1.0",
+      "node_modules/typhonjs-object-util": "0.4.2",
+      "node_modules/typhonjs-plugin-manager": "0.2.0"
+    },
+    "parserOptions": {
+      "sourceType": "module",
+      "plugins": [
+        "typescript",
+        "jsx"
+      ]
+    },
+    "coverageConfig": {
+      "test": {
+        "include": [
+          "reports/additional-measurements/subject.test.ts"
+        ],
+        "coverage": {
+          "provider": "v8",
+          "include": [
+            "reports/additional-measurements/subject.tsx"
+          ],
+          "reporter": [
+            "json",
+            "lcovonly"
+          ],
+          "reportsDirectory": "reports/additional-measurements/coverage"
+        }
+      }
+    }
+  },
+  "decision": {
+    "crap": "deferred",
+    "halsteadDifficulty": "deferred",
+    "productionScores": null,
+    "reason": "Existing coverage join loses ownership; Halstead candidate silently omits supported-language operations."
+  },
+  "findings": [
+    {
+      "file": "subject.tsx",
+      "line": 1,
+      "column": 8,
+      "value": 2,
+      "message": "Function 'zero' has a complexity of 2. Maximum allowed is 0.",
+      "endLine": 1,
+      "endColumn": 21
+    },
+    {
+      "file": "subject.tsx",
+      "line": 5,
+      "column": 8,
+      "value": 2,
+      "message": "Function 'partial' has a complexity of 2. Maximum allowed is 0.",
+      "endLine": 5,
+      "endColumn": 24
+    },
+    {
+      "file": "subject.tsx",
+      "line": 11,
+      "column": 8,
+      "value": 2,
+      "message": "Function 'full' has a complexity of 2. Maximum allowed is 0.",
+      "endLine": 11,
+      "endColumn": 21
+    },
+    {
+      "file": "subject.tsx",
+      "line": 15,
+      "column": 8,
+      "value": 1,
+      "message": "Function 'parent' has a complexity of 1. Maximum allowed is 0.",
+      "endLine": 15,
+      "endColumn": 23
+    },
+    {
+      "file": "subject.tsx",
+      "line": 16,
+      "column": 3,
+      "value": 2,
+      "message": "Function 'child' has a complexity of 2. Maximum allowed is 0.",
+      "endLine": 16,
+      "endColumn": 17
+    },
+    {
+      "file": "subject.tsx",
+      "line": 22,
+      "column": 24,
+      "value": 1,
+      "message": "Arrow function has a complexity of 1. Maximum allowed is 0.",
+      "endLine": 22,
+      "endColumn": 26
+    },
+    {
+      "file": "subject.tsx",
+      "line": 22,
+      "column": 54,
+      "value": 1,
+      "message": "Arrow function has a complexity of 1. Maximum allowed is 0.",
+      "endLine": 22,
+      "endColumn": 56
+    },
+    {
+      "file": "subject.tsx",
+      "line": 23,
+      "column": 26,
+      "value": 2,
+      "message": "Function has a complexity of 2. Maximum allowed is 0.",
+      "endLine": 23,
+      "endColumn": 35
+    },
+    {
+      "file": "subject.tsx",
+      "line": 24,
+      "column": 33,
+      "value": 1,
+      "message": "Arrow function has a complexity of 1. Maximum allowed is 0.",
+      "endLine": 24,
+      "endColumn": 35
+    },
+    {
+      "file": "subject.tsx",
+      "line": 25,
+      "column": 8,
+      "value": 1,
+      "message": "Function 'empty' has a complexity of 1. Maximum allowed is 0.",
+      "endLine": 25,
+      "endColumn": 22
+    }
+  ],
+  "coverage": {
+    "fnMap": {
+      "0": {
+        "name": "zero",
+        "decl": {
+          "start": {
+            "line": 1,
+            "column": 16
+          },
+          "end": {
+            "line": 1,
+            "column": 21
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 1,
+            "column": 33
+          },
+          "end": {
+            "line": 4,
+            "column": null
+          }
+        },
+        "line": 1
+      },
+      "1": {
+        "name": "partial",
+        "decl": {
+          "start": {
+            "line": 5,
+            "column": 16
+          },
+          "end": {
+            "line": 5,
+            "column": 24
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 5,
+            "column": 36
+          },
+          "end": {
+            "line": 10,
+            "column": null
+          }
+        },
+        "line": 5
+      },
+      "2": {
+        "name": "full",
+        "decl": {
+          "start": {
+            "line": 11,
+            "column": 16
+          },
+          "end": {
+            "line": 11,
+            "column": 21
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 11,
+            "column": 33
+          },
+          "end": {
+            "line": 14,
+            "column": null
+          }
+        },
+        "line": 11
+      },
+      "3": {
+        "name": "parent",
+        "decl": {
+          "start": {
+            "line": 15,
+            "column": 16
+          },
+          "end": {
+            "line": 15,
+            "column": 25
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 15,
+            "column": 25
+          },
+          "end": {
+            "line": 21,
+            "column": null
+          }
+        },
+        "line": 15
+      },
+      "4": {
+        "name": "child",
+        "decl": {
+          "start": {
+            "line": 16,
+            "column": 11
+          },
+          "end": {
+            "line": 16,
+            "column": 17
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 16,
+            "column": 29
+          },
+          "end": {
+            "line": 19,
+            "column": null
+          }
+        },
+        "line": 16
+      },
+      "5": {
+        "name": "(anonymous_5)",
+        "decl": {
+          "start": {
+            "line": 22,
+            "column": 20
+          },
+          "end": {
+            "line": 22,
+            "column": 26
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 22,
+            "column": 26
+          },
+          "end": {
+            "line": 22,
+            "column": 36
+          }
+        },
+        "line": 22
+      },
+      "6": {
+        "name": "(anonymous_6)",
+        "decl": {
+          "start": {
+            "line": 22,
+            "column": 50
+          },
+          "end": {
+            "line": 22,
+            "column": 56
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 22,
+            "column": 56
+          },
+          "end": {
+            "line": 22,
+            "column": null
+          }
+        },
+        "line": 22
+      },
+      "7": {
+        "name": "(anonymous_7)",
+        "decl": {
+          "start": {
+            "line": 23,
+            "column": 25
+          },
+          "end": {
+            "line": 23,
+            "column": 35
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 23,
+            "column": 47
+          },
+          "end": {
+            "line": 23,
+            "column": null
+          }
+        },
+        "line": 23
+      },
+      "8": {
+        "name": "(anonymous_8)",
+        "decl": {
+          "start": {
+            "line": 24,
+            "column": 20
+          },
+          "end": {
+            "line": 24,
+            "column": 21
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 24,
+            "column": 35
+          },
+          "end": {
+            "line": 24,
+            "column": null
+          }
+        },
+        "line": 24
+      },
+      "9": {
+        "name": "empty",
+        "decl": {
+          "start": {
+            "line": 25,
+            "column": 16
+          },
+          "end": {
+            "line": 25,
+            "column": 24
+          }
+        },
+        "loc": {
+          "start": {
+            "line": 25,
+            "column": 24
+          },
+          "end": {
+            "line": 25,
+            "column": null
+          }
+        },
+        "line": 25
+      }
+    },
+    "f": {
+      "0": 0,
+      "1": 1,
+      "2": 2,
+      "3": 1,
+      "4": 0,
+      "5": 1,
+      "6": 0,
+      "7": 1,
+      "8": 0,
+      "9": 0
+    },
+    "statementMap": {
+      "0": {
+        "start": {
+          "line": 2,
+          "column": 2
+        },
+        "end": {
+          "line": 2,
+          "column": null
+        }
+      },
+      "1": {
+        "start": {
+          "line": 2,
+          "column": 9
+        },
+        "end": {
+          "line": 2,
+          "column": null
+        }
+      },
+      "2": {
+        "start": {
+          "line": 3,
+          "column": 2
+        },
+        "end": {
+          "line": 3,
+          "column": null
+        }
+      },
+      "3": {
+        "start": {
+          "line": 6,
+          "column": 2
+        },
+        "end": {
+          "line": 8,
+          "column": null
+        }
+      },
+      "4": {
+        "start": {
+          "line": 7,
+          "column": 4
+        },
+        "end": {
+          "line": 7,
+          "column": null
+        }
+      },
+      "5": {
+        "start": {
+          "line": 9,
+          "column": 2
+        },
+        "end": {
+          "line": 9,
+          "column": null
+        }
+      },
+      "6": {
+        "start": {
+          "line": 12,
+          "column": 2
+        },
+        "end": {
+          "line": 12,
+          "column": null
+        }
+      },
+      "7": {
+        "start": {
+          "line": 12,
+          "column": 9
+        },
+        "end": {
+          "line": 12,
+          "column": null
+        }
+      },
+      "8": {
+        "start": {
+          "line": 13,
+          "column": 2
+        },
+        "end": {
+          "line": 13,
+          "column": null
+        }
+      },
+      "9": {
+        "start": {
+          "line": 17,
+          "column": 4
+        },
+        "end": {
+          "line": 17,
+          "column": null
+        }
+      },
+      "10": {
+        "start": {
+          "line": 17,
+          "column": 11
+        },
+        "end": {
+          "line": 17,
+          "column": null
+        }
+      },
+      "11": {
+        "start": {
+          "line": 18,
+          "column": 4
+        },
+        "end": {
+          "line": 18,
+          "column": null
+        }
+      },
+      "12": {
+        "start": {
+          "line": 20,
+          "column": 2
+        },
+        "end": {
+          "line": 20,
+          "column": null
+        }
+      },
+      "13": {
+        "start": {
+          "line": 22,
+          "column": 20
+        },
+        "end": {
+          "line": 22,
+          "column": 36
+        }
+      },
+      "14": {
+        "start": {
+          "line": 22,
+          "column": 26
+        },
+        "end": {
+          "line": 22,
+          "column": 36
+        }
+      },
+      "15": {
+        "start": {
+          "line": 22,
+          "column": 50
+        },
+        "end": {
+          "line": 22,
+          "column": null
+        }
+      },
+      "16": {
+        "start": {
+          "line": 22,
+          "column": 56
+        },
+        "end": {
+          "line": 22,
+          "column": null
+        }
+      },
+      "17": {
+        "start": {
+          "line": 23,
+          "column": 25
+        },
+        "end": {
+          "line": 23,
+          "column": null
+        }
+      },
+      "18": {
+        "start": {
+          "line": 23,
+          "column": 49
+        },
+        "end": {
+          "line": 23,
+          "column": 67
+        }
+      },
+      "19": {
+        "start": {
+          "line": 24,
+          "column": 20
+        },
+        "end": {
+          "line": 24,
+          "column": null
+        }
+      },
+      "20": {
+        "start": {
+          "line": 24,
+          "column": 35
+        },
+        "end": {
+          "line": 24,
+          "column": null
+        }
+      }
+    },
+    "s": {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 1,
+      "4": 1,
+      "5": 0,
+      "6": 2,
+      "7": 1,
+      "8": 1,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 1,
+      "13": 1,
+      "14": 1,
+      "15": 1,
+      "16": 0,
+      "17": 1,
+      "18": 1,
+      "19": 1,
+      "20": 0
+    }
+  },
+  "lcov": "TN:\nSF:reports/additional-measurements/subject.tsx\nFN:1,zero\nFN:5,partial\nFN:11,full\nFN:15,parent\nFN:16,child\nFN:22,(anonymous_5)\nFN:22,(anonymous_6)\nFN:23,(anonymous_7)\nFN:24,(anonymous_8)\nFN:25,empty\nFNF:10\nFNH:5\nFNDA:0,zero\nFNDA:1,partial\nFNDA:2,full\nFNDA:1,parent\nFNDA:0,child\nFNDA:1,(anonymous_5)\nFNDA:0,(anonymous_6)\nFNDA:1,(anonymous_7)\nFNDA:0,(anonymous_8)\nFNDA:0,empty\nDA:2,0\nDA:3,0\nDA:6,1\nDA:7,1\nDA:9,0\nDA:12,2\nDA:13,1\nDA:17,0\nDA:18,0\nDA:20,1\nDA:22,1\nDA:23,1\nDA:24,1\nLF:13\nLH:8\nBRDA:2,0,0,0\nBRDA:2,0,1,0\nBRDA:6,1,0,1\nBRDA:6,1,1,0\nBRDA:12,2,0,1\nBRDA:12,2,1,1\nBRDA:17,3,0,0\nBRDA:17,3,1,0\nBRDA:23,4,0,1\nBRDA:23,4,1,0\nBRF:10\nBRH:4\nend_of_record\n",
+  "crap": {
+    "status": "deferred",
+    "score": null,
+    "oracles": [
+      {
+        "name": "zero",
+        "line": 1,
+        "complexity": 2,
+        "ownedLines": [
+          2,
+          3
+        ],
+        "coveredLines": [],
+        "score": 6,
+        "attribution": "hand-assigned fixture oracle; not an automatic join"
+      },
+      {
+        "name": "partial",
+        "line": 5,
+        "complexity": 2,
+        "ownedLines": [
+          6,
+          7,
+          9
+        ],
+        "coveredLines": [
+          6,
+          7
+        ],
+        "score": 2.1481481481481484,
+        "attribution": "hand-assigned fixture oracle; not an automatic join"
+      },
+      {
+        "name": "full",
+        "line": 11,
+        "complexity": 2,
+        "ownedLines": [
+          12,
+          13
+        ],
+        "coveredLines": [
+          12,
+          13
+        ],
+        "score": 2,
+        "attribution": "hand-assigned fixture oracle; not an automatic join"
+      },
+      {
+        "name": "parent",
+        "line": 15,
+        "complexity": 1,
+        "ownedLines": [
+          20
+        ],
+        "coveredLines": [
+          20
+        ],
+        "score": 1,
+        "attribution": "hand-assigned fixture oracle; not an automatic join"
+      },
+      {
+        "name": "child",
+        "line": 16,
+        "complexity": 2,
+        "ownedLines": [
+          17,
+          18
+        ],
+        "coveredLines": [],
+        "score": 6,
+        "attribution": "hand-assigned fixture oracle; not an automatic join"
+      }
+    ],
+    "diagnostics": [
+      {
+        "status": "missing",
+        "score": null,
+        "reason": "Existing JSON summary has no function-owned line counters; ESLint findings have no body ranges."
+      },
+      {
+        "status": "ambiguous",
+        "score": null,
+        "reason": "Line 22 contains two arrows with different function hits but one LCOV line hit."
+      },
+      {
+        "status": "unsupported",
+        "score": null,
+        "reason": "Line 24 is covered by binding initialization while the JSX arrow body never executes."
+      },
+      {
+        "status": "unsupported",
+        "score": null,
+        "reason": "Empty function has no executable-line denominator; implicit class scopes and general source-map joins remain unvalidated."
+      }
+    ]
+  },
+  "halstead": [
+    {
+      "id": "addition",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "return",
+            "+"
+          ],
+          "operands": [
+            "a",
+            "b"
+          ],
+          "difficulty": 1
+        }
+      ],
+      "observed": [
+        {
+          "name": "add",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.003,
+            "difficulty": 1,
+            "effort": 8,
+            "length": 4,
+            "time": 0.444,
+            "vocabulary": 4,
+            "volume": 8,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "a",
+                "b"
+              ]
+            },
+            "operators": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "return",
+                "+"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "typed-addition",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "return",
+            "+"
+          ],
+          "operands": [
+            "a",
+            "b"
+          ],
+          "difficulty": 1
+        }
+      ],
+      "observed": [
+        {
+          "name": "add",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.003,
+            "difficulty": 1,
+            "effort": 8,
+            "length": 4,
+            "time": 0.444,
+            "vocabulary": 4,
+            "volume": 8,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "a",
+                "b"
+              ]
+            },
+            "operators": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "return",
+                "+"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "repeated-operand",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "return",
+            "+"
+          ],
+          "operands": [
+            "a",
+            "a"
+          ],
+          "difficulty": 2
+        }
+      ],
+      "observed": [
+        {
+          "name": "twice",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.002,
+            "difficulty": 2,
+            "effort": 12.68,
+            "length": 4,
+            "time": 0.704,
+            "vocabulary": 3,
+            "volume": 6.34,
+            "operands": {
+              "distinct": 1,
+              "total": 2,
+              "identifiers": [
+                "a"
+              ]
+            },
+            "operators": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "return",
+                "+"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "assertion",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "return"
+          ],
+          "operands": [
+            "x"
+          ],
+          "difficulty": 0.5
+        }
+      ],
+      "observed": [
+        {
+          "name": "value",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.001,
+            "difficulty": 0.5,
+            "effort": 1,
+            "length": 2,
+            "time": 0.056,
+            "vocabulary": 2,
+            "volume": 2,
+            "operands": {
+              "distinct": 1,
+              "total": 1,
+              "identifiers": [
+                "x"
+              ]
+            },
+            "operators": {
+              "distinct": 1,
+              "total": 1,
+              "identifiers": [
+                "return"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "nested",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "function",
+            "return"
+          ],
+          "operands": [
+            "inner",
+            "b",
+            "a"
+          ],
+          "difficulty": 1
+        },
+        {
+          "operators": [
+            "return",
+            "+"
+          ],
+          "operands": [
+            "b",
+            "1"
+          ],
+          "difficulty": 1
+        }
+      ],
+      "observed": [
+        {
+          "name": "outer",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.004,
+            "difficulty": 1,
+            "effort": 11.61,
+            "length": 5,
+            "time": 0.645,
+            "vocabulary": 5,
+            "volume": 11.61,
+            "operands": {
+              "distinct": 3,
+              "total": 3,
+              "identifiers": [
+                "inner",
+                "b",
+                "a"
+              ]
+            },
+            "operators": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "function",
+                "return"
+              ]
+            }
+          }
+        },
+        {
+          "name": "inner",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.003,
+            "difficulty": 1,
+            "effort": 8,
+            "length": 4,
+            "time": 0.444,
+            "vocabulary": 4,
+            "volume": 8,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "b",
+                "1"
+              ]
+            },
+            "operators": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "return",
+                "+"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "member-access",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "return",
+            "."
+          ],
+          "operands": [
+            "x",
+            "a"
+          ],
+          "difficulty": 1
+        }
+      ],
+      "observed": [
+        {
+          "name": "value",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.003,
+            "difficulty": 1,
+            "effort": 8,
+            "length": 4,
+            "time": 0.444,
+            "vocabulary": 4,
+            "volume": 8,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "x",
+                "a"
+              ]
+            },
+            "operators": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "return",
+                "."
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "optional-access",
+      "status": "unsupported",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "return",
+            "?."
+          ],
+          "operands": [
+            "x",
+            "a"
+          ],
+          "difficulty": 1
+        }
+      ],
+      "observed": [
+        {
+          "name": "value",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.002,
+            "difficulty": 0.5,
+            "effort": 2.377,
+            "length": 3,
+            "time": 0.132,
+            "vocabulary": 3,
+            "volume": 4.755,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "x",
+                "a"
+              ]
+            },
+            "operators": {
+              "distinct": 1,
+              "total": 1,
+              "identifiers": [
+                "return"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "nullish",
+      "status": "fixture-match",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "??"
+          ],
+          "operands": [
+            "x",
+            "0"
+          ],
+          "difficulty": 0.5
+        }
+      ],
+      "observed": [
+        {
+          "name": "<anon method-1>",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.002,
+            "difficulty": 0.5,
+            "effort": 2.377,
+            "length": 3,
+            "time": 0.132,
+            "vocabulary": 3,
+            "volume": 4.755,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "x",
+                "0"
+              ]
+            },
+            "operators": {
+              "distinct": 1,
+              "total": 1,
+              "identifiers": [
+                "??"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "jsx-empty",
+      "status": "unsupported",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "jsx-element"
+          ],
+          "operands": [
+            "span"
+          ],
+          "difficulty": 0.5
+        }
+      ],
+      "observed": [
+        {
+          "name": "<anon method-1>",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0,
+            "difficulty": 0,
+            "effort": 0,
+            "length": 0,
+            "time": 0,
+            "vocabulary": 0,
+            "volume": 0,
+            "operands": {
+              "distinct": 0,
+              "total": 0,
+              "identifiers": []
+            },
+            "operators": {
+              "distinct": 0,
+              "total": 0,
+              "identifiers": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "jsx-expression",
+      "status": "unsupported",
+      "score": null,
+      "expected": [
+        {
+          "operators": [
+            "jsx-element",
+            "jsx-expression",
+            "+"
+          ],
+          "operands": [
+            "span",
+            "x",
+            "1"
+          ],
+          "difficulty": 1.5
+        }
+      ],
+      "observed": [
+        {
+          "name": "<anon method-1>",
+          "lineStart": 1,
+          "lineEnd": 1,
+          "errors": [],
+          "halstead": {
+            "bugs": 0.002,
+            "difficulty": 0.5,
+            "effort": 2.377,
+            "length": 3,
+            "time": 0.132,
+            "vocabulary": 3,
+            "volume": 4.755,
+            "operands": {
+              "distinct": 2,
+              "total": 2,
+              "identifiers": [
+                "x",
+                "1"
+              ]
+            },
+            "operators": {
+              "distinct": 1,
+              "total": 1,
+              "identifiers": [
+                "+"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "malformed",
+      "status": "expected-parse-error",
+      "score": null,
+      "reason": "Unexpected token (1:27)"
+    }
+  ]
+}

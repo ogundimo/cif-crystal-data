@@ -99,8 +99,8 @@ try {
   await json('duplication.json', duplication);
 
   const deferred = {
-    halsteadDifficulty: 'Deferred: no validated TypeScript/TSX operator-and-operand analyzer has been selected. Not inferred from file length.',
-    crap: 'Deferred: no validated function-range join between ESLint complexity and V8 source coverage yet. Proposed formula: C^2 * (1 - cov)^3 + C, where C is per-function classic cyclomatic complexity and cov is the fraction of executable lines covered within that same function. Nested-function attribution must be defined before calculation. Global coverage must not be substituted.'
+    halsteadDifficulty: 'Deferred after fixture evaluation: typhonjs-escomplex 0.1.0 silently omits JSX and optional-access operators. No production score or proxy. See docs/additional-measurements.md and its retained evidence.',
+    crap: 'Deferred after fixture evaluation: existing ESLint header locations and V8/LCOV line hits do not establish function-owned coverage for nested/adjacent/inline functions. No production score or global-coverage proxy. The proposed formula remains C^2 * (1 - cov)^3 + C with same-function owned executable-line coverage. See docs/additional-measurements.md.'
   };
   await json('baseline.json', { ...metadata, coverage: { total: totals, modules, files: coverage },
     inventory, complexity: { cyclomatic, cognitive }, duplication, deferred });
