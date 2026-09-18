@@ -8,7 +8,7 @@ and proposals.
 
 Released under the [MIT License](LICENSE).
 
-![CIF Crystal Data workspace showing a selected synthetic sodium chloride structure, unit-cell parameters, atomic sites, crystal viewer, and simulated powder-diffraction pattern.](docs/images/workspace.png)
+![CIF Crystal Data workspace showing batch-selection checkboxes, a selected synthetic sodium chloride structure, atomic sites, a rotated crystal view, and the simulated powder-diffraction panel with its Cu wavelength preset.](docs/images/workspace.png)
 
 The main workspace keeps search results, compound details, the crystal structure, and
 simulated diffraction together. All screenshots use an [original synthetic sample](docs/samples/rocksalt-demo.cif)
@@ -21,15 +21,18 @@ in a clean test profile; the sample is an idealized demonstration, not experimen
 **Quick search:** combine element selections, space-group criteria, and cell-length ranges;
 preview the number of matching structures before running the search.
 
-![Expanded JSmol crystal viewer displaying a 2 by 2 by 2 block of the synthetic sodium chloride cell, with atom colors, cell parameters, and representation controls.](docs/images/crystal-viewer.png)
+![Expanded JSmol viewer showing a rotated 2 by 2 by 2 block of the synthetic sodium chloride cell, with representation, polyhedra, distance, angle, and crystallographic-axis controls.](docs/images/crystal-viewer.png)
 
 **Crystal viewer:** double-click the embedded structure to open the full-window controls,
 then choose a representation, unit-cell block size, or crystallographic viewing axis.
+Distance, angle, and polyhedra controls are available in the same toolbar.
 
-![Simulated powder-diffraction panel plotting relative intensity against 2 theta, with wavelength 1.5406 angstroms, FWHM 0.1 degrees, and Export .xy controls.](docs/images/powder-diffraction.png)
+![Powder-diffraction comparison with a blue simulation and a red imported synthetic pattern, Cu wavelength preset at 1.5406 angstroms, FWHM 0.1 degrees, and import, clear, and export controls.](docs/images/powder-diffraction.png)
 
-**Powder diffraction:** adjust wavelength and peak broadening, inspect reflections, and
-export the simulated pattern as a two-column `.xy` file.
+**Powder diffraction:** adjust wavelength and peak broadening, inspect reflections,
+compare an imported `.xy` pattern, and export the simulation. The red trace uses an
+[original synthetic illustration](docs/samples/synthetic-comparison.xy), not experimental
+data or a fitted reference pattern.
 
 Choose Cu (1.5406 Å), Mo (0.7107 Å), Co (1.7902 Å), or Ag (0.5609 Å).
 Cu is the initial default; the selected preset stays in effect while browsing.
@@ -75,6 +78,8 @@ does not act in text fields or modal dialogs. Near either end, the row is shown 
 close to the center as the available scroll range permits.
 
 ## Batch export
+
+![Batch export dialog with one checked structure selected, an alternative scope for all search matches, CIF files and CSV summary format, and the confirmed count before choosing a destination.](docs/images/batch-export.png)
 
 After a Quick search, check rows for batch selection or choose **All matching the
 current search** in **Batch export…**. Review the exact count, then export CIFs,
