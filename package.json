@@ -31,6 +31,7 @@
     "package": "npm run build && electron-builder",
     "quality:baseline": "node scripts/quality/baseline.mjs",
     "quality:test": "node --test scripts/quality/*.test.mjs",
+    "quality:evaluate-additional": "node scripts/quality/evaluate-additional.mjs",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "node scripts/quality/run-mutation.mjs",
     "quality:regression": "node scripts/quality/regression.mjs",

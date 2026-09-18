@@ -1,0 +1,24 @@
+{
+  "coverageSource": "export function zero(x: boolean) {\n  if (x) return 1;\n  return 0;\n}\nexport function partial(x: boolean) {\n  if (x) {\n    return 1;\n  }\n  return 0;\n}\nexport function full(x: boolean) {\n  if (x) return 1;\n  return 0;\n}\nexport function parent() {\n  function child(x: boolean) {\n    if (x) return 1;\n    return 0;\n  }\n  return child;\n}\nexport const left = () => 1; export const right = () => 2;\nexport const anonymous = function (x: boolean) { return x ? 1 : 0; };\nexport const view = (x: number) => <span>{x}</span>;\nexport function empty() {}\n",
+  "coverageTest": "import { test, expect } from 'vitest';\nimport { partial, full, parent, left, anonymous } from './subject';\ntest('explicit fixture execution', () => {\n  expect(partial(true)).toBe(1);\n  expect(full(true)).toBe(1);\n  expect(full(false)).toBe(0);\n  expect(typeof parent()).toBe('function');\n  expect(left()).toBe(1);\n  expect(anonymous(true)).toBe(1);\n});\n",
+  "coverageOracles": [
+    { "name": "zero", "line": 1, "complexity": 2, "ownedLines": [2, 3], "coveredLines": [], "score": 6 },
+    { "name": "partial", "line": 5, "complexity": 2, "ownedLines": [6, 7, 9], "coveredLines": [6, 7], "score": 2.1481481481481484 },
+    { "name": "full", "line": 11, "complexity": 2, "ownedLines": [12, 13], "coveredLines": [12, 13], "score": 2 },
+    { "name": "parent", "line": 15, "complexity": 1, "ownedLines": [20], "coveredLines": [20], "score": 1 },
+    { "name": "child", "line": 16, "complexity": 2, "ownedLines": [17, 18], "coveredLines": [], "score": 6 }
+  ],
+  "halstead": [
+    { "id": "addition", "source": "function add(a,b){return a+b;}", "methods": [{ "operators": ["return", "+"], "operands": ["a", "b"], "difficulty": 1 }] },
+    { "id": "typed-addition", "source": "function add(a:number,b:number):number{return a+b;}", "methods": [{ "operators": ["return", "+"], "operands": ["a", "b"], "difficulty": 1 }] },
+    { "id": "repeated-operand", "source": "function twice(a:number){return a+a;}", "methods": [{ "operators": ["return", "+"], "operands": ["a", "a"], "difficulty": 2 }] },
+    { "id": "assertion", "source": "function value(x:unknown){return x as number;}", "methods": [{ "operators": ["return"], "operands": ["x"], "difficulty": 0.5 }] },
+    { "id": "nested", "source": "function outer(a){function inner(b){return b+1;}return a;}", "methods": [{ "operators": ["function", "return"], "operands": ["inner", "b", "a"], "difficulty": 1 }, { "operators": ["return", "+"], "operands": ["b", "1"], "difficulty": 1 }] },
+    { "id": "member-access", "source": "function value(x){return x.a;}", "methods": [{ "operators": ["return", "."], "operands": ["x", "a"], "difficulty": 1 }] },
+    { "id": "optional-access", "source": "function value(x){return x?.a;}", "methods": [{ "operators": ["return", "?."], "operands": ["x", "a"], "difficulty": 1 }] },
+    { "id": "nullish", "source": "const value=(x)=>x??0;", "methods": [{ "operators": ["??"], "operands": ["x", "0"], "difficulty": 0.5 }] },
+    { "id": "jsx-empty", "source": "const view=()=> <span/>;", "methods": [{ "operators": ["jsx-element"], "operands": ["span"], "difficulty": 0.5 }] },
+    { "id": "jsx-expression", "source": "const view=(x:number)=> <span>{x+1}</span>;", "methods": [{ "operators": ["jsx-element", "jsx-expression", "+"], "operands": ["span", "x", "1"], "difficulty": 1.5 }] },
+    { "id": "malformed", "source": "function value(x){return x+;}", "parseError": true }
+  ]
+}

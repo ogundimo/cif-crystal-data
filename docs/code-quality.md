@@ -64,14 +64,16 @@ survivor review and execution cost. It runs separately from the coverage baselin
 | Per-function cognitive complexity | `eslint-plugin-sonarjs` 4.2.0, `sonarjs/cognitive-complexity` | An analyzer-specific measure of control-flow and nesting difficulty. Only positive scores appear in the report. Locations are the analyzer's locations and may differ from ESLint's function-start locations. |
 | Duplication | jscpd 4.3.0, weak token mode, minimum 70 tokens and 5 lines | Candidate repeated blocks, ignoring comments and whitespace. Reports clone pairs and the tool's duplicated-line estimate. TSX can generate multiple token streams, so its line/source denominator is not the physical file inventory. |
 | File size | Repository reporting script, physical lines | Counts blanks and comments, normalizing CRLF/LF and ignoring a final newline as an extra line. A large file is a review candidate, not automatically a design defect. |
-| Halstead difficulty | **Deferred / unavailable** | No TypeScript/TSX operator-and-operand analyzer has been validated for this repository. No proxy score is fabricated from file size. |
-| CRAP | **Deferred / unavailable** | Would combine per-function complexity with coverage for the same function. Function-range mapping and nested-function attribution have not been validated. |
+| Halstead difficulty | **Deferred / unavailable** | The evaluated candidate silently omits JSX and optional-access operators; see [fixture evidence and decision](additional-measurements.md). |
+| CRAP | **Deferred / unavailable** | Existing diagnostic/coverage outputs lose function ownership for inline and adjacent functions; see [attribution contract and evidence](additional-measurements.md). |
 
 The proposed CRAP calculation is `C² × (1 − cov)³ + C`, where `C` is classic per-function
 cyclomatic complexity and `cov` is the fraction, from 0 to 1, of executable lines covered
 inside that same function. Repository or module coverage must not be substituted. A future
 implementation must specify nested-function handling and zero executable-line cases before
-publishing scores. Both deferred metrics remain explicit in machine-readable reports.
+publishing scores. The [additional measurement evaluation](additional-measurements.md)
+defines that contract and rejects the tested candidates with reproducible fixtures.
+Both deferred metrics remain explicit in machine-readable reports.
 
 Complexity rules use a reporting threshold of zero so scores can be collected. Their
 messages about a maximum of zero are analyzer output, **not policy violations**. Inline
