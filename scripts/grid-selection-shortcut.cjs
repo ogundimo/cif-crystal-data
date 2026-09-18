@@ -51,7 +51,7 @@ module.exports = async function testSelectedRowShortcut(window, testUrl, waitFor
   assert.equal((await geometry()).calls.load,partial.calls.load,'reveal triggered incremental loading');
   await evaluate(`${grid}.dispatchEvent(new WheelEvent('wheel',{bubbles:true,deltaY:120}));undefined`);
   assert.equal((await geometry()).calls.load,partial.calls.load+1,'ordinary scrolling no longer loads the next page');
-  await update({ids:Array.from({length:1000},(_,i)=>i+1)});await shortcut();await centered(500);
+  await update({ids:Array.from({length:1000},(_,i)=>i+1),loadingMore:false});await shortcut();await centered(500);
   for(const selectedId of [null,20000]) {
     await update({selectedId});const before=await geometry();await shortcut();assert.equal((await geometry()).top,before.top,'missing selection moved grid');
   }
