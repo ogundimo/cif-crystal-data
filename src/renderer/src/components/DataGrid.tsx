@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-table';
 import type { EntryRow, SearchSortColumn } from '../../../shared/types';
 import { useLayoutPreference, validColumnWidths } from '../layoutPreferences';
-import { formatFormula } from '../formatFormula';
+import { formatCifText, formatFormula, plainCifText } from '../formatFormula';
 import { calculateVirtualRowWindow } from '../virtualRows';
 
 const columnHelper = createColumnHelper<EntryRow>();
@@ -61,6 +61,7 @@ const columns = [
   columnHelper.accessor('reference', {
     id: 'reference',
     header: 'Reference',
+    cell: (info) => formatCifText(info.getValue()),
     size: 260
   }),
   columnHelper.accessor('level_struct_studies', {
@@ -295,7 +296,7 @@ export default function DataGrid({
                     className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#f0f0f0] border-r border-[#f0f0f0] px-2 py-0.5 leading-[15px]"
                     title={
                       typeof cell.getValue() === 'string'
-                        ? (cell.getValue() as string)
+                        ? plainCifText(cell.getValue() as string)
                         : undefined
                     }
                   >

@@ -4,7 +4,7 @@ import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import JSmolViewer from './JSmolViewer';
 import PxrdPattern from './PxrdPattern';
 import PublicationReference from './PublicationReference';
-import { formatFormula } from '../formatFormula';
+import { formatCifText, formatFormula } from '../formatFormula';
 
 interface Props {
   entry: EntryRow;
@@ -83,7 +83,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
     }
   ];
   const publication = [
-    { label: 'Reference', value: entry.reference },
+    { label: 'Reference', value: formatCifText(entry.reference) },
     { label: 'Publication link', value: <PublicationReference entry={entry} authors={authors} /> },
     { label: 'Language', value: entry.journal_language }
   ];
@@ -133,7 +133,8 @@ export default function CompoundInfoPanel({ entry }: Props) {
         data-testid="compound-info-panel"
         className="min-w-0 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-[#f1f3f5]"
         style={infoWidth === null ? undefined : { flex: `0 0 ${infoWidth}px` }}
-      >        <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
+      >
+        <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
           <caption className="info-section-label">Sample details</caption>
           <tbody>
             {metadata.map((field) => (

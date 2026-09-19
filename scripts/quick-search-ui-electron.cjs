@@ -365,8 +365,8 @@ async function testCompoundInformationSelection(window) {
   `);
   assert.equal(selected.site, 'Sb2', 'information panel did not follow the selected row');
   assert.deepEqual(selected.publication.slice(0, 3), [
-    { label: 'Reference', value: 'Reference 2' },
-    { label: 'Publication link', value: 'Synthetic structure report 2' },
+    { label: 'Reference', value: 'Reference 2: RE3InSe6' },
+    { label: 'Publication link', value: 'Synthetic RE3InSe6 structure report' },
     { label: 'Language', value: 'English' }
   ]);
   assert.equal(selected.publication[3]?.label, 'Publication authors');
@@ -375,6 +375,20 @@ async function testCompoundInformationSelection(window) {
     ['Doe, J.', 'Department of Chemistry, Example University, Springfield'],
     ['Roe, A.', '']
   ]);
+  const formulaLayout = await window.webContents.executeJavaScript(`(() => {
+    const button = document.querySelector('[data-testid="publication-table"] tbody').children[1].querySelector('button');
+    const r = button.getBoundingClientRect();
+    return { style: { overflow:getComputedStyle(button).overflow, lineHeight:getComputedStyle(button).lineHeight,
+      decoration:getComputedStyle(button).textDecorationLine }, rect:r.toJSON(),
+      subs:[...button.querySelectorAll('sub')].map(sub=>({text:sub.textContent, size:getComputedStyle(sub).fontSize, rect:sub.getBoundingClientRect().toJSON()})) };
+  })()`);
+  assert.deepEqual(formulaLayout.subs.map(sub => sub.text), ['3', '6']);
+  assert.ok(formulaLayout.subs.every(sub => sub.rect.bottom <= formulaLayout.rect.bottom && sub.rect.top >= formulaLayout.rect.top),
+    'publication subscripts must fit inside the link without clipping');
+  assert.equal(formulaLayout.style.overflow, 'visible', 'publication title must not clip subscripts');
+  assert.deepEqual(await window.webContents.executeJavaScript(`Array.from(document.querySelector('[data-testid="publication-table"] tbody').children[0].querySelectorAll('sub'), s=>s.textContent)`), ['3','6']);
+  assert.deepEqual(await window.webContents.executeJavaScript(`Array.from(document.querySelector('[data-entry-id="2"]')?.querySelectorAll('td:nth-child(7) sub') ?? [], s=>s.textContent)`), ['3','6']);
+
   await window.webContents.executeJavaScript(`
     (() => {
       window.__publicationLookup = null;
@@ -394,8 +408,8 @@ async function testCompoundInformationSelection(window) {
     destination: window.__publicationDestination
   })`);
   assert.deepEqual(publicationResolution.lookup, {
-    title: 'Synthetic structure report 2',
-    reference: 'Reference 2',
+    title: 'Synthetic RE$_3$InSe$_6$ structure report',
+    reference: 'Reference 2: RE$_3$InSe$_6$',
     authors: ['Doe, J.', 'Roe, A.']
   });
   assert.equal(publicationResolution.destination, 'https://doi.org/10.1000/verified');

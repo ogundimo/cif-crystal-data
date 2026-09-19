@@ -126,3 +126,30 @@ native stack, then verifies empty registries, early-initialization cleanup,
 queued paint/resize completion without exceptions, and 27 atoms in a subsequent
 viewer. CI retains these JSON records and the comparison/control captures alongside
 the existing representation captures.
+
+
+## Publication and reference text
+
+Publication links, reference cells, and tooltips share one formatter. It recognizes:
+
+- CIF paired tilde subscripts and paired caret superscripts.
+- Standalone LaTeX script fragments, including braced and escaped-underscore variants.
+- Simple dollar-delimited or backslash-parenthesized math with scripts and flat
+  `\mathrm`, `\mathit`, or `\text` wrappers.
+- Attached braced scripts and `\textsubscript` / `\textsuperscript` commands.
+- Attribute-free HTML/JATS `sub` and `sup` elements (rendered as safe React elements).
+- Existing Unicode subscript/superscript characters, preserved as written.
+
+Ordinary prose, years, page numbers, identifiers, and unmarked formulas in titles are
+not guessed. This is not a full TeX, HTML, mhchem, or MathML renderer: unknown commands,
+complex/nested equations, and malformed notation remain visible for inspection. No
+HTML is executed and stored metadata and publication lookup inputs remain unchanged.
+The formula-only field retains its separate element-count formatter.
+
+Conventions: [IUCr CIF text semantics](https://www.iucr.org/resources/cif/spec/version1.1/semantics),
+[Crossref title markup](https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/titles),
+and [LaTeX documentation](https://www.latex-project.org/help/documentation/).
+Validation covers representative variants and malformed/adversarial text, not every
+possible publishing format. A read-only check of the three available local CIF folders
+found 160 files and 10 distinct extracted publication titles, nine with CIF subscripts;
+the user-provided rare-earth title additionally established standalone LaTeX use.

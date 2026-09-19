@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { EntryRow, PublAuthorRow } from '../../../shared/types';
+import { formatCifText, plainCifText } from '../formatFormula';
 
 interface PublicationTarget {
   label: string;
@@ -54,13 +55,13 @@ export default function PublicationReference({
 }) {
   const target = publicationTarget(entry);
   const [resolving, setResolving] = useState(false);
-  if (!target.url) return <>{target.label}</>;
+  if (!target.url) return <>{formatCifText(target.label)}</>;
   return (
     <button
       type="button"
       disabled={resolving}
-      className="max-w-full truncate text-left text-[#0067b8] underline decoration-[#0067b8]/50 underline-offset-2 hover:text-[#004f8c]"
-      title={`${target.label} — verify and open publication link`}
+      className="max-w-full whitespace-normal break-words py-0.5 text-left leading-5 text-[#0067b8] underline decoration-[#0067b8]/50 underline-offset-2 hover:text-[#004f8c]"
+      title={`${plainCifText(target.label)} — verify and open publication link`}
       onClick={async (event) => {
         event.stopPropagation();
         setResolving(true);
@@ -82,7 +83,7 @@ export default function PublicationReference({
         }
       }}
     >
-      {resolving ? 'Resolving publication…' : target.label}
+      {resolving ? 'Resolving publication…' : formatCifText(target.label)}
     </button>
   );
 }
