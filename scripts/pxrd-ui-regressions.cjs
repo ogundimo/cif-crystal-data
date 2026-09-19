@@ -50,6 +50,18 @@ module.exports = async function(window,testUrl) {
   };
   await importXY('# synthetic\n0 1\n5 5\n40 10\n80 2\n90 1','personal.xy');
   await wait("!!document.querySelector('[data-role=pxrd-imported-profile]')");
+  const toolbar = await ui(`(() => {
+    const bar = document.querySelector('[data-testid=pxrd-toolbar]');
+    const controls = [...bar.querySelectorAll('select,input:not([type=file]),button,label.btn-w32')].map(el => {
+      const r = el.getBoundingClientRect(); return { left:r.left, right:r.right, center:r.top+r.height/2 };
+    });
+    return { controls, groups:bar.querySelectorAll('[role=group]').length, wrap:getComputedStyle(bar).flexWrap };
+  })()`);
+  assert.equal(toolbar.groups, 3);
+  assert.equal(toolbar.wrap, 'nowrap');
+  assert.equal(toolbar.controls.length, 6);
+  assert.ok(toolbar.controls.every(r => Math.abs(r.center-toolbar.controls[0].center)<2), 'PXRD controls must share one row');
+  assert.ok(toolbar.controls.slice(1).every((r,i)=>r.left>=toolbar.controls[i].right), 'PXRD controls must not overlap');
   // Error feedback can resize the plot. Compare the trace's relative geometry,
   // not pixel coordinates, to verify preservation across that layout change.
   const overlayGeometry = async () => ui(`(()=>{
@@ -97,7 +109,7 @@ module.exports = async function(window,testUrl) {
   window.setContentSize(650,650); await new Promise(resolve=>setTimeout(resolve,100));
   assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),true);
   window.setContentSize(1200,800);
-  await ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Clear imported pattern').click()");
+  await ui("document.querySelector('[aria-label=\"Clear imported pattern\"]').click()");
   assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),false);
   await ui('window.pxrdHarness.setEntry({...window.pxrdHarness.entry,cell_a_angstrom:60});');
   await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='incomplete'");

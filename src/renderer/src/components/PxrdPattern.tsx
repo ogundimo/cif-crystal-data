@@ -120,11 +120,10 @@ export default function PxrdPattern({ entry }: Props) {
   }
 
   return (
-    <section aria-label="Simulated PXRD pattern" data-testid="pxrd-pattern" data-calculation-ms={response?.calculationMs} data-calculation-status={response?.result.status} className="flex min-h-0 flex-col overflow-hidden border border-stroke bg-white">
-      <div data-testid="pxrd-toolbar" className="z-[1] flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-stroke bg-[#f7f9fb] px-2 py-1 text-xs text-[#2f4052]">
-        <span className="whitespace-nowrap font-semibold">Simulated PXRD pattern</span>
-        <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1">
-          <label className="flex items-center gap-1 whitespace-nowrap font-medium">
+    <section aria-label="Simulated PXRD pattern" data-testid="pxrd-pattern" data-calculation-ms={response?.calculationMs} data-calculation-status={response?.result.status} className="flex min-h-0 min-w-0 flex-col overflow-hidden border border-stroke bg-white">
+      <div data-testid="pxrd-toolbar" className="z-[1] flex min-w-0 shrink-0 items-center gap-4 overflow-x-auto border-b border-stroke bg-[#f7f9fb] px-2 py-1 text-xs text-[#2f4052]">
+        <div role="group" aria-label="Simulation settings" className="flex shrink-0 items-center gap-4">
+          <label className="flex items-center gap-2 whitespace-nowrap font-medium">
             λ
             <select
               aria-label="PXRD wavelength in angstroms"
@@ -136,7 +135,7 @@ export default function PxrdPattern({ entry }: Props) {
               className="h-6 rounded-sm border border-[#aeb8c2] bg-white px-1 text-xs font-normal text-[#202020] outline-none focus:border-accent"
             >{WAVELENGTH_PRESETS.map(preset => <option key={preset.value} value={preset.value}>{preset.label}</option>)}</select>
           </label>
-          <label className="flex items-center gap-1 whitespace-nowrap font-medium">
+          <label className="flex items-center gap-2 whitespace-nowrap font-medium">
             FWHM (2θ)
             <input
               aria-label="PXRD FWHM in degrees 2 theta"
@@ -154,25 +153,29 @@ export default function PxrdPattern({ entry }: Props) {
             />
             <span>°</span>
           </label>
-          <label className="flex items-center gap-1 whitespace-nowrap text-[10px]">
+        </div>
+        <div role="group" aria-label="Export settings" className="flex shrink-0 items-center gap-2 border-l border-stroke pl-4">
+          <label title="Include column names and simulation settings in the exported file" className="flex items-center gap-1.5 whitespace-nowrap">
             <input type="checkbox" checked={includeHeader} onChange={(event) => setIncludeHeader(event.currentTarget.checked)} />
             Header
           </label>
           <button className="btn-w32 h-6 px-2 py-0" disabled={profile.length === 0 || exporting} onClick={() => void exportPattern()}>
             {exporting ? 'Exporting…' : 'Export .xy'}
           </button>
-          {exportMessage && <span className="max-w-40 truncate text-[10px] text-[#2f6f3e]" title={exportMessage}>{exportMessage}</span>}
+        </div>
+        <div role="group" aria-label="Pattern comparison" className="flex shrink-0 items-center gap-2 border-l border-stroke pl-4">
+          <label title="Import a measured pattern for comparison" className="btn-w32 relative h-6 cursor-pointer whitespace-nowrap px-2 py-0 focus-within:outline focus-within:outline-2 focus-within:outline-accent">Import .xy<input aria-label="Import personal XY pattern" className="sr-only" type="file" accept=".xy" onChange={event => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = '';
+            if (file) void importPattern(file);
+          }} /></label>
+          {imported && <button aria-label="Clear imported pattern" title="Clear imported pattern" className="btn-w32 h-6 px-2 py-0" onClick={() => { importSequence.current++; setImported(null); setImportError(null); }}>Clear</button>}
         </div>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-2 px-2 text-[10px]">
-        <label className="btn-w32 cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-accent">Import .xy<input aria-label="Import personal XY pattern" className="sr-only" type="file" accept=".xy" onChange={event => {
-          const file = event.currentTarget.files?.[0];
-          event.currentTarget.value = '';
-          if (file) void importPattern(file);
-        }} /></label>
-        {imported && <><span className="break-all text-red-700">Red: {imported.fileName} (maximum = 100)</span><button className="btn-w32" onClick={() => { importSequence.current++; setImported(null); setImportError(null); }}>Clear imported pattern</button></>}
+      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 px-2 text-[10px]">
+        {exportMessage && <span role="status" className="max-w-40 truncate text-[#2f6f3e]" title={exportMessage}>{exportMessage}</span>}
         <span className="text-blue-700">Blue: simulation</span>
-        {imported && <span>Comparison requires matching wavelengths. Imported angles stay unchanged; display clips to 5–80°.</span>}
+        {imported && <><span className="break-all text-red-700">Red: {imported.fileName} (maximum = 100)</span><span>Comparison requires matching wavelengths. Imported angles stay unchanged; display clips to 5–80°.</span></>}
         {noOverlap && <span role="status">Imported pattern has no overlap with 5–80°.</span>}
         {importError && <span role="alert" className="text-red-700">{importError}</span>}
       </div>

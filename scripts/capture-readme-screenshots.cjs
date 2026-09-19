@@ -142,7 +142,7 @@ async function run() {
     return svg && svg.getBoundingClientRect().bottom <= chart.getBoundingClientRect().bottom + 1;
   })()`);
   await capture('powder-diffraction', '[data-testid=pxrd-pattern]');
-  await click('Clear imported pattern');
+  await click('Clear');
   await click('Quick search');
   await waitFor("Boolean(document.querySelector('#quick-search-space-group-number'))");
   await ui(`(() => {
