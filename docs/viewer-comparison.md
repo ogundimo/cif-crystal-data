@@ -41,6 +41,9 @@ cancels picking. Opening/leaving expanded view, changing representation, or load
 a structure/supercell cancels picking; reloading also clears native measurements.
 Clear polyhedra also cancels pending polyhedron selection.
 Rotation, zoom, axis views and fit/reset preserve completed measurements.
+Returning to results reloads the embedded viewer with Atoms, Cells and 1³ selected.
+Labels, polyhedra, measurements and picking are cleared, and cell-parameter text is
+hidden. Reopening the expanded viewer starts with these reset settings.
 
 The native popup is disabled at initialization and after loads, while the viewport
 suppresses browser context menus. Crystallographic axes are an independent SVG

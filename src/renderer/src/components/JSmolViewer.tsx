@@ -62,6 +62,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
   const [labelsVisible, setLabelsVisible] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [supercellSize, setSupercellSize] = useState<CrystalSupercellSize>(1);
+  const [compactResetVersion, setCompactResetVersion] = useState(0);
   const [pickingMode, setPickingMode] = useState<PickingMode>('off');
   const [pickingMessage, setPickingMessage] = useState('Picking off. Drag to rotate; scroll to zoom.');
   const [rotation, setRotation] = useState([[1,0,0],[0,1,0],[0,0,1]]);
@@ -175,7 +176,19 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
     desiredRequest.current = request;
     setView((current) => ({ phase: 'loading', pendingFileName: entry.source_filename, result: current.result }));
     if (readyRef.current) runtimeRef.current?.request(request);
-  }, [entry.id, entry.source_filename, supercellSize]);
+  }, [entry.id, entry.source_filename, supercellSize, compactResetVersion]);
+
+  function closeControls(): void {
+    runtimeRef.current?.setCellParametersVisible(false);
+    setRepresentation('atoms');
+    setUnitCellVisible(true);
+    setLabelsVisible(false);
+    setSupercellSize(1);
+    // Reload even when already at 1³ to clear annotations and supersede any
+    // in-flight expanded-view load with the compact defaults.
+    setCompactResetVersion((version) => version + 1);
+    setControlsOpen(false);
+  }
 
   function chooseRepresentation(value: CrystalRepresentation): void {
     setRepresentation(value);
@@ -222,12 +235,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
         <div className="flex flex-wrap items-center gap-1 border-b border-stroke bg-[#eef2f5] p-1">
           <button
             className="btn-w32 px-2"
-            onClick={() => {
-              runtimeRef.current?.setCellParametersVisible(false);
-              runtimeRef.current?.setPolyhedraPicking(false);
-              runtimeRef.current?.clearPolyhedra(representation);
-              setControlsOpen(false);
-            }}
+            onClick={closeControls}
             aria-label="Back to quick search results"
           >
             ← Back to results
