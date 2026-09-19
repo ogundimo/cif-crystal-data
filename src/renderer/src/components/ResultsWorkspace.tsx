@@ -4,6 +4,7 @@ import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import DataGrid, { type EmptyResultsMessage } from './DataGrid';
 
 interface Props {
+  onRecovery?: (entry?: EntryRow) => void;
   checkedIds?: ReadonlySet<number>;
   onToggleChecked?: (id: number) => void;
   emptyMessage?: EmptyResultsMessage;
@@ -32,7 +33,7 @@ class DetailsBoundary extends Component<{ children: React.ReactNode }, { failed:
   }
 }
 
-export default function ResultsWorkspace({ checkedIds, onToggleChecked, emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
+export default function ResultsWorkspace({ onRecovery, checkedIds, onToggleChecked, emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ y: number; height: number } | null>(null);
   const [panelHeight, setPanelHeight] = usePanelSize('details-height', workspaceRef, MIN_PANEL_HEIGHT, MIN_RESULTS_HEIGHT + 6, 'height');
@@ -117,7 +118,7 @@ export default function ResultsWorkspace({ checkedIds, onToggleChecked, emptyMes
       />
       <DetailsBoundary>
         <Suspense fallback={<div role="status" className="p-4">Loading structure details…</div>}>
-          <CompoundInfoPanel entry={selectedEntry} />
+          <CompoundInfoPanel entry={selectedEntry} onRecovery={onRecovery} />
         </Suspense>
       </DetailsBoundary>
     </div>

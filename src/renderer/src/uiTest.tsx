@@ -6,6 +6,7 @@ import ResultsWorkspace from './components/ResultsWorkspace';
 import DataGrid from './components/DataGrid';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
 import PxrdPattern from './components/PxrdPattern';
+import SourceRecovery from './components/SourceRecovery';
 import type { EntryRow, SearchPageRequest, SearchPageResult, ImportProgress, ImportResult } from '../../shared/types';
 import syntheticCif from '../../parser/__fixtures__/synthetic-test.cif?raw';
 import './index.css';
@@ -96,6 +97,7 @@ window.cifApi = {
     { id: entryId + 1, entry_id: entryId, author_order: 1, name: 'Roe, A.', address: null }
   ],
   getViewerSource: async (entryId) => ({ fileName: `${entryId}.cif`, text: syntheticCif }),
+  sourceRecovery: async () => ({ eligible: false }),
   getImportFolder: async () => null,
   countBatchExport: async scope => scope.kind === 'selected' ? scope.ids.length : 1205,
   batchExport: async () => null,
@@ -160,6 +162,25 @@ function PxrdRegression() {
   return <div className="grid h-screen">{mounted && <PxrdPattern entry={entry}/>}</div>;
 }
 const gridShortcutMode = new URLSearchParams(location.search).has('grid-shortcut');
+const sourceRecoveryMode = new URLSearchParams(location.search).has('source-recovery');
+function SourceRecoveryHarness() {
+  const [selected, setSelected] = React.useState<number | null>(null);
+  return <div className="flex h-screen flex-col items-center justify-center bg-[#071018] text-white">
+    <h1>Could not display missing.cif</h1>
+    <SourceRecovery entry={gridRows[0]} onComplete={entry => setSelected(entry?.id ?? -1)} />
+    <output aria-label="Recovery selection">{selected}</output>
+  </div>;
+}
+if (sourceRecoveryMode) {
+  window.cifApi.sourceRecovery = async request => {
+    if (request.action === 'inspect') return { eligible: true, candidates: [gridRows[1]] };
+    if (request.action === 'prepare-remove') return { eligible: true, token: 'remove', removal: true };
+    if (request.action === 'confirm') return { eligible: true, completed: request.token === 'remove' ? 'removed' : 'recovered',
+      entry: request.token === 'remove' ? undefined : gridRows[0], snapshot: 'test-profile/pre-recovery.db' };
+    return { eligible: true, token: 'recover', choices: [{ index: 0, filename: 'synthetic.cif', block: 'synthetic',
+      formula: gridRows[0].formula, reference: 'Synthetic recovery fixture', atoms: 2, cell: [4,4,4,90,90,90] }] };
+  };
+}
 if (appRegressionMode) {
   const regression = {
     progress: (_value: ImportProgress) => {},
@@ -181,4 +202,4 @@ if (appRegressionMode) {
     return new Promise<SearchPageResult>((resolve) => regression.pending.push(() => resolve(result)));
   };
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(pxrdRegressionMode ? <PxrdRegression/> : gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);
+ReactDOM.createRoot(document.getElementById('root')!).render(sourceRecoveryMode ? <SourceRecoveryHarness /> : pxrdRegressionMode ? <PxrdRegression/> : gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);

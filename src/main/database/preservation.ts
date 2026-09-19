@@ -72,7 +72,7 @@ export function backupProfile(destination: string, database: Database.Database =
   }
 }
 
-function validateArchive(archive: Database.Database, database: Database.Database): void {
+export function validateArchive(archive: Database.Database, database: Database.Database): void {
   // Never execute SQL supplied by an archive. Reject schema additions and alterations.
   const schema = (db: Database.Database) => (db.prepare(`SELECT type, name, tbl_name, sql FROM sqlite_master
     WHERE (name NOT LIKE 'sqlite_%' OR name = 'sqlite_sequence') AND name != 'backup_manifest' ORDER BY type, name`).all() as

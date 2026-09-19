@@ -64,6 +64,39 @@ Stored versions are retained until **Clear CIFs**, including versions superseded
 refresh. Clear removes indexed records and managed bytes, but never external originals.
 Database files may retain allocated space for reuse. Back up before clearing.
 
+## Missing-source recovery
+
+**Resolve missing source…** in the viewer error panel opens three actions:
+**Locate CIF…**, **Delete this entry…**, and **Open matching entry** when a
+potential duplicate with verified stored bytes is available. Formula matches are
+suggestions, not proof of identical provenance; opening one does not merge or delete
+records. There is no additional toolbar control or backup-picker action in this dialog.
+
+Locate a CIF with the file picker (up to 32 MiB), choose its data block, compare its
+metadata, and confirm the association. The selected entry retains its ID. All blocks
+are imported transactionally, and existing source ownership prevents implicit merging.
+Known fingerprints must match. Without one, historical source identity cannot be
+established. Confirmation uses the bytes captured during preview; previews expire after
+15 minutes or a database change. Originals are never modified.
+
+Deletion asks **Delete [filename] from the app?** and requires **Delete entry**.
+Deletion requires no snapshot and creates none. Only the selected unavailable entry
+and its dependent database metadata are removed; the original CIF is never deleted or
+modified. Cancel keeps the entry. Healthy managed entries cannot be removed through
+this missing-source dialog.
+
+Refreshing the saved folder reimports deleted entries if their CIF files are still
+present and valid in that folder. New entries receive new IDs. Deletion invalidates
+surviving fingerprints for the same source so multi-block files are scanned again too.
+If the file is absent, refresh cannot reconstruct the deleted metadata. Missing files
+alone never automatically delete app entries during refresh. Snapshot requirements for
+migration, profile restore, and source replacement do not apply to confirmed entry deletion.
+
+Recovery also saves a snapshot automatically before modifying the entry. Snapshots
+preserve the whole profile, including unavailable legacy records. They are SQLite
+profile snapshots, not portable archives; close the app before manually restoring one,
+as described above. Failed parsing or writes leave the previous entry intact.
+
 ## Relinking
 
 Select a structure, then **Sources & backups → Relink selected source**. Choose an

@@ -44,6 +44,11 @@ export function createSearchController(api: Pick<CifApi, 'searchPage'>,
     finally { if (id === generation) update({ busy: false }); }
   };
   return {
+    openEntry: (entry: EntryRow) => {
+      generation++; filter = null;
+      update({ entries: [entry], selectedEntryId: entry.id, total: 1, active: true, busy: false, sort: {} });
+    },
+    refresh: async () => { if (filter) await request(false, 'refresh search results'); else reset(); },
     reset,
     select: (id: number) => update({ selectedEntryId: id }),
     search: async (next: SearchFilter) => {

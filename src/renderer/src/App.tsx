@@ -56,6 +56,7 @@ function AppInner() {
   const [databaseEntryCount, setDatabaseEntryCount] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [searchTotal, setSearchTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -242,6 +243,12 @@ function AppInner() {
     await controller.search(filter);
   }
   const loadMoreResults = controller.loadMore;
+  function handleSourceRecovery(entry?: EntryRow) {
+    setCheckedIds(new Set()); setBatchFilter(null); setWorkspaceVersion(value => value + 1);
+    void refreshDatabaseCount();
+    if (entry) { controller.openEntry(entry); setAnswerSetLabel('Selected source entry'); }
+    else void controller.refresh();
+  }
   const sortSearchResults = controller.sort;
   return (
     <div className="mx-auto flex h-screen max-w-full flex-col overflow-hidden bg-mica">
@@ -340,6 +347,8 @@ function AppInner() {
         <span className="text-text-dim">Checkboxes select exports; the highlighted row shows details. Selection survives paging and sorting; new searches and data refresh clear it.</span>
       </div>
       <ResultsWorkspace
+        key={workspaceVersion}
+        onRecovery={handleSourceRecovery}
         checkedIds={checkedIds}
         onToggleChecked={id => setCheckedIds(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; })}
         emptyMessage={loadingMore ? { title: 'Searching…', description: 'Finding matching structures.' } : searchActive ? { title: 'No matching results', description: 'Open Quick search to adjust or remove criteria.' } : databaseEntryCount === 0 ? { title: 'No structures imported', description: 'Use Import CIFs to add structures, then run a Quick search.' } : databaseEntryCount === null ? { title: 'Loading database…', description: 'Checking the available structures.' } : { title: 'Run a search', description: 'Use Quick search to filter the imported structures.' }}

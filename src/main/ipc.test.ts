@@ -7,6 +7,7 @@ const doubles = vi.hoisted(() => ({
   readFile: vi.fn(), stat: vi.fn(), writeFile: vi.fn(),
   save: vi.fn(), open: vi.fn(), confirm: vi.fn(), error: vi.fn(), worker: vi.fn(),
   db: { countBatchExport: vi.fn(), runBatchExport: vi.fn(), getStartupRefresh: vi.fn(), setStartupRefresh: vi.fn(), getDataAuthors: vi.fn(), readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
+    inspectSourceRecovery: vi.fn(), previewSourceRecovery: vi.fn(), prepareSourceRemoval: vi.fn(), confirmSourceRecovery: vi.fn(),
     searchEntriesPage: vi.fn(), getImportFolder: vi.fn(), setImportFolder: vi.fn(), clearAllEntries: vi.fn() }
 }));
 vi.mock('electron', () => ({
@@ -64,6 +65,38 @@ beforeEach(async () => {
 });
 
 describe('main-process IPC contracts', () => {
+  it('validates recovery input, handles picker cancellation and dispatches explicit confirmations', async () => {
+    for (const request of [null, {}, { entryId: -1, action: 'inspect' }, { entryId: 1, action: 'unknown' },
+      { entryId: 1, action: 'confirm', token: 4, choice: 0 }, { entryId: 1, action: 'confirm', token: 'x', choice: -1 }]) {
+      await expect(invoke('cif:sourceRecovery', request)).rejects.toThrow('Invalid recovery');
+    }
+    doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
+    await expect(invoke('cif:sourceRecovery', { entryId: 1, action: 'choose-cif' })).resolves.toMatchObject({ cancelled: true });
+    expect(doubles.db.previewSourceRecovery).not.toHaveBeenCalled();
+    doubles.open.mockResolvedValue({ canceled: false, filePaths: [sourcePath] });
+    await invoke('cif:sourceRecovery', { entryId: 1, action: 'choose-backup' });
+    expect(doubles.db.previewSourceRecovery).toHaveBeenCalledWith(1, sourcePath, true);
+    await invoke('cif:sourceRecovery', { entryId: 1, action: 'inspect' });
+    expect(doubles.db.inspectSourceRecovery).toHaveBeenCalledWith(1);
+    await invoke('cif:sourceRecovery', { entryId: 1, action: 'prepare-remove' });
+    expect(doubles.db.prepareSourceRemoval).toHaveBeenCalledWith(1);
+    await invoke('cif:sourceRecovery', { entryId: 1, action: 'confirm', token: 'reviewed', choice: 0 });
+    expect(doubles.db.confirmSourceRecovery).toHaveBeenCalledWith(1, 'reviewed', 0);
+  });
+
+  it('excludes other data operations while recovery holds a picker and releases after errors', async () => {
+    let cancel!: (value: unknown) => void;
+    doubles.open.mockImplementation(() => new Promise(resolve => { cancel = resolve; }));
+    const pending = invoke('cif:sourceRecovery', { entryId: 1, action: 'choose-cif' });
+    await vi.waitFor(() => expect(doubles.open).toHaveBeenCalled());
+    await expect(invoke('cif:clearCifs')).rejects.toThrow('already in progress');
+    await expect(invoke('cif:sourceRecovery', { entryId: 1, action: 'prepare-remove' })).rejects.toThrow('already in progress');
+    cancel({ canceled: true, filePaths: [] }); await pending;
+    doubles.db.inspectSourceRecovery.mockImplementationOnce(() => { throw new Error('synthetic failure'); });
+    await expect(invoke('cif:sourceRecovery', { entryId: 1, action: 'inspect' })).rejects.toThrow('synthetic failure');
+    await invoke('cif:sourceRecovery', { entryId: 1, action: 'inspect' });
+  });
+
   it('validates batch scopes before opening dialogs and writes nothing after picker cancellation', async () => {
     await expect(invoke('cif:batchExport', { scope: { kind: 'selected', ids: [0] }, mode: 'both', expectedCount: 2 })).rejects.toThrow('Invalid');
     expect(doubles.open).not.toHaveBeenCalled();

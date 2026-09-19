@@ -8,6 +8,7 @@ import { formatCifText, formatFormula } from '../formatFormula';
 
 interface Props {
   entry: EntryRow;
+  onRecovery?: (entry?: EntryRow) => void;
 }
 
 const DIVIDER_SIZE = 6;
@@ -15,7 +16,7 @@ const MIN_COLUMN_WIDTH = 220;
 const MIN_VIEWER_ROW_HEIGHT = 44;
 const MIN_LOWER_ROW_HEIGHT = 44;
 
-export default function CompoundInfoPanel({ entry }: Props) {
+export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const viewerRowsRef = useRef<HTMLDivElement>(null);
   const columnDragStart = useRef<{ x: number; width: number } | null>(null);
@@ -311,7 +312,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
             : `${viewerHeight}px ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`
         }}
       >
-        <JSmolViewer entry={entry} atomSites={atomSites} />
+        <JSmolViewer entry={entry} atomSites={atomSites} onRecovery={onRecovery} />
         <div
           role="separator" data-resize-handle="true"
           aria-label="Resize crystal viewer and lower visual panel"

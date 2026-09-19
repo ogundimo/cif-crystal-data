@@ -1,0 +1,42 @@
+const assert = require('node:assert/strict');
+const { mkdirSync, writeFileSync } = require('node:fs');
+
+module.exports = async (window, testUrl, waitForRenderer) => {
+  const ui = code => window.webContents.executeJavaScript(code);
+  const wait = code => waitForRenderer(window, code, 'source recovery UI');
+  const click = async text => {
+    await ui(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent===${JSON.stringify(text)}).click();true`);
+  };
+  await window.loadURL(testUrl + '?source-recovery');
+  await wait("document.body.textContent.includes('Resolve missing source…')");
+  await click('Resolve missing source…');
+  await wait("document.querySelector('dialog')?.open");
+  assert.equal(await ui("document.querySelector('dialog').contains(document.activeElement)"), true);
+  await click('Open matching entry');
+  await wait("document.querySelector('output').textContent==='2'");
+  await click('Resolve missing source…');
+  await wait("document.querySelector('dialog')?.open");
+  await click('Locate CIF…');
+  await wait("!!document.querySelector('[aria-label=\"Recovery comparison\"]')");
+  assert.equal(await ui("Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Confirm recovery').disabled"), true);
+  mkdirSync('reports/viewer', { recursive: true });
+  window.showInactive();
+  await new Promise(resolve => setTimeout(resolve, 250));
+  writeFileSync('reports/viewer/recovery-preview.png', (await window.webContents.capturePage()).toPNG());
+  await ui("document.querySelector('dialog input[type=checkbox]').click();true");
+  await click('Confirm recovery');
+  await wait("document.querySelector('dialog').textContent.includes('The source was recovered.')");
+  await click('Done');
+  await wait("document.querySelector('output').textContent==='1'");
+  await click('Resolve missing source…'); await wait("document.querySelector('dialog')?.open");
+  await click('Delete this entry…'); await wait("!!document.querySelector('[aria-label=\"Delete entry confirmation\"]')");
+  assert.equal(await ui("document.querySelectorAll('dialog input[type=checkbox]').length"), 0);
+  assert.equal(await ui("document.querySelector('dialog').textContent.includes('Snapshot saved:')"), false);
+  await click('Delete entry'); await wait("document.querySelector('dialog').textContent.includes('was removed')");
+  await click('Done'); await wait("document.querySelector('output').textContent==='-1'");
+  await click('Resolve missing source…'); await wait("document.querySelector('dialog')?.open");
+  window.webContents.sendInputEvent({ type: 'keyDown', keyCode: 'ESC' });
+  window.webContents.sendInputEvent({ type: 'keyUp', keyCode: 'ESC' });
+  await wait("!document.querySelector('dialog')");
+  console.log('✓ missing-source dialog: candidate navigation, preview, confirmation, entry deletion, focus and Escape');
+};

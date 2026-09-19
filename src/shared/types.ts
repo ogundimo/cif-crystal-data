@@ -200,6 +200,7 @@ export interface CifViewerSource {
 }
 
 export interface CifApi {
+  sourceRecovery: (request: SourceRecoveryRequest) => Promise<SourceRecoveryResult>;
   countBatchExport: (scope: BatchExportScope) => Promise<number>;
   batchExport: (request: BatchExportRequest) => Promise<BatchExportResult | null>;
   cancelBatchExport: () => Promise<boolean>;
@@ -229,6 +230,31 @@ export interface CifApi {
   refreshCifFolder: () => Promise<ImportResult>;
   onImportProgress: (listener: (progress: ImportProgress) => void) => () => void;
   clearCifs: () => Promise<ClearCifsResult>;
+}
+
+export type SourceRecoveryRequest = { entryId: number } & (
+  { action: 'inspect' | 'choose-cif' | 'choose-backup' | 'prepare-remove' } |
+  { action: 'confirm'; token: string; choice: number }
+);
+export interface RecoveryChoice {
+  index: number;
+  filename: string;
+  block: string;
+  formula: string;
+  reference: string;
+  cell: (number | null)[];
+  atoms: number;
+}
+export interface SourceRecoveryResult {
+  eligible: boolean;
+  entry?: EntryRow;
+  candidates?: EntryRow[];
+  choices?: RecoveryChoice[];
+  token?: string;
+  snapshot?: string;
+  removal?: boolean;
+  completed?: 'recovered' | 'removed';
+  cancelled?: boolean;
 }
 
 export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter };

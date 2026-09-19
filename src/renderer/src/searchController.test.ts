@@ -18,6 +18,20 @@ function setup() {
   return { controller, searchPage, requests, error, state };
 }
 describe('renderer search lifecycle', () => {
+  it('opens a recovery candidate without stale search responses replacing it', async () => {
+    const t = setup(); const pending = t.controller.search(filter);
+    t.controller.openEntry(row(9));
+    t.requests[0].resolve({ rows: [row(1)], total: 1 }); await pending;
+    expect(t.state()).toMatchObject({ entries: [row(9)], selectedEntryId: 9, total: 1, busy: false });
+    await t.controller.refresh(); expect(t.state().entries).toEqual([]);
+  });
+  it('refreshes the active search after removal', async () => {
+    const t = setup(); const initial = t.controller.search(filter);
+    t.requests[0].resolve({ rows: [row(1), row(2)], total: 2 }); await initial;
+    const refreshed = t.controller.refresh();
+    t.requests[1].resolve({ rows: [row(2)], total: 1 }); await refreshed;
+    expect(t.state()).toMatchObject({ entries: [row(2)], selectedEntryId: 2, total: 1 });
+  });
   it('hands off filters, replaces results, selects the first row, pages once and preserves selection', async () => {
     const t = setup(); const first = t.controller.search(filter);
     expect(t.searchPage).toHaveBeenCalledWith({ filter, offset: 0, limit: 500 });

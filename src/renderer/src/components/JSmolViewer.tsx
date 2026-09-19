@@ -4,10 +4,12 @@ import { CrystalViewerRuntime, type PickingMode, type ViewerRequest, type Viewer
 import type { CrystalAxis, CrystalRepresentation, CrystalSupercellSize } from '../jsmol/scripts';
 import CrystalLegend, { type CrystalLegendMode } from './CrystalLegend';
 import CrystalAxes from './CrystalAxes';
+import SourceRecovery from './SourceRecovery';
 
 interface Props {
   entry: EntryRow;
   atomSites: AtomSiteRow[];
+  onRecovery?: (entry?: EntryRow) => void;
 }
 
 type ViewState =
@@ -51,7 +53,7 @@ function formatUnitCell(values: [number, number, number, number, number, number]
   return `a ${a.toFixed(4)} · b ${b.toFixed(4)} · c ${c.toFixed(4)} Å · α ${alpha.toFixed(2)}° · β ${beta.toFixed(2)}° · γ ${gamma.toFixed(2)}°`;
 }
 
-export default function JSmolViewer({ entry, atomSites }: Props) {
+export default function JSmolViewer({ entry, atomSites, onRecovery }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<CrystalViewerRuntime | null>(null);
@@ -334,6 +336,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
               <>
                 <strong className="text-[#ffb4ab]">Could not display {view.pendingFileName}</strong>
                 <span className="mt-2 max-w-md text-xs text-[#d7e3ee]">{view.message}</span>
+                <SourceRecovery key={entry.id} entry={entry} onComplete={onRecovery} />
               </>
             ) : (
               <>

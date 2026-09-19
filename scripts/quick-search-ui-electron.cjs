@@ -552,6 +552,7 @@ async function run() {
   };
   window.webContents.on('console-message', reportConsole);
   await require('./pxrd-ui-regressions.cjs')(window,testUrl);
+  await require('./source-recovery-ui.cjs')(window, testUrl, waitForRenderer);
   // The comparison capture briefly shows its window. Start layout scenarios in
   // a fresh hidden window, without native display-size constraints from showing.
   const comparisonWindow = window;
