@@ -42,7 +42,7 @@ profile's `cif-local.db`. Every indexed block references that content version an
 own block checksum. Viewer and CIF export verify both checksums and select the stored
 block. They never substitute current external content. Editing, moving, or deleting the
 external original therefore does not change viewing/export until an explicit refresh or
-import succeeds. Refresh and enabled startup scans intentionally update indexed metadata too. Schema 10 repairs bibliography from verified stored sources during the snapshotted upgrade; see [reliability](import-search-reliability.md).
+import succeeds. Manual refresh intentionally updates indexed metadata too. Schema 10 repairs bibliography from verified stored sources during the snapshotted upgrade; see [reliability](import-search-reliability.md).
 
 There is no new linked-only import mode. Existing linked-only records retain their source
 paths and entry IDs during migration, but cannot prove the original imported bytes from
@@ -99,7 +99,11 @@ as described above. Failed parsing or writes leave the previous entry intact.
 
 ## Relinking
 
-Select a structure, then **Sources & backups → Relink selected source**. Choose an
+The following relink and portable-archive services remain internal maintenance and
+compatibility infrastructure. They are not exposed in the main application toolbar;
+the Sources & backups menu and automatic startup scanning have been removed.
+
+The internal relink service accepts a selected entry and the path to an
 accessible CIF with exactly the same complete-file SHA-256 as the imported version.
 Relinking updates all sibling blocks' locations and keeps IDs and content unchanged.
 It never writes to the selected file. Cancel leaves the database untouched.

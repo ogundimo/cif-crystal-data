@@ -99,13 +99,14 @@ separate structures. Refresh hashes each file, skips unchanged sources, and repo
 structures, updates, identical copies kept separately, and failures. A failed block leaves
 the entire previous version of that file intact.
 
-The selected folder is remembered. Startup refresh defaults off; enable it under **Sources & backups**. **Refresh CIFs** scans it again.
-A changed file updates structures with the same unique data-block labels. Renamed or copied
-files remain separate unless you explicitly relink the existing source to an identical copy.
+The selected folder is remembered. **Refresh CIFs** scans it again when requested;
+opening the app does not scan automatically. A changed file updates structures with
+the same unique data-block labels. Renamed or copied files remain separate sources.
 
-Use **Sources & backups** to save a portable backup, restore one, or relink the selected
-source. Viewing and export use the managed imported version even after the original is
-moved, edited, or deleted. Backup and export require a new destination filename.
+Import, refresh, and deletion of app entries never modify or delete original CIF files.
+Viewing and export use the managed imported version even after the original is moved,
+edited, or deleted. Export requires a new destination filename. The main toolbar contains
+Import CIFs, Refresh CIFs, and Clear CIFs; backup, restore, and relink controls are not shown.
 See [Import and search reliability](docs/import-search-reliability.md) for cancellation, diagnostics, author roles, and startup behavior.
 See [Data preservation](docs/data-preservation.md) for identity, migration, legacy-source,
 relinking, backup, and recovery policies.

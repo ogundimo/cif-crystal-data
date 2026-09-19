@@ -186,6 +186,7 @@ if (appRegressionMode) {
     progress: (_value: ImportProgress) => {},
     finishImport: (_value: ImportResult) => {},
     cancelled: false,
+    refreshCalls: 0,
     requests: [] as SearchPageRequest[],
     pending: [] as Array<() => void>
   };
@@ -193,6 +194,9 @@ if (appRegressionMode) {
   window.cifApi.onImportProgress = listener => { regression.progress = listener; return () => { regression.progress = () => {}; }; };
   window.cifApi.importCifFolder = () => new Promise(resolve => { regression.finishImport = resolve; });
   window.cifApi.cancelImport = async () => { regression.cancelled = true; return true; };
+  window.cifApi.getImportFolder = async () => 'C:/synthetic-cifs';
+  const originalRefresh = window.cifApi.refreshCifFolder;
+  window.cifApi.refreshCifFolder = async () => { regression.refreshCalls++; return originalRefresh(); };
   window.cifApi.getStartupRefresh = async () => localStorage.getItem('test-startup-refresh') === 'true';
   window.cifApi.setStartupRefresh = async enabled => { localStorage.setItem('test-startup-refresh', String(enabled)); };
   window.cifApi.searchPage = async (request) => {
