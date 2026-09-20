@@ -7,14 +7,15 @@ import {
   type PxrdPeak
 } from '../pxrd';
 import { startPxrdTask } from '../pxrdTask';
+import PxrdInfo from './PxrdInfo';
 import type { PxrdRequest, PxrdResponse } from '../pxrdTask';
 import { MAX_PATTERN_BYTES, parsePersonalPattern, usePatternComparison, WAVELENGTH_PRESETS } from '../patternComparison';
 
 interface Props { entry: EntryRow }
 
 const MIN_CHART_WIDTH = 220;
-const MIN_CHART_HEIGHT = 180;
 const MARGIN = { left: 52, right: 14, top: 12, bottom: 42 };
+const MIN_CHART_HEIGHT = MARGIN.top + MARGIN.bottom + 1;
 const ImportError = globalThis.Error;
 
 export default function PxrdPattern({ entry }: Props) {
@@ -24,8 +25,8 @@ export default function PxrdPattern({ entry }: Props) {
     const chart = chartRef.current;
     if (!chart) return;
     const observer = new ResizeObserver(([entry]) => {
-      const width = Math.max(MIN_CHART_WIDTH, entry.contentRect.width);
-      const height = Math.max(MIN_CHART_HEIGHT, entry.contentRect.height);
+      const width = Math.max(MIN_CHART_WIDTH, Math.floor(entry.contentRect.width));
+      const height = Math.max(MIN_CHART_HEIGHT, Math.floor(entry.contentRect.height));
       setSize(current => current.width === width && current.height === height ? current : { width, height });
     });
     observer.observe(chart);
@@ -120,7 +121,7 @@ export default function PxrdPattern({ entry }: Props) {
 
   return (
     <section aria-label="Simulated PXRD pattern" data-testid="pxrd-pattern" data-calculation-ms={response?.calculationMs} data-calculation-status={response?.result.status} className="flex min-h-0 min-w-0 flex-col overflow-hidden border border-stroke bg-white">
-      <div data-testid="pxrd-toolbar" className="z-[1] flex min-w-0 shrink-0 items-center gap-2 border-b border-stroke bg-[#f7f9fb] px-1.5 py-1 text-xs text-[#2f4052]">
+      <div data-testid="pxrd-toolbar" className="z-[1] flex min-w-0 shrink-0 items-center gap-1 border-b border-stroke bg-[#f7f9fb] px-1.5 py-1 text-xs text-[#2f4052]">
         <div role="group" aria-label="Simulation settings" className="flex shrink-0 items-center gap-1.5">
           <label className="flex items-center gap-1 whitespace-nowrap font-medium">
             λ
@@ -164,10 +165,11 @@ export default function PxrdPattern({ entry }: Props) {
           <button disabled={!imported} aria-label="Clear imported pattern" title="Clear imported pattern" className="btn-w32 h-6 px-1.5 py-0" onClick={() => { importSequence.current++; setImported(null); setImportError(null); }}>Clear</button>
         </div>
         <div role="group" aria-label="Export pattern" className="flex shrink-0 items-center border-l border-stroke pl-2">
-          <button className="btn-w32 h-6 w-20 whitespace-nowrap px-1.5 py-0" disabled={profile.length === 0 || exporting} onClick={() => void exportPattern()}>
+          <button className="btn-w32 h-6 w-[4.5rem] whitespace-nowrap px-1.5 py-0" disabled={profile.length === 0 || exporting} onClick={() => void exportPattern()}>
             {exporting ? 'Exporting…' : 'Export .xy'}
           </button>
         </div>
+        {response && <PxrdInfo result={response.result} />}
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 px-2 text-[10px]">
         {exportMessage && <span role="status" className="max-w-40 truncate text-[#2f6f3e]" title={exportMessage}>{exportMessage}</span>}
@@ -176,10 +178,6 @@ export default function PxrdPattern({ entry }: Props) {
         {noOverlap && <span role="status">Imported pattern has no overlap with 5–80°.</span>}
         {importError && <span role="alert" className="text-red-700">{importError}</span>}
       </div>
-      {response && <details data-testid="pxrd-diagnostics" className="shrink-0 px-2 text-[10px] text-[#4c5260]">
-        <summary>{response.result.status === 'incomplete' ? 'Incomplete pattern — reflection limit reached' : response.result.status === 'unsupported' ? 'Unsupported calculation' : 'Calculated X-ray model — assumptions and limits'}</summary>
-        <ul className="max-h-24 overflow-auto">{response.result.diagnostics.map(message=><li key={message}>{message}</li>)}</ul>
-      </details>}
       <div ref={chartRef} data-testid="pxrd-chart" className="relative min-h-0 min-w-0 flex-1 overflow-auto">
         {status === 'error' || current?.error ? (
           <div role="alert" className="flex h-full items-center justify-center gap-2 text-xs text-[#c42b1c]">{current?.error ?? 'Could not load diffraction data.'}<button className="btn-w32" onClick={()=>setRetry(value=>value+1)}>Retry</button></div>
@@ -239,7 +237,7 @@ export default function PxrdPattern({ entry }: Props) {
             );
           })()}
           <text x={MARGIN.left + plotWidth / 2} y={HEIGHT - 5} textAnchor="middle" fontSize="12" fill="#34495e">2θ (degrees)</text>
-          <text x="14" y={MARGIN.top + plotHeight / 2} textAnchor="middle" fontSize="12" fill="#34495e" transform={`rotate(-90 14 ${MARGIN.top + plotHeight / 2})`}>Relative intensity (%)</text>
+          <text x="14" y={MARGIN.top + plotHeight / 2} textAnchor="middle" fontSize={Math.min(12, (HEIGHT - MARGIN.bottom) / 10)} fill="#34495e" transform={`rotate(-90 14 ${MARGIN.top + plotHeight / 2})`}>Relative intensity (%)</text>
           </svg>
           {hoveredPeak && (() => {
             const peakX = x(hoveredPeak.twoTheta);

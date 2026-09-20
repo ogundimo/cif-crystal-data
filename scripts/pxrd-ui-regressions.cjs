@@ -9,9 +9,48 @@ module.exports = async function(window,testUrl) {
   };
   await window.loadURL(testUrl+'?pxrd-regression');
   await wait("!!document.querySelector('[data-role=pxrd-profile]')");
+  // The embedded startup panel is much shorter than this full-window harness.
+  // Check real scroll dimensions and label bounds, not just overflow styling.
+  for (const height of [150, 190.5, 260]) {
+    await ui(`document.querySelector('[data-testid=pxrd-pattern]').style.cssText='width:500px;height:${height}px'`);
+    await wait(`(() => {
+      const chart = document.querySelector('[data-testid=pxrd-chart]');
+      const svg = chart.querySelector('svg');
+      return svg && Math.abs(svg.getBoundingClientRect().height - chart.clientHeight) <= 1;
+    })()`);
+    assert.ok(await ui(`(() => {
+      const chart = document.querySelector('[data-testid=pxrd-chart]');
+      const bounds = chart.getBoundingClientRect();
+      return chart.scrollHeight === chart.clientHeight && chart.scrollWidth === chart.clientWidth &&
+        [...chart.querySelectorAll('svg text')].every(label => {
+          const r = label.getBoundingClientRect();
+          return r.left >= bounds.left && r.right <= bounds.right && r.top >= bounds.top && r.bottom <= bounds.bottom;
+        });
+    })()`), 'compact PXRD panel fits its complete plot and axis labels without scrollbars at height ' + height);
+  }
+  await ui("document.querySelector('[data-testid=pxrd-pattern]').style.cssText=''");
   assert.equal(await ui("document.querySelector('[data-testid=pxrd-wavelength-input]').value"),'1.5406');
   assert.deepEqual(await ui("[...document.querySelector('[data-testid=pxrd-wavelength-input]').options].map(o=>o.textContent)"),['Cu (1.5406 Å)','Mo (0.7107 Å)','Co (1.7902 Å)','Ag (0.5609 Å)']);
   assert.match(await ui("document.querySelector('[data-testid=pxrd-diagnostics]').textContent"),/Neutral atoms/);
+  // Native focus and pointer events require a rendered Electron window.
+  window.showInactive();
+  window.webContents.focus();
+  assert.equal(await ui("document.querySelector('[role=tooltip]').hidden"), true);
+  await ui("document.querySelector('[data-testid=pxrd-toolbar] button[aria-describedby]').focus()");
+  await wait("!document.querySelector('[role=tooltip]').hidden");
+  assert.ok(await ui(`(() => {
+    const tooltip = document.querySelector('[role=tooltip]').getBoundingClientRect();
+    return tooltip.left >= 0 && tooltip.top >= 0 && tooltip.right <= innerWidth && tooltip.bottom <= innerHeight;
+  })()`), 'tooltip stays inside the viewport and outside the clipped chart');
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'Escape'});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'Escape'});
+  await wait("document.querySelector('[role=tooltip]').hidden");
+  await ui("document.activeElement.blur()");
+  const infoIcon = await ui("(() => {const r=document.querySelector('[data-testid=pxrd-toolbar] button[aria-describedby]').getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};})()");
+  window.webContents.sendInputEvent({type:'mouseMove', ...infoIcon});
+  await wait("!document.querySelector('[role=tooltip]').hidden");
+  window.webContents.sendInputEvent({type:'mouseMove',x:1,y:400});
+  await wait("document.querySelector('[role=tooltip]').hidden");
   // A late data response for a prior selection must never replace this one.
   await ui(`window.originalInput=window.cifApi.getDiffractionInput;
     window.cifApi.getDiffractionInput=id=>id===2?new Promise(resolve=>window.lateInput=resolve):window.originalInput(id);
@@ -78,7 +117,7 @@ module.exports = async function(window,testUrl) {
   assert.ok(await ui("(()=>{const field=document.querySelector('.pxrd-fwhm-field').getBoundingClientRect(), unit=document.querySelector('.pxrd-fwhm-unit').getBoundingClientRect();return unit.left>field.left&&unit.right<field.right;})()"));
   await ui("document.querySelector('[data-testid=pxrd-pattern]').style.width=''");
   assert.equal(toolbar.wrap, 'nowrap');
-  assert.equal(toolbar.controls.length, 5);
+  assert.equal(toolbar.controls.length, 6);
   assert.ok(toolbar.controls.every(r => Math.abs(r.center-toolbar.controls[0].center)<2), 'PXRD controls must share one row');
   assert.ok(toolbar.controls.slice(1).every((r,i)=>r.left>=toolbar.controls[i].right), 'PXRD controls must not overlap');
   // Error feedback can resize the plot. Compare the trace's relative geometry,
@@ -134,7 +173,7 @@ module.exports = async function(window,testUrl) {
   assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),false);
   await ui('window.pxrdHarness.setEntry({...window.pxrdHarness.entry,cell_a_angstrom:60});');
   await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='incomplete'");
-  assert.match(await ui("document.querySelector('[data-testid=pxrd-diagnostics] summary').textContent"),/Incomplete pattern/);
+  assert.match(await ui("document.querySelector('[data-testid=pxrd-diagnostics] p').textContent"),/Incomplete pattern/);
   await ui('window.pxrdHarness.setEntry({...window.pxrdHarness.entry,radiation_wavelength_angstrom:null});');
   await wait("document.querySelector('[data-testid=pxrd-diagnostics]')?.textContent.includes('CIF wavelength missing')");
   // A completed export for an older selection must not label the current one.

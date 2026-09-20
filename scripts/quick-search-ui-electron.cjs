@@ -356,7 +356,7 @@ async function testCompoundInformationSelection(window) {
         authors: Array.from(panel.querySelectorAll('[data-testid="publication-authors"] tbody tr')).map((row) =>
           Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent.trim())
         ),
-        pxrdLabel: document.querySelector('[data-testid="pxrd-pattern"] svg')?.getAttribute('aria-label'),
+        pxrdLabel: document.querySelector('[data-testid="pxrd-chart"] svg')?.getAttribute('aria-label'),
         hasPxrdProfile: Boolean(document.querySelector('[data-testid="pxrd-pattern"] svg path[data-role="pxrd-profile"]')),
         pxrdProfilePath: document.querySelector('[data-testid="pxrd-pattern"] svg path[data-role="pxrd-profile"]')?.getAttribute('d'),
         pxrdFwhm: Number(document.querySelector('[data-testid="pxrd-fwhm-input"]')?.value),
