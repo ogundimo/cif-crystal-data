@@ -28,6 +28,7 @@
     "src/main/database/query.ts",
     "src/main/database/restraints.ts",
     "src/main/database/search.ts",
+    "src/main/database/sourceRecovery.ts",
     "src/main/database/sources.ts",
     "src/main/database/writer.ts",
     "src/main/databaseDiagnostics.ts",
@@ -43,6 +44,7 @@
     "src/main/runtimeTrace.ts",
     "src/main/searchFilterValidation.ts",
     "src/main/sourceIdentity.ts",
+    "src/main/sourceRecoveryIpc.ts",
     "src/parser/cif/blocks.ts",
     "src/parser/cif/entry.ts",
     "src/parser/cif/formula.ts",
@@ -64,20 +66,25 @@
     "src/renderer/src/components/ImportResultsPanel.tsx",
     "src/renderer/src/components/JSmolViewer.tsx",
     "src/renderer/src/components/PublicationReference.tsx",
+    "src/renderer/src/components/PxrdInfo.tsx",
     "src/renderer/src/components/PxrdPattern.tsx",
     "src/renderer/src/components/QuickSearchDialog.tsx",
     "src/renderer/src/components/QuickSearchFields.tsx",
     "src/renderer/src/components/QuickSearchParts.tsx",
     "src/renderer/src/components/QuickSearchPreview.tsx",
     "src/renderer/src/components/ResultsWorkspace.tsx",
+    "src/renderer/src/components/SourceRecovery.tsx",
     "src/renderer/src/components/quickSearchForm.ts",
     "src/renderer/src/components/useSearchRestraints.ts",
     "src/renderer/src/debouncedRequest.ts",
     "src/renderer/src/formatFormula.tsx",
+    "src/renderer/src/jsmol/appletSession.ts",
+    "src/renderer/src/jsmol/commandBridge.ts",
     "src/renderer/src/jsmol/geometry.ts",
     "src/renderer/src/jsmol/latestOnlyScheduler.ts",
     "src/renderer/src/jsmol/lifecycle.ts",
     "src/renderer/src/jsmol/runtime.ts",
+    "src/renderer/src/jsmol/runtimeLoader.ts",
     "src/renderer/src/jsmol/scripts.ts",
     "src/renderer/src/jsmol/status.ts",
     "src/renderer/src/layoutPreferences.ts",
@@ -87,8 +94,10 @@
     "src/renderer/src/pxrd.ts",
     "src/renderer/src/pxrdTask.ts",
     "src/renderer/src/pxrdWorker.ts",
+    "src/renderer/src/rowSelection.ts",
     "src/renderer/src/scattering.ts",
     "src/renderer/src/searchController.ts",
+    "src/renderer/src/sourceRecoveryWorkflow.ts",
     "src/renderer/src/virtualRows.ts",
     "src/shared/exportFilename.ts",
     "src/shared/periodicTableData.ts",
@@ -99,77 +108,77 @@
   "coverage": {
     "total": {
       "lines": {
-        "total": 3074,
-        "covered": 1720,
-        "pct": 55.95
+        "total": 3356,
+        "covered": 2373,
+        "pct": 70.71
       },
       "statements": {
-        "total": 3809,
-        "covered": 2080,
-        "pct": 54.61
+        "total": 4162,
+        "covered": 2856,
+        "pct": 68.62
       },
       "functions": {
-        "total": 851,
-        "covered": 364,
-        "pct": 42.77
+        "total": 992,
+        "covered": 607,
+        "pct": 61.19
       },
       "branches": {
-        "total": 2896,
-        "covered": 1434,
-        "pct": 49.52
+        "total": 3089,
+        "covered": 1935,
+        "pct": 62.64
       }
     },
     "files": {
       "src/main/batchExport.ts": {
         "lines": {
-          "total": 77,
-          "covered": 77,
+          "total": 74,
+          "covered": 74,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 14,
+          "total": 12,
           "covered": 12,
           "skipped": 0,
-          "pct": 85.71
+          "pct": 100
         },
         "statements": {
-          "total": 103,
-          "covered": 103,
+          "total": 97,
+          "covered": 97,
           "skipped": 0,
           "pct": 100
         },
         "branches": {
-          "total": 61,
-          "covered": 55,
+          "total": 42,
+          "covered": 42,
           "skipped": 0,
-          "pct": 90.16
+          "pct": 100
         }
       },
       "src/main/batchExportValidation.ts": {
         "lines": {
-          "total": 11,
-          "covered": 11,
+          "total": 13,
+          "covered": 13,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 3,
-          "covered": 3,
+          "total": 4,
+          "covered": 4,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 15,
-          "covered": 14,
+          "total": 18,
+          "covered": 17,
           "skipped": 0,
-          "pct": 93.33
+          "pct": 94.44
         },
         "branches": {
-          "total": 22,
-          "covered": 21,
+          "total": 25,
+          "covered": 24,
           "skipped": 0,
-          "pct": 95.45
+          "pct": 96
         }
       },
       "src/main/bibliographyMigration.ts": {
@@ -252,20 +261,20 @@
       },
       "src/main/exportCif.ts": {
         "lines": {
-          "total": 2,
-          "covered": 2,
+          "total": 1,
+          "covered": 1,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 2,
-          "covered": 2,
+          "total": 1,
+          "covered": 1,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 2,
-          "covered": 2,
+          "total": 1,
+          "covered": 1,
           "skipped": 0,
           "pct": 100
         },
@@ -356,28 +365,28 @@
       },
       "src/main/index.ts": {
         "lines": {
-          "total": 238,
-          "covered": 196,
+          "total": 243,
+          "covered": 201,
           "skipped": 0,
-          "pct": 82.35
+          "pct": 82.71
         },
         "functions": {
-          "total": 47,
-          "covered": 27,
+          "total": 48,
+          "covered": 28,
           "skipped": 0,
-          "pct": 57.44
+          "pct": 58.33
         },
         "statements": {
-          "total": 296,
-          "covered": 227,
+          "total": 303,
+          "covered": 234,
           "skipped": 0,
-          "pct": 76.68
+          "pct": 77.22
         },
         "branches": {
-          "total": 213,
-          "covered": 138,
+          "total": 215,
+          "covered": 140,
           "skipped": 0,
-          "pct": 64.78
+          "pct": 65.11
         }
       },
       "src/main/ingest.ts": {
@@ -395,15 +404,15 @@
         },
         "statements": {
           "total": 73,
-          "covered": 71,
+          "covered": 72,
           "skipped": 0,
-          "pct": 97.26
+          "pct": 98.63
         },
         "branches": {
           "total": 36,
-          "covered": 33,
+          "covered": 35,
           "skipped": 0,
-          "pct": 91.66
+          "pct": 97.22
         }
       },
       "src/main/migrations.ts": {
@@ -536,6 +545,32 @@
           "pct": 83.33
         }
       },
+      "src/main/sourceRecoveryIpc.ts": {
+        "lines": {
+          "total": 17,
+          "covered": 17,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 4,
+          "covered": 4,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 22,
+          "covered": 22,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 32,
+          "covered": 32,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
       "src/main/database/connection.ts": {
         "lines": {
           "total": 19,
@@ -591,35 +626,35 @@
       "src/main/database/preservation.ts": {
         "lines": {
           "total": 64,
-          "covered": 1,
+          "covered": 39,
           "skipped": 0,
-          "pct": 1.56
+          "pct": 60.93
         },
         "functions": {
           "total": 15,
-          "covered": 0,
+          "covered": 10,
           "skipped": 0,
-          "pct": 0
+          "pct": 66.66
         },
         "statements": {
           "total": 79,
-          "covered": 1,
+          "covered": 43,
           "skipped": 0,
-          "pct": 1.26
+          "pct": 54.43
         },
         "branches": {
           "total": 35,
-          "covered": 0,
+          "covered": 20,
           "skipped": 0,
-          "pct": 0
+          "pct": 57.14
         }
       },
       "src/main/database/query.ts": {
         "lines": {
           "total": 79,
-          "covered": 67,
+          "covered": 79,
           "skipped": 0,
-          "pct": 84.81
+          "pct": 100
         },
         "functions": {
           "total": 10,
@@ -629,41 +664,41 @@
         },
         "statements": {
           "total": 83,
-          "covered": 70,
+          "covered": 82,
           "skipped": 0,
-          "pct": 84.33
+          "pct": 98.79
         },
         "branches": {
           "total": 79,
-          "covered": 61,
+          "covered": 78,
           "skipped": 0,
-          "pct": 77.21
+          "pct": 98.73
         }
       },
       "src/main/database/restraints.ts": {
         "lines": {
           "total": 42,
-          "covered": 0,
+          "covered": 42,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         },
         "functions": {
           "total": 4,
-          "covered": 0,
+          "covered": 4,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         },
         "statements": {
           "total": 43,
-          "covered": 0,
+          "covered": 43,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         },
         "branches": {
           "total": 68,
-          "covered": 0,
+          "covered": 68,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         }
       },
       "src/main/database/search.ts": {
@@ -692,6 +727,32 @@
           "pct": 71.42
         }
       },
+      "src/main/database/sourceRecovery.ts": {
+        "lines": {
+          "total": 84,
+          "covered": 83,
+          "skipped": 0,
+          "pct": 98.8
+        },
+        "functions": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 103,
+          "covered": 96,
+          "skipped": 0,
+          "pct": 93.2
+        },
+        "branches": {
+          "total": 54,
+          "covered": 43,
+          "skipped": 0,
+          "pct": 79.62
+        }
+      },
       "src/main/database/sources.ts": {
         "lines": {
           "total": 18,
@@ -707,41 +768,41 @@
         },
         "statements": {
           "total": 25,
-          "covered": 10,
+          "covered": 11,
           "skipped": 0,
-          "pct": 40
+          "pct": 44
         },
         "branches": {
           "total": 22,
-          "covered": 12,
+          "covered": 13,
           "skipped": 0,
-          "pct": 54.54
+          "pct": 59.09
         }
       },
       "src/main/database/writer.ts": {
         "lines": {
-          "total": 82,
-          "covered": 75,
+          "total": 114,
+          "covered": 112,
           "skipped": 0,
-          "pct": 91.46
+          "pct": 98.24
         },
         "functions": {
-          "total": 16,
-          "covered": 13,
+          "total": 47,
+          "covered": 46,
           "skipped": 0,
-          "pct": 81.25
+          "pct": 97.87
         },
         "statements": {
-          "total": 93,
-          "covered": 80,
+          "total": 128,
+          "covered": 124,
           "skipped": 0,
-          "pct": 86.02
+          "pct": 96.87
         },
         "branches": {
           "total": 55,
-          "covered": 39,
+          "covered": 47,
           "skipped": 0,
-          "pct": 70.9
+          "pct": 85.45
         }
       },
       "src/parser/cifParser.ts": {
@@ -798,22 +859,22 @@
       },
       "src/parser/cif/entry.ts": {
         "lines": {
-          "total": 82,
-          "covered": 81,
+          "total": 90,
+          "covered": 89,
           "skipped": 0,
-          "pct": 98.78
+          "pct": 98.88
         },
         "functions": {
-          "total": 11,
-          "covered": 11,
+          "total": 18,
+          "covered": 18,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 92,
-          "covered": 90,
+          "total": 100,
+          "covered": 98,
           "skipped": 0,
-          "pct": 97.82
+          "pct": 98
         },
         "branches": {
           "total": 113,
@@ -869,9 +930,9 @@
         },
         "branches": {
           "total": 34,
-          "covered": 28,
+          "covered": 30,
           "skipped": 0,
-          "pct": 82.35
+          "pct": 88.23
         }
       },
       "src/parser/cif/scanner.ts": {
@@ -947,29 +1008,29 @@
         },
         "branches": {
           "total": 25,
-          "covered": 21,
+          "covered": 22,
           "skipped": 0,
-          "pct": 84
+          "pct": 88
         }
       },
       "src/preload/index.ts": {
         "lines": {
-          "total": 35,
-          "covered": 0,
+          "total": 36,
+          "covered": 36,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         },
         "functions": {
-          "total": 33,
-          "covered": 0,
+          "total": 34,
+          "covered": 34,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         },
         "statements": {
-          "total": 39,
-          "covered": 0,
+          "total": 40,
+          "covered": 40,
           "skipped": 0,
-          "pct": 0
+          "pct": 100
         },
         "branches": {
           "total": 0,
@@ -980,25 +1041,25 @@
       },
       "src/renderer/src/App.tsx": {
         "lines": {
-          "total": 174,
+          "total": 127,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "functions": {
-          "total": 43,
+          "total": 38,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "statements": {
-          "total": 204,
+          "total": 148,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "branches": {
-          "total": 173,
+          "total": 116,
           "covered": 0,
           "skipped": 0,
           "pct": 0
@@ -1058,26 +1119,26 @@
       },
       "src/renderer/src/formatFormula.tsx": {
         "lines": {
-          "total": 12,
-          "covered": 12,
+          "total": 39,
+          "covered": 39,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 1,
-          "covered": 1,
+          "total": 14,
+          "covered": 14,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 12,
-          "covered": 12,
+          "total": 43,
+          "covered": 43,
           "skipped": 0,
           "pct": 100
         },
         "branches": {
-          "total": 4,
-          "covered": 4,
+          "total": 29,
+          "covered": 29,
           "skipped": 0,
           "pct": 100
         }
@@ -1188,28 +1249,28 @@
       },
       "src/renderer/src/pxrd.ts": {
         "lines": {
-          "total": 193,
-          "covered": 193,
+          "total": 199,
+          "covered": 199,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 48,
-          "covered": 48,
+          "total": 52,
+          "covered": 52,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 283,
-          "covered": 274,
+          "total": 287,
+          "covered": 279,
           "skipped": 0,
-          "pct": 96.81
+          "pct": 97.21
         },
         "branches": {
-          "total": 252,
-          "covered": 239,
+          "total": 250,
+          "covered": 238,
           "skipped": 0,
-          "pct": 94.84
+          "pct": 95.2
         }
       },
       "src/renderer/src/pxrdTask.ts": {
@@ -1264,6 +1325,32 @@
           "pct": 0
         }
       },
+      "src/renderer/src/rowSelection.ts": {
+        "lines": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 3,
+          "covered": 3,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 29,
+          "covered": 29,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 23,
+          "covered": 23,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
       "src/renderer/src/scattering.ts": {
         "lines": {
           "total": 3,
@@ -1292,28 +1379,54 @@
       },
       "src/renderer/src/searchController.ts": {
         "lines": {
-          "total": 31,
-          "covered": 31,
+          "total": 45,
+          "covered": 45,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 11,
-          "covered": 11,
+          "total": 18,
+          "covered": 18,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 45,
-          "covered": 44,
+          "total": 67,
+          "covered": 66,
           "skipped": 0,
-          "pct": 97.77
+          "pct": 98.5
         },
         "branches": {
-          "total": 31,
-          "covered": 30,
+          "total": 47,
+          "covered": 46,
           "skipped": 0,
-          "pct": 96.77
+          "pct": 97.87
+        }
+      },
+      "src/renderer/src/sourceRecoveryWorkflow.ts": {
+        "lines": {
+          "total": 34,
+          "covered": 34,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 17,
+          "covered": 17,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 52,
+          "covered": 52,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 29,
+          "covered": 27,
+          "skipped": 0,
+          "pct": 93.1
         }
       },
       "src/renderer/src/virtualRows.ts": {
@@ -1370,25 +1483,25 @@
       },
       "src/renderer/src/components/BatchExportDialog.tsx": {
         "lines": {
-          "total": 31,
+          "total": 38,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "functions": {
-          "total": 15,
+          "total": 17,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "statements": {
-          "total": 53,
+          "total": 64,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "branches": {
-          "total": 51,
+          "total": 83,
           "covered": 0,
           "skipped": 0,
           "pct": 0
@@ -1396,25 +1509,25 @@
       },
       "src/renderer/src/components/CompoundInfoPanel.tsx": {
         "lines": {
-          "total": 93,
+          "total": 89,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "functions": {
-          "total": 30,
+          "total": 27,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "statements": {
-          "total": 113,
+          "total": 103,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "branches": {
-          "total": 96,
+          "total": 84,
           "covered": 0,
           "skipped": 0,
           "pct": 0
@@ -1474,25 +1587,25 @@
       },
       "src/renderer/src/components/DataGrid.tsx": {
         "lines": {
-          "total": 84,
+          "total": 94,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "functions": {
-          "total": 28,
+          "total": 32,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "statements": {
-          "total": 101,
+          "total": 118,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "branches": {
-          "total": 115,
+          "total": 133,
           "covered": 0,
           "skipped": 0,
           "pct": 0
@@ -1552,77 +1665,103 @@
       },
       "src/renderer/src/components/JSmolViewer.tsx": {
         "lines": {
-          "total": 113,
-          "covered": 13,
+          "total": 117,
+          "covered": 40,
           "skipped": 0,
-          "pct": 11.5
+          "pct": 34.18
         },
         "functions": {
-          "total": 49,
-          "covered": 1,
+          "total": 50,
+          "covered": 2,
           "skipped": 0,
-          "pct": 2.04
+          "pct": 4
         },
         "statements": {
-          "total": 128,
-          "covered": 13,
+          "total": 133,
+          "covered": 40,
           "skipped": 0,
-          "pct": 10.15
+          "pct": 30.07
         },
         "branches": {
           "total": 103,
-          "covered": 12,
+          "covered": 26,
           "skipped": 0,
-          "pct": 11.65
+          "pct": 25.24
         }
       },
       "src/renderer/src/components/PublicationReference.tsx": {
         "lines": {
           "total": 37,
-          "covered": 19,
+          "covered": 24,
           "skipped": 0,
-          "pct": 51.35
+          "pct": 64.86
         },
         "functions": {
           "total": 6,
-          "covered": 3,
+          "covered": 4,
           "skipped": 0,
-          "pct": 50
+          "pct": 66.66
         },
         "statements": {
           "total": 42,
-          "covered": 21,
+          "covered": 27,
           "skipped": 0,
-          "pct": 50
+          "pct": 64.28
         },
         "branches": {
           "total": 38,
-          "covered": 18,
+          "covered": 23,
           "skipped": 0,
-          "pct": 47.36
+          "pct": 60.52
+        }
+      },
+      "src/renderer/src/components/PxrdInfo.tsx": {
+        "lines": {
+          "total": 10,
+          "covered": 10,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 7,
+          "covered": 7,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 13,
+          "covered": 13,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
         }
       },
       "src/renderer/src/components/PxrdPattern.tsx": {
         "lines": {
-          "total": 107,
+          "total": 104,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "functions": {
-          "total": 40,
+          "total": 38,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "statements": {
-          "total": 134,
+          "total": 131,
           "covered": 0,
           "skipped": 0,
           "pct": 0
         },
         "branches": {
-          "total": 114,
+          "total": 108,
           "covered": 0,
           "skipped": 0,
           "pct": 0
@@ -1758,6 +1897,32 @@
           "pct": 0
         }
       },
+      "src/renderer/src/components/SourceRecovery.tsx": {
+        "lines": {
+          "total": 24,
+          "covered": 17,
+          "skipped": 0,
+          "pct": 70.83
+        },
+        "functions": {
+          "total": 14,
+          "covered": 9,
+          "skipped": 0,
+          "pct": 64.28
+        },
+        "statements": {
+          "total": 30,
+          "covered": 19,
+          "skipped": 0,
+          "pct": 63.33
+        },
+        "branches": {
+          "total": 28,
+          "covered": 24,
+          "skipped": 0,
+          "pct": 85.71
+        }
+      },
       "src/renderer/src/components/quickSearchForm.ts": {
         "lines": {
           "total": 6,
@@ -1808,6 +1973,58 @@
           "covered": 0,
           "skipped": 0,
           "pct": 0
+        }
+      },
+      "src/renderer/src/jsmol/appletSession.ts": {
+        "lines": {
+          "total": 43,
+          "covered": 43,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 11,
+          "covered": 11,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 50,
+          "covered": 50,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 11,
+          "covered": 11,
+          "skipped": 0,
+          "pct": 100
+        }
+      },
+      "src/renderer/src/jsmol/commandBridge.ts": {
+        "lines": {
+          "total": 37,
+          "covered": 37,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 9,
+          "covered": 9,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 41,
+          "covered": 41,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 14,
+          "covered": 14,
+          "skipped": 0,
+          "pct": 100
         }
       },
       "src/renderer/src/jsmol/geometry.ts": {
@@ -1883,61 +2100,87 @@
         },
         "branches": {
           "total": 10,
-          "covered": 7,
+          "covered": 8,
           "skipped": 0,
-          "pct": 70
+          "pct": 80
         }
       },
       "src/renderer/src/jsmol/runtime.ts": {
         "lines": {
-          "total": 249,
-          "covered": 69,
+          "total": 181,
+          "covered": 180,
           "skipped": 0,
-          "pct": 27.71
+          "pct": 99.44
         },
         "functions": {
-          "total": 60,
-          "covered": 10,
+          "total": 49,
+          "covered": 49,
           "skipped": 0,
-          "pct": 16.66
+          "pct": 100
         },
         "statements": {
-          "total": 308,
-          "covered": 77,
+          "total": 222,
+          "covered": 212,
           "skipped": 0,
-          "pct": 25
+          "pct": 95.49
         },
         "branches": {
-          "total": 182,
-          "covered": 15,
+          "total": 155,
+          "covered": 135,
           "skipped": 0,
-          "pct": 8.24
+          "pct": 87.09
+        }
+      },
+      "src/renderer/src/jsmol/runtimeLoader.ts": {
+        "lines": {
+          "total": 20,
+          "covered": 20,
+          "skipped": 0,
+          "pct": 100
+        },
+        "functions": {
+          "total": 7,
+          "covered": 7,
+          "skipped": 0,
+          "pct": 100
+        },
+        "statements": {
+          "total": 27,
+          "covered": 27,
+          "skipped": 0,
+          "pct": 100
+        },
+        "branches": {
+          "total": 7,
+          "covered": 7,
+          "skipped": 0,
+          "pct": 100
         }
       },
       "src/renderer/src/jsmol/scripts.ts": {
         "lines": {
           "total": 70,
-          "covered": 63,
+          "covered": 66,
           "skipped": 0,
-          "pct": 90
+          "pct": 94.28
         },
         "functions": {
           "total": 25,
-          "covered": 24,
+          "covered": 25,
           "skipped": 0,
-          "pct": 96
+          "pct": 100
         },
         "statements": {
           "total": 80,
-          "covered": 68,
+          "covered": 71,
           "skipped": 0,
-          "pct": 85
+          "pct": 88.75
         },
         "branches": {
           "total": 89,
-          "covered": 60,
+          "covered": 67,
           "skipped": 0,
-          "pct": 67.41
+          "pct": 75.28
         }
       },
       "src/renderer/src/jsmol/status.ts": {
@@ -1968,26 +2211,26 @@
       },
       "src/shared/exportFilename.ts": {
         "lines": {
-          "total": 4,
-          "covered": 4,
+          "total": 7,
+          "covered": 7,
           "skipped": 0,
           "pct": 100
         },
         "functions": {
-          "total": 1,
-          "covered": 1,
+          "total": 2,
+          "covered": 2,
           "skipped": 0,
           "pct": 100
         },
         "statements": {
-          "total": 5,
-          "covered": 5,
+          "total": 9,
+          "covered": 9,
           "skipped": 0,
           "pct": 100
         },
         "branches": {
-          "total": 4,
-          "covered": 4,
+          "total": 6,
+          "covered": 6,
           "skipped": 0,
           "pct": 100
         }
@@ -2075,23 +2318,13 @@
   "complexity": {
     "cyclomatic": [
       {
-        "file": "src/main/batchExport.ts",
-        "line": 76,
-        "column": 8,
-        "value": 26,
-        "message": "Async function 'runBatchExport' has a complexity of 26. Maximum allowed is 0.",
-        "key": "src/main/batchExport.ts::runBatchExport#1",
-        "reason": "Snapshot export, cancellation and per-entry publication outcomes preserve data-integrity contracts.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
         "file": "src/main/database/query.ts",
         "line": 79,
         "column": 8,
         "value": 25,
         "message": "Function 'buildWhereClause' has a complexity of 25. Maximum allowed is 0.",
         "key": "src/main/database/query.ts::buildWhereClause#1",
-        "reason": "Independent validated search dimensions are combined into parameterized predicates.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2101,7 +2334,7 @@
         "value": 34,
         "message": "Function 'computeRestraints' has a complexity of 34. Maximum allowed is 0.",
         "key": "src/main/database/restraints.ts::computeRestraints#1",
-        "reason": "Domain-specific geometry restraints retain established calculation branches.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2111,7 +2344,7 @@
         "value": 26,
         "message": "Function 'importCifFolder' has a complexity of 26. Maximum allowed is 0.",
         "key": "src/main/ingest.ts::importCifFolder#1",
-        "reason": "Transactional file imports preserve cancellation, failure and progress handling.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2121,7 +2354,7 @@
         "value": 21,
         "message": "Function 'validateSearchFilter' has a complexity of 21. Maximum allowed is 0.",
         "key": "src/main/searchFilterValidation.ts::validateSearchFilter#1",
-        "reason": "Main-side validation must reject malformed IPC fields independently.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2131,7 +2364,7 @@
         "value": 37,
         "message": "Function 'scanCif' has a complexity of 37. Maximum allowed is 0.",
         "key": "src/parser/cif/scanner.ts::scanCif#1",
-        "reason": "CIF token/loop/block state handling must preserve malformed-input diagnostics.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2141,79 +2374,59 @@
         "value": 21,
         "message": "Function 'tokenize' has a complexity of 21. Maximum allowed is 0.",
         "key": "src/parser/cif/scanner.ts::tokenize#1",
-        "reason": "Quoted, multiline and comment syntax requires stateful scanning.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/App.tsx",
-        "line": 32,
+        "line": 37,
         "column": 1,
-        "value": 75,
-        "message": "Function 'AppInner' has a complexity of 75. Maximum allowed is 0.",
+        "value": 48,
+        "message": "Function 'AppInner' has a complexity of 48. Maximum allowed is 0.",
         "key": "src/renderer/src/App.tsx::AppInner#1",
-        "reason": "Existing React workspace orchestration and conditional UI; isolate future behavior changes.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/components/BatchExportDialog.tsx",
-        "line": 4,
-        "column": 16,
-        "value": 22,
-        "message": "Function 'BatchExportDialog' has a complexity of 22. Maximum allowed is 0.",
-        "key": "src/renderer/src/components/BatchExportDialog.tsx::BatchExportDialog#1",
-        "reason": "Export modes, selection and progress states are existing UI contracts.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/components/DataGrid.tsx",
-        "line": 185,
-        "column": 26,
-        "value": 30,
-        "message": "Arrow function has a complexity of 30. Maximum allowed is 0.",
-        "key": "src/renderer/src/components/DataGrid.tsx::DataGrid#1/<callback>#5",
-        "reason": "Keyboard, selection and focus handling in the existing grid callback.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/components/JSmolViewer.tsx",
-        "line": 54,
+        "line": 56,
         "column": 16,
         "value": 29,
         "message": "Function 'JSmolViewer' has a complexity of 29. Maximum allowed is 0.",
         "key": "src/renderer/src/components/JSmolViewer.tsx::JSmolViewer#1",
-        "reason": "Existing embedded-viewer lifecycle and error states.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/components/PxrdPattern.tsx",
-        "line": 20,
+        "line": 21,
         "column": 16,
-        "value": 44,
-        "message": "Function 'PxrdPattern' has a complexity of 44. Maximum allowed is 0.",
+        "value": 41,
+        "message": "Function 'PxrdPattern' has a complexity of 41. Maximum allowed is 0.",
         "key": "src/renderer/src/components/PxrdPattern.tsx::PxrdPattern#1",
-        "reason": "Existing worker, pattern settings and comparison controls.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/pxrd.ts",
-        "line": 220,
+        "line": 244,
         "column": 8,
         "value": 45,
         "message": "Function 'calculatePxrd' has a complexity of 45. Maximum allowed is 0.",
         "key": "src/renderer/src/pxrd.ts::calculatePxrd#1",
-        "reason": "Reviewed in milestone 7: ordered public scientific input validation, diagnostic precedence and resource admission remain cohesive; reflection calculation stages are extracted separately.",
-        "reviewTrigger": "Any increase, rename/move, analyzer change, scientific validation/diagnostic or resource-policy change."
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
+        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       }
     ],
     "cognitive": [
       {
         "file": "src/main/batchExport.ts",
-        "line": 76,
+        "line": 85,
         "column": 23,
-        "value": 54,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 54 to the 0 allowed.",
+        "value": 36,
+        "message": "Refactor this function to reduce its Cognitive Complexity from 36 to the 0 allowed.",
         "key": "src/main/batchExport.ts::runBatchExport#1",
-        "reason": "Snapshot export, cancellation and per-entry publication outcomes preserve data-integrity contracts.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2223,7 +2436,7 @@
         "value": 36,
         "message": "Refactor this function to reduce its Cognitive Complexity from 36 to the 0 allowed.",
         "key": "src/main/database/query.ts::buildWhereClause#1",
-        "reason": "Independent validated search dimensions are combined into parameterized predicates.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2233,7 +2446,7 @@
         "value": 25,
         "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 0 allowed.",
         "key": "src/main/database/restraints.ts::computeRestraints#1",
-        "reason": "Domain-specific geometry restraints retain established calculation branches.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2243,7 +2456,7 @@
         "value": 45,
         "message": "Refactor this function to reduce its Cognitive Complexity from 45 to the 0 allowed.",
         "key": "src/main/ingest.ts::importCifFolder#1",
-        "reason": "Transactional file imports preserve cancellation, failure and progress handling.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2253,7 +2466,7 @@
         "value": 22,
         "message": "Refactor this function to reduce its Cognitive Complexity from 22 to the 0 allowed.",
         "key": "src/main/searchFilterValidation.ts::validateSearchFilter#1",
-        "reason": "Main-side validation must reject malformed IPC fields independently.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2263,7 +2476,7 @@
         "value": 30,
         "message": "Refactor this function to reduce its Cognitive Complexity from 30 to the 0 allowed.",
         "key": "src/parser/cif/formula.ts::parseFormulaMoiety#1",
-        "reason": "Existing component, charge and multiplier grammar reviewed in #50.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2273,7 +2486,7 @@
         "value": 48,
         "message": "Refactor this function to reduce its Cognitive Complexity from 48 to the 0 allowed.",
         "key": "src/parser/cif/scanner.ts::scanCif#1",
-        "reason": "CIF token/loop/block state handling must preserve malformed-input diagnostics.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2283,57 +2496,17 @@
         "value": 38,
         "message": "Refactor this function to reduce its Cognitive Complexity from 38 to the 0 allowed.",
         "key": "src/parser/cif/scanner.ts::tokenize#1",
-        "reason": "Quoted, multiline and comment syntax requires stateful scanning.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/App.tsx",
-        "line": 32,
+        "line": 37,
         "column": 10,
         "value": 40,
         "message": "Refactor this function to reduce its Cognitive Complexity from 40 to the 0 allowed.",
         "key": "src/renderer/src/App.tsx::AppInner#1",
-        "reason": "Existing React workspace orchestration and conditional UI; isolate future behavior changes.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/App.tsx",
-        "line": 137,
-        "column": 18,
-        "value": 25,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 0 allowed.",
-        "key": "src/renderer/src/App.tsx::AppInner#1/handlePreservation#1",
-        "reason": "Backup/restore/relink UI state transitions must retain recovery handling.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/components/CompoundInfoPanel.tsx",
-        "line": 18,
-        "column": 25,
-        "value": 22,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 22 to the 0 allowed.",
-        "key": "src/renderer/src/components/CompoundInfoPanel.tsx::CompoundInfoPanel#1",
-        "reason": "Existing conditional presentation of crystal and publication metadata.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/components/DataGrid.tsx",
-        "line": 185,
-        "column": 26,
-        "value": 21,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 21 to the 0 allowed.",
-        "key": "src/renderer/src/components/DataGrid.tsx::DataGrid#1/<callback>#5",
-        "reason": "Keyboard, selection and focus handling in the existing grid callback.",
-        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-      },
-      {
-        "file": "src/renderer/src/components/PxrdPattern.tsx",
-        "line": 20,
-        "column": 25,
-        "value": 23,
-        "message": "Refactor this function to reduce its Cognitive Complexity from 23 to the 0 allowed.",
-        "key": "src/renderer/src/components/PxrdPattern.tsx::PxrdPattern#1",
-        "reason": "Existing worker, pattern settings and comparison controls.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
@@ -2343,18 +2516,18 @@
         "value": 22,
         "message": "Refactor this function to reduce its Cognitive Complexity from 22 to the 0 allowed.",
         "key": "src/renderer/src/patternComparison.ts::parsePersonalPattern#1",
-        "reason": "Strict two-column scientific input validation with actionable errors.",
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
         "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/pxrd.ts",
-        "line": 220,
+        "line": 244,
         "column": 17,
         "value": 35,
         "message": "Refactor this function to reduce its Cognitive Complexity from 35 to the 0 allowed.",
         "key": "src/renderer/src/pxrd.ts::calculatePxrd#1",
-        "reason": "Reviewed in milestone 7: ordered public scientific input validation, diagnostic precedence and resource admission remain cohesive; reflection calculation stages are extracted separately.",
-        "reviewTrigger": "Any increase, rename/move, analyzer change, scientific validation/diagnostic or resource-policy change."
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
+        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       },
       {
         "file": "src/renderer/src/pxrd.ts",
@@ -2363,27 +2536,26 @@
         "value": 25,
         "message": "Refactor this function to reduce its Cognitive Complexity from 25 to the 0 allowed.",
         "key": "src/renderer/src/pxrd.ts::parseCoordinate#1",
-        "reason": "Reviewed in milestone 7: symmetry-expression grammar and wrapping are outside the selected reflection-stage extraction; boundary regressions retain numerical behavior.",
-        "reviewTrigger": "Any increase, rename/move, analyzer change or supported symmetry-grammar/wrapping change."
+        "reason": "Existing measured orchestration/validation logic; preserve behavior while incremental gates prevent further growth.",
+        "reviewTrigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
       }
     ]
   },
   "provenance": {
-    "commit": "2efc7ea70d8868223b4c89a6eb066e77560eb3c1",
-    "dirty": true,
-    "sourceSha256": "4920aefc33c36ad04966c205408db4147e44e866dc4faec9545d74e1f5be7593",
+    "commit": "aee7fcec0e5dff10696628c44e8f1c491bc9a968",
+    "dirty": false,
+    "sourceSha256": "74180bb802cb1b834a70c71f1b08ab903d9ee9ee5f501a9061e3a7bf509c0d92",
     "node": "v22.23.2",
-    "testsSha256": "64fa4a59423a608f0cd82a95d5ee0663375884197971e5096a104f3401ca910e",
-    "inputsSha256": "4e25c9212bc6d717bfc3ddeba64fa5eac27563bc4ad7b408b1fa51ca8d7de74a",
-    "testsCommit": "bde2341f1fb00ebea6f52199bf1b6342c52a2b72"
+    "testsSha256": "37e4762b447ae6cd7eca1333380258986ac54ee65475d281307502db8108bd71",
+    "inputsSha256": "5cfb9326b36f1881a444877bff1a344aab0f6f8eeee865c90afc13c4fffc80de"
   },
   "policy": {
     "cyclomatic": 20,
     "cognitive": 20
   },
+  "exceptionsOnly": true,
   "review": {
-    "reason": "Adopt per-file and aggregate coverage floors at the measured milestone-6 source; cap new functions at 20 and retain individual existing complexity exceptions for behavior-preserving follow-up.",
+    "reason": "Adopt the floor reached by the Unit-reachable coverage gaps milestone: #98 preload IPC bridge, #99 computeRestraints, #101 entry column order, #100 JSmol runtime split",
     "trigger": "Any increase, rename/move, analyzer or scope change; revisit during #52/#53 simplification."
-  },
-  "exceptionsOnly": true
+  }
 }
