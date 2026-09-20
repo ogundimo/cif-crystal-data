@@ -13,10 +13,13 @@ import type { BatchExportRequest, BatchExportProgress } from '../shared/types';
 
 const roots: string[] = [];
 const databases: Database.Database[] = [];
-const faults = vi.hoisted(() => ({ path: '' }));
+const faults = vi.hoisted(() => ({ path: '', directoryError: false }));
 vi.mock('node:fs/promises', async original => {
   const fs = await original<typeof import('node:fs/promises')>();
-  return { ...fs, open: async (...args: Parameters<typeof fs.open>) => {
+  return { ...fs, mkdir: async (...args: Parameters<typeof fs.mkdir>) => {
+    if (faults.directoryError) throw Object.assign(new Error('Destination is read-only'), { code: 'EACCES' });
+    return fs.mkdir(...args);
+  }, open: async (...args: Parameters<typeof fs.open>) => {
     const file = await fs.open(...args);
     const write = file.writeFile.bind(file);
     file.writeFile = async (...values) => {
@@ -26,7 +29,7 @@ vi.mock('node:fs/promises', async original => {
     return file;
   } };
 });
-afterEach(() => { faults.path = ''; for (const db of databases.splice(0)) db.close(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+afterEach(() => { faults.path = ''; faults.directoryError = false; for (const db of databases.splice(0)) db.close(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
 const filter = { slot1: ['Na'], slot2: [], mode: 'AND' as const };
 function fixture(count = 3) {
   const root = mkdtempSync(join(tmpdir(), 'batch-export-test-')); roots.push(root);
@@ -185,6 +188,18 @@ describe('batch export contracts', () => {
     expect(result).toMatchObject({ completed: 1, failed: 2 });
     expect(readFileSync(original, 'utf8')).toBe('original');
     expect(readFileSync(join(f.root, result.folderName, 'Cl1Na1_1.cif'), 'utf8')).toBe('existing');
+  });
+  it('propagates folder permission failures without output and allows a fresh retry', async () => {
+    const f = fixture();
+    const progress = vi.fn();
+    faults.directoryError = true;
+    await expect(f.run({}, undefined, progress)).rejects.toMatchObject({ code: 'EACCES' });
+    expect(progress).not.toHaveBeenCalled();
+    expect(readdirSync(f.root)).toEqual(['profile']);
+    faults.directoryError = false;
+    const result = await f.run();
+    expect(result).toMatchObject({ completed: 3, failed: 0, notAttempted: 0, failures: [] });
+    expect(readdirSync(join(f.root, result.folderName))).toHaveLength(3);
   });
   it('rejects stale counts and invalid destinations before creating output', async () => {
     const f = fixture();
