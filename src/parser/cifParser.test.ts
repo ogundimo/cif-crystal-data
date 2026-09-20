@@ -194,7 +194,7 @@ describe('parseCif against the synthetic CIF fixture', () => {
 describe('citation metadata and multi-block CIF documents', () => {
   it('reads the first citation row and citation authors', () => {
     const citation = fixtureText
-      .replace(/_publ_section_title[\s\S]*?testing\n/, '')
+      .replace(/_publ_section_title\r?\n;\r?\n[\s\S]*?\r?\n;\r?\n/, '')
       .replace(/loop_\r?\n _publ_author_name[\s\S]*?Shelbyville'\r?\n/, '') + `
 loop_
 _citation_id

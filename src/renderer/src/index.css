@@ -295,3 +295,77 @@ button:focus-visible, [role="separator"]:focus-visible, a:focus-visible {
 [data-resize-handle][aria-orientation="horizontal"]::after { width: 24px; height: 2px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 [data-resize-handle][aria-orientation="vertical"]::after { height: 24px; width: 2px; left: 50%; top: 50%; transform: translate(-50%, -50%); }
 [data-resize-handle]:hover::after, [data-resize-handle]:active::after { background: #5d5d5d; }
+
+.plot-export-window { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.plot-export-window > header { flex: 0 0 auto; gap: 12px; }
+.plot-export-layout { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(220px, 30%) minmax(0, 1fr); gap: 16px; }
+.plot-export-controls { min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.plot-export-preview { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.plot-export-stage { flex: 1; min-height: 0; overflow: hidden; background: #e5e7eb; }
+.plot-export-stage > div { width: 100%; height: 100%; }
+.plot-export-stage svg { width: 100% !important; height: 100% !important; }
+.plot-export-preview > p { max-height: 70px; overflow-y: auto; flex-shrink: 0; }
+
+/* The two halves never grow with form contents or refinement output. */
+.refinement-workspace { height: 100dvh; overflow: hidden; display: grid; grid-template-rows: minmax(0,1fr) minmax(0,1fr); gap: 6px; padding: 6px; }
+.refinement-controls, .refinement-chart { min-width: 0; min-height: 0; display: flex; flex-direction: column; border: 1px solid #d9dfe5; border-radius: 6px; background: white; overflow: hidden; }
+.refinement-heading, .refinement-import, .refinement-actions, .refinement-metrics { display: flex; align-items: center; gap: 10px; padding: 5px 10px; flex-shrink: 0; }
+.refinement-heading { background: #edf3f8; justify-content: space-between; }
+.refinement-heading h1 { font-size: 15px; }
+.refinement-import button, .refinement-actions button { flex-shrink: 0; font-size: 12px; min-height: 24px; }
+.refinement-form { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.refinement-tabs { display: flex; align-items: center; gap: 4px; padding: 0 10px; border-bottom: 1px solid #d9dfe5; flex-shrink: 0; }
+.refinement-tabs button { padding: 5px 12px; border-bottom: 2px solid transparent; font-size: 12px; }
+.refinement-tabs button[aria-selected=true] { border-color: #0067c0; color: #005a9e; background: #f0f6fc; font-weight: 600; }
+.refinement-warning-count { margin-left: 5px; color: #92400e; }
+.refinement-tab-content { flex: 1; min-height: 0; overflow: auto; padding: 8px 10px; }
+.refinement-tab-content input, .refinement-tab-content select { height: 27px; font-size: 12px; }
+.refinement-tab-content label { min-width: 0; }
+.refinement-tab-content [role=tabpanel][hidden] { display: none; }
+.refinement-flags { padding: 4px 10px; flex-shrink: 0; border-top: 1px solid #edf0f3; }
+.refinement-actions { border-top: 1px solid #d9dfe5; background: #f8fafc; }
+.refinement-actions > span { min-width: 0; overflow: auto; max-height: 32px; }
+.refinement-results { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+.refinement-results > ul { grid-column: 1 / -1; }
+.refinement-result-card { min-width: 0; }
+.refinement-metrics { font-size: 12px; border-bottom: 1px solid #edf0f3; }
+.refinement-fit-plot { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; padding: 3px 8px; }
+.refinement-plot-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+.refinement-plot-toolbar button { font-size: 11px; }
+.refinement-plot-stage { flex: 1; min-height: 0; overflow: hidden; }
+.refinement-plot-stage > div, .refinement-plot-stage svg { width: 100% !important; height: 100% !important; }
+.refinement-legend-options { position: absolute; left: 10px; top: 27px; z-index: 2; font-size: 11px; }
+.refinement-legend-options details[open] { padding: 8px; max-width: 450px; background: white; border: 1px solid #ccd5de; box-shadow: 0 2px 8px #0002; }
+.refinement-empty { flex: 1; display: grid; place-items: center; color: #687787; font-size: 13px; }
+@media (max-height: 650px) { .refinement-heading, .refinement-import, .refinement-actions, .refinement-metrics { padding-top: 3px; padding-bottom: 3px; } .refinement-tab-content { padding-top: 4px; padding-bottom: 4px; } }
+
+.refinement-form fieldset { min-width: 0; }
+
+/* Export controls use short panels so Save and the preview remain in view. */
+.plot-export-window { gap: 8px; }
+.plot-export-window .export-heading { padding: 5px 8px; background: #edf3f8; border: 1px solid #d9dfe5; border-radius: 6px; }
+.plot-export-window .plot-export-layout { grid-template-columns: minmax(300px, 28%) minmax(0, 1fr); gap: 8px; }
+.plot-export-window .plot-export-controls { display: flex; flex-direction: column; overflow: hidden; }
+.export-settings-tabs { display: flex; flex-shrink: 0; border-bottom: 1px solid #d9dfe5; padding: 0 4px; }
+.export-settings-tabs button { padding: 7px 9px; font-size: 12px; border-bottom: 2px solid transparent; }
+.export-settings-tabs button[aria-selected=true] { color: #005a9e; background: #f0f6fc; border-color: #0067c0; font-weight: 600; }
+.export-settings-body { min-height: 0; padding: 10px; overflow: auto; }
+.export-settings-body section > * + * { margin-top: 10px; }
+.export-settings-body [hidden] { display: none; }
+.export-settings-body input:not([type=checkbox]):not([type=color]), .export-settings-body select { height: 28px; font-size: 12px; }
+.export-settings-body fieldset { min-width: 0; }
+.export-settings-body details > div { flex-direction: column; gap: 10px; }
+.export-settings-body details summary { display: none; }
+.plot-export-window .plot-export-preview { gap: 6px; }
+.plot-export-window .plot-export-preview > [role] { margin: 0; max-height: 42px; }
+@media (max-height: 600px) { .export-settings-body { padding: 8px; } .export-settings-body section > * + * { margin-top: 6px; } }
+
+.refinement-upper { display: grid; grid-template-columns: minmax(0,4fr) minmax(0,1fr); gap: 6px; min-height: 0; }
+.refinement-progress { min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; background: white; border: 1px solid #d9dfe5; border-radius: 6px; }
+.refinement-progress header { display: flex; justify-content: space-between; gap: 4px; padding: 6px; font-size: 11px; background: #edf3f8; }
+.refinement-progress svg { width: 100%; flex: 1; min-height: 0; }
+
+.export-settings-tabs { flex-wrap: wrap; }
+.export-settings-body select.export-font-list { height: 82px; width: 100%; overflow-y: auto; border: 1px solid #aeb8c2; border-radius: 3px; background: white; }
+.export-font-list option { padding: 2px 5px; }
+.export-settings-body details > div { gap: 5px; }

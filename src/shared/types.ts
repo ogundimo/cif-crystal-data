@@ -1,3 +1,5 @@
+import type { RefinementMethod, ImportedCheckpoint, ExperimentalPattern, RefinementRequest, RefinementResult, RefinementProgress } from './refinement';
+
 export interface EntryRow {
   id: number;
   source_filename: string;
@@ -214,6 +216,19 @@ export interface CifViewerSource {
 }
 
 export interface CifApi {
+  openPlotExport: (snapshot: import('./plot').PlotSnapshot) => Promise<void>;
+  getPlotExport: () => Promise<import('./plot').PlotSnapshot>;
+  savePlotExport: (design: import('./plot').PlotDesign, view: import('./plot').PlotView) => Promise<string | null>;
+  openManual: () => Promise<void>;
+  openRefinementWindow: (entryId: number, method: RefinementMethod, experimentalId?: string, wavelength?: number) => Promise<void>;
+  importRefinementCheckpoint: () => Promise<ImportedCheckpoint | null>;
+  importExperimental: () => Promise<ExperimentalPattern | null>;
+  getExperimental: (id: string) => Promise<ExperimentalPattern>;
+  refinementEngineStatus: () => Promise<{ available: boolean; message?: string }>;
+  runRefinement: (request: RefinementRequest) => Promise<RefinementResult>;
+  cancelRefinement: () => Promise<void>;
+  openRefinementOutput: () => Promise<void>;
+  onRefinementProgress: (listener: (progress: RefinementProgress) => void) => () => void;
   getAllEntries: () => Promise<EntryRow[]>;
   getEntryCount: () => Promise<number>;
   getAtomSites: (entryId: number) => Promise<AtomSiteRow[]>;

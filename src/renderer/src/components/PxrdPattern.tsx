@@ -1,5 +1,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { normalizeExperimentalPxrd, parseExperimentalPxrd } from '../experimentalPxrd';
+import { simulatedPlotSnapshot } from '../../../shared/plot';
+import { normalizeExperimentalPxrd } from '../experimentalPxrd';
+import { XRAY_WAVELENGTHS, METHOD_LABELS, type RefinementMethod } from '../../../shared/refinement';
 import type { DiffractionInput, EntryRow } from '../../../shared/types';
 import {
   createPxrdProfile,
@@ -17,19 +19,14 @@ interface Props { entry: EntryRow }
 const MIN_CHART_WIDTH = 220;
 const MIN_CHART_HEIGHT = 180;
 const MARGIN = { left: 52, right: 14, top: 12, bottom: 42 };
-const WAVELENGTH_OPTIONS = [
-  { symbol: 'Cu', wavelength: 1.5406 },
-  { symbol: 'Mo', wavelength: 0.7107 },
-  { symbol: 'Co', wavelength: 1.7902 },
-  { symbol: 'Ag', wavelength: 0.5609 }
-] as const;
 
 export default function PxrdPattern({ entry }: Props) {
-  const experimentalFileRef = useRef<HTMLInputElement>(null);
   const clipId = useId();
-  const [experimental, setExperimental] = useState<{ name: string; points: PxrdProfilePoint[] } | null>(null);
+  const [experimental, setExperimental] = useState<{ id: string; name: string; points: PxrdProfilePoint[] } | null>(null);
   const [importingExperimental, setImportingExperimental] = useState(false);
   const [experimentalError, setExperimentalError] = useState<string | null>(null);
+  const [refinementMethod, setRefinementMethod] = useState<RefinementMethod>('lebail');
+  const [refinementError, setRefinementError] = useState<string | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: MIN_CHART_WIDTH, height: MIN_CHART_HEIGHT });
   useEffect(() => {
@@ -50,6 +47,7 @@ export default function PxrdPattern({ entry }: Props) {
   const [wavelength, setWavelength] = useState(DEFAULT_WAVELENGTH);
   const [includeHeader, setIncludeHeader] = useState(true);
   const [hoveredPeak, setHoveredPeak] = useState<PxrdPeak | null>(null);
+  const [openingPlot,setOpeningPlot]=useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
@@ -89,16 +87,17 @@ export default function PxrdPattern({ entry }: Props) {
     `${index === 0 ? 'M' : 'L'}${(MARGIN.left + (point.twoTheta - PXRD_RANGE.min) / (PXRD_RANGE.max - PXRD_RANGE.min) * plotWidth).toFixed(2)},${(MARGIN.top + plotHeight * (1 - point.intensity / 100)).toFixed(2)}`
   ).join(' ') ?? '', [experimental, plotWidth, plotHeight]);
 
-  async function importExperimental(file: File): Promise<void> {
+  async function importExperimental(): Promise<void> {
     setImportingExperimental(true);
     setExperimentalError(null);
     try {
-      if (file.size > 10_000_000) throw new Error('Please select a file smaller than 10 MB.');
-      const points = normalizeExperimentalPxrd(parseExperimentalPxrd(await file.text()));
+      const file = await window.cifApi.importExperimental();
+      if (!file) return;
+      const points = normalizeExperimentalPxrd(file.points);
       if (points[points.length - 1].twoTheta < PXRD_RANGE.min || points[0].twoTheta > PXRD_RANGE.max) {
         throw new Error(`The experimental data does not overlap the ${PXRD_RANGE.min}–${PXRD_RANGE.max}° plot range.`);
       }
-      setExperimental({ name: file.name, points });
+      setExperimental({ id: file.id, name: file.fileName, points });
     } catch (error) {
       setExperimentalError(error instanceof Error ? error.message : 'Could not import experimental data.');
     } finally {
@@ -137,7 +136,7 @@ export default function PxrdPattern({ entry }: Props) {
               }}
               className="h-6 rounded-sm border border-[#aeb8c2] bg-white px-1 text-xs font-normal text-[#202020] outline-none focus:border-accent"
             >
-              {WAVELENGTH_OPTIONS.map((option) => (
+              {XRAY_WAVELENGTHS.map((option) => (
                 <option key={option.symbol} value={option.wavelength}>
                   {option.symbol} ({option.wavelength.toFixed(4)} Å)
                 </option>
@@ -169,21 +168,15 @@ export default function PxrdPattern({ entry }: Props) {
           <button className="btn-w32 h-6 px-2 py-0" disabled={profile.length === 0 || exporting} onClick={() => void exportPattern()}>
             {exporting ? 'Exporting…' : 'Export .xy'}
           </button>
-          <input
-            ref={experimentalFileRef}
-            type="file"
-            accept=".xy,.txt,.csv"
-            aria-label="Experimental PXRD file"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
-              event.currentTarget.value = '';
-              if (file) void importExperimental(file);
-            }}
-          />
-          <button className="btn-w32 h-6 px-2 py-0" disabled={importingExperimental} onClick={() => experimentalFileRef.current?.click()}>
+          <button className="btn-w32 h-6 px-2 py-0" disabled={openingPlot||(!profile.length&&!experimental)} onClick={async()=>{setOpeningPlot(true);setExportMessage(null);try{await window.cifApi.openPlotExport(simulatedPlotSnapshot(profile,experimental?.points,entry.formula));}catch(error){setExportMessage(String(error));}finally{setOpeningPlot(false);}}}>{openingPlot?'Opening…':'Export Plot'}</button>
+          <button className="btn-w32 h-6 px-2 py-0" disabled={importingExperimental} onClick={() => void importExperimental()}>
             {importingExperimental ? 'Importing…' : 'Import experimental'}
           </button>
+          <select aria-label="Refinement method" className="h-6 rounded border border-stroke bg-white text-xs" value={refinementMethod} onChange={event => setRefinementMethod(event.target.value as RefinementMethod)}>{Object.entries(METHOD_LABELS).map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select>
+          <button className="btn-w32 h-6 px-2 py-0" onClick={() => {
+            setRefinementError(null);
+            void window.cifApi.openRefinementWindow(entry.id, refinementMethod, experimental?.id, wavelength).catch(error => setRefinementError(error instanceof Error ? error.message : 'Could not open refinement.'));
+          }}>Refine</button>
           {exportMessage && <span className="max-w-40 truncate text-[10px] text-[#2f6f3e]" title={exportMessage}>{exportMessage}</span>}
         </div>
       </div>
@@ -195,6 +188,7 @@ export default function PxrdPattern({ entry }: Props) {
         </div>
       )}
       {experimentalError && <p role="alert" className="shrink-0 px-2 py-1 text-xs text-[#c42b1c]">{experimentalError}</p>}
+      {refinementError && <p role="alert" className="shrink-0 px-2 py-1 text-xs text-[#c42b1c]">{refinementError}</p>}
       <div ref={chartRef} data-testid="pxrd-chart" className="relative min-h-0 min-w-0 flex-1 overflow-auto">
         {status === 'loading' && !experimental ? (
           <div className="flex h-full items-center justify-center text-xs text-text-dim">Calculating diffraction pattern…</div>

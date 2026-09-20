@@ -3,6 +3,7 @@ import { readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type {
+  EntryRow,
   PublicationLookupRequest,
   SearchFilter,
   SearchPageRequest,
@@ -14,6 +15,11 @@ import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
 import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
 import { splitCifDataBlocks } from '../parser/cifParser';
 import { resolvePublication } from './publicationResolver';
+import { getExperimental, registerRefinementHandlers } from './refinement';
+import { registerPlotExportHandlers } from './plotExport';
+import { screenWindowBounds,keepWindowOnScreen } from './windowBounds';
+import { resolveRefinementSource, storedStructureCif } from './refinementSource';
+import { XRAY_WAVELENGTHS, REFINEMENT_METHODS, METHOD_LABELS, type RefinementMethod } from '../shared/refinement';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 type DbModule = typeof import('./db');
@@ -21,6 +27,7 @@ type DbModule = typeof import('./db');
 let dbReady: Promise<DbModule> | null = null;
 let dataMutationInFlight: 'import' | 'refresh' | 'clear' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
+const refinementWindows = new Map<string, BrowserWindow>();
 
 async function readCifDataBlock(sourcePath: string, blockIndex: number): Promise<string> {
   const text = await readFile(sourcePath, 'utf8');
@@ -85,6 +92,66 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  registerPlotExportHandlers(__dirname);
+  registerRefinementHandlers(async entryId => {
+    const database = await getDbModule();
+    const source = database.getCifViewerSourceRecord(entryId);
+    if (!source) throw new Error('The selected structure is no longer in the database.');
+    return resolveRefinementSource(source.source_path, source.data_block_index, readCifDataBlock, () => {
+      const entry = database.getDb().prepare('SELECT * FROM entries WHERE id = ?').get(entryId) as EntryRow;
+      return storedStructureCif(entry, database.getAtomSites(entryId), database.getSymmetryOperations(entryId), database.getAtomSiteAnisotropic(entryId));
+    });
+  });
+  ipcMain.handle('cif:openRefinementWindow', async (_event, entryId: unknown, method: RefinementMethod, experimentalId?: unknown, wavelength?: unknown) => {
+    if (typeof entryId !== 'number' || !Number.isInteger(entryId) || entryId < 1) {
+      throw new TypeError('Invalid entry id');
+    }
+    if (!REFINEMENT_METHODS.includes(method)) throw new Error('Invalid refinement method');
+    const windowKey = String(entryId) + ':' + method;
+    if (experimentalId !== undefined) getExperimental(experimentalId);
+    if (wavelength !== undefined && !XRAY_WAVELENGTHS.some(option => option.wavelength === wavelength)) throw new Error('Invalid wavelength');
+    const existing = refinementWindows.get(windowKey);
+    if (existing && !existing.isDestroyed()) {
+      if (existing.isMinimized()) existing.restore();
+      existing.focus();
+      return;
+    }
+    const database = await getDbModule();
+    const entry = database.getDb().prepare('SELECT * FROM entries WHERE id = ?').get(entryId) as EntryRow | undefined;
+    if (!entry) throw new Error('The selected compound is no longer in the database.');
+    // Recheck after database initialization, which may have yielded to another request.
+    const pending = refinementWindows.get(windowKey);
+    if (pending && !pending.isDestroyed()) { pending.focus(); return; }
+    const query = {
+      view: 'refinement', entryId: String(entryId), method, formula: entry.formula, spaceGroup: entry.space_group,
+      experimentalId: typeof experimentalId === 'string' ? experimentalId : '',
+      wavelength: String(wavelength ?? 1.5406),
+      a: String(entry.cell_a_angstrom ?? entry.cell_a * 10),
+      b: String(entry.cell_b_angstrom ?? entry.cell_b * 10),
+      c: String(entry.cell_c_angstrom ?? entry.cell_c * 10),
+      alpha: String(entry.cell_angle_alpha ?? ''),
+      beta: String(entry.cell_angle_beta ?? ''),
+      gamma: String(entry.cell_angle_gamma ?? '')
+    };
+    const win = new BrowserWindow({
+      title: METHOD_LABELS[method] + ' Refinement — CIF Crystal Data',
+      ...screenWindowBounds(1400,850,700,500,BrowserWindow.fromWebContents(_event.sender)),
+      autoHideMenuBar: true, backgroundColor: '#f3f3f3',
+      webPreferences: { preload: join(__dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false }
+    });
+    keepWindowOnScreen(win,700,500);
+    refinementWindows.set(windowKey, win);
+    win.on('closed', () => refinementWindows.delete(windowKey));
+    try {
+      if (process.env.ELECTRON_RENDERER_URL) {
+        const url = new URL(process.env.ELECTRON_RENDERER_URL);
+        Object.entries(query).forEach(([key, value]) => url.searchParams.set(key, value));
+        await win.loadURL(url.toString());
+      } else {
+        await win.loadFile(join(__dirname, '../../dist/index.html'), { query });
+      }
+    } catch (error) { win.destroy(); throw error; }
+  });
   ipcMain.handle('cif:getAllEntries', async () => (await getDbModule()).getAllEntries());
   ipcMain.handle('cif:getEntryCount', async () => (await getDbModule()).getEntryCount());
   ipcMain.handle('cif:getAtomSites', async (_event, entryId: unknown) => {
@@ -183,6 +250,13 @@ app.whenReady().then(() => {
     if (result.canceled || !result.filePath) return { exported: false };
     await writeFile(result.filePath, contents, 'utf8');
     return { exported: true, fileName: basename(result.filePath) };
+  });
+
+  ipcMain.handle('cif:openManual', async () => {
+    const manualPath = join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'docs', 'CIF Crystal Data User Manual.pdf');
+    await stat(manualPath);
+    const error = await shell.openPath(manualPath);
+    if (error) throw new Error(error);
   });
 
   ipcMain.handle('cif:openExternal', async (_event, url: unknown) => {

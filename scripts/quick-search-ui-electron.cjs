@@ -568,6 +568,9 @@ async function run() {
 
   await window.loadURL(testUrl + '?app-regression');
   await pause(300);
+  assert.equal(await window.webContents.executeJavaScript('!!document.querySelector("#quick-search-space-group-number")'), true, 'Quick search opens on startup');
+  await window.webContents.executeJavaScript('document.querySelector("button[aria-label=Close]").click()');
+  await pause(100);
   const clickButton = async (text) => {
     await window.webContents.executeJavaScript(`(() => { const button = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes(${JSON.stringify(text)})); button.focus(); button.click(); })()`);
     await pause(100);
@@ -687,4 +690,3 @@ app.whenReady().then(run).then(
     app.exit(1);
   }
 );
-

@@ -1,0 +1,102 @@
+name: Build macOS installers
+
+on:
+  push:
+    branches: [codex/macos-installers]
+  workflow_dispatch:
+    inputs:
+      signed:
+        description: Sign with Developer ID and notarize with Apple
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      CSC_LINK: ${{ inputs.signed && secrets.MACOS_CERTIFICATE || '' }}
+      CSC_KEY_PASSWORD: ${{ inputs.signed && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
+      APPLE_ID: ${{ inputs.signed && secrets.APPLE_ID || '' }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ inputs.signed && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+      APPLE_TEAM_ID: ${{ inputs.signed && secrets.APPLE_TEAM_ID || '' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          architecture: ${{ matrix.arch }}
+          cache: npm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.8.22'
+      - name: Check runner architecture and signing inputs
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+          SIGNED: ${{ inputs.signed }}
+        run: |
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            assert.equal(process.platform, "darwin");
+            assert.equal(process.arch, process.env.EXPECTED_ARCH);
+            if (process.env.SIGNED === "true") {
+              for (const key of ["CSC_LINK", "CSC_KEY_PASSWORD", "APPLE_ID", "APPLE_APP_SPECIFIC_PASSWORD", "APPLE_TEAM_ID"]) {
+                assert.ok(process.env[key], "Missing signing secret: " + key);
+              }
+            }
+          '
+      - run: npm ci
+      - run: npm run setup:refinement:mac
+      - run: npm test
+      - run: npm run test:refinement
+      - run: npm run package:mac
+      - name: Verify the packaged runtime and application
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          if [ "$TARGET_ARCH" = arm64 ]; then
+            APP='release/mac-arm64/CIF Crystal Data.app'
+          else
+            APP='release/mac/CIF Crystal Data.app'
+          fi
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          "$APP/Contents/Resources/rietx-runtime/python/bin/python3" -I "$APP/Contents/Resources/engine/refinement.py" --check
+          mkdir -p .tools/refinement-ui-test/cifs
+          "$APP/Contents/Resources/rietx-runtime/python/bin/python3" -I engine/test_refinement.py --fixture .tools/refinement-ui-test/fixture.json
+          node --input-type=module -e 'import fs from "node:fs"; const fixture=JSON.parse(fs.readFileSync(".tools/refinement-ui-test/fixture.json", "utf8")); fs.writeFileSync(".tools/refinement-ui-test/cifs/nacl.cif",fixture.cifText);'
+          node scripts/packaged-smoke.mjs "$APP/Contents/MacOS/CIF Crystal Data" .tools/refinement-ui-test/cifs --refinement
+      - name: Verify notarization
+        if: inputs.signed
+        env:
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          if [ "$TARGET_ARCH" = arm64 ]; then APP='release/mac-arm64/CIF Crystal Data.app'; else APP='release/mac/CIF Crystal Data.app'; fi
+          xcrun stapler validate "$APP"
+          spctl --assess --type execute --verbose=2 "$APP"
+      - name: Generate checksums
+        run: |
+          cd release
+          shasum -a 256 ./*.dmg ./*.zip > SHA256SUMS-mac-${{ matrix.arch }}.txt
+      - name: Retain installers
+        uses: actions/upload-artifact@v6
+        with:
+          name: CIF-Crystal-Data-mac-${{ matrix.arch }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/SHA256SUMS-mac-*.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

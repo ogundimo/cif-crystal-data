@@ -1,3 +1,4 @@
+import type { RefinementProgress } from '../shared/refinement';
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
   CifApi,
@@ -8,6 +9,23 @@ import type {
 } from '../shared/types';
 
 const api: CifApi = {
+  openPlotExport: snapshot => ipcRenderer.invoke('cif:openPlotExport', snapshot),
+  getPlotExport: () => ipcRenderer.invoke('cif:getPlotExport'),
+  savePlotExport: (design, view) => ipcRenderer.invoke('cif:savePlotExport', design, view),
+  openManual: () => ipcRenderer.invoke('cif:openManual'),
+  openRefinementWindow: (entryId, method, experimentalId, wavelength) => ipcRenderer.invoke('cif:openRefinementWindow', entryId, method, experimentalId, wavelength),
+  importRefinementCheckpoint: () => ipcRenderer.invoke('cif:importRefinementCheckpoint'),
+  importExperimental: () => ipcRenderer.invoke('cif:importExperimental'),
+  getExperimental: id => ipcRenderer.invoke('cif:getExperimental', id),
+  refinementEngineStatus: () => ipcRenderer.invoke('cif:refinementEngineStatus'),
+  runRefinement: request => ipcRenderer.invoke('cif:runRefinement', request),
+  cancelRefinement: () => ipcRenderer.invoke('cif:cancelRefinement'),
+  openRefinementOutput: () => ipcRenderer.invoke('cif:openRefinementOutput'),
+  onRefinementProgress: listener => {
+    const handler = (_event: Electron.IpcRendererEvent, progress: RefinementProgress) => listener(progress);
+    ipcRenderer.on('cif:refinementProgress', handler);
+    return () => ipcRenderer.removeListener('cif:refinementProgress', handler);
+  },
   getAllEntries: () => ipcRenderer.invoke('cif:getAllEntries'),
   getEntryCount: () => ipcRenderer.invoke('cif:getEntryCount'),
   getAtomSites: (entryId: number) => ipcRenderer.invoke('cif:getAtomSites', entryId),

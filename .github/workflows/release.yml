@@ -85,6 +85,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Set up Python for the bundled refinement engine
+        id: refinement-python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Prepare pinned rietx runtime
+        shell: pwsh
+        run: ./scripts/setup-refinement.ps1 -Python '${{ steps.refinement-python.outputs.python-path }}'
+
+      - name: Verify all three refinement methods
+        run: npm run test:refinement
+
       - name: Run complete test suite
         run: npm run test:all
 

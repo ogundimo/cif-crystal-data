@@ -46,6 +46,56 @@ to replace the overlay, or use **Remove experimental** to clear it. The overlay 
 in the current chart session; it is not stored in the database or included in simulated
 `.xy` exports.
 
+## Le Bail, Pawley and Rietveld refinement
+
+Select a method beside **Refine** in the simulated PXRD toolbar. The new window
+prefills the selected CIF cell and uses its atom sites for Rietveld. Import the
+experimental pattern, check the editable Bragg–Brentano geometry and 250 mm radius
+defaults against your instrument, verify the required (*)
+fields and start. Actual fitting evaluations update the plot in real time.
+
+Outputs and complete checkpoints are saved beside the experimental file.
+**Resume refinement** retains fitted parameters and intensities while allowing
+edits. **Load checkpoint** restores a run after restarting the app. **Stop and
+save** preserves the last completed stage. See [engine notes](docs/refinement-engine.md)
+for modeling assumptions, figure conventions and checkpoint details.
+
+Quick search opens automatically when the app starts and can be reopened from
+the toolbar at any time. **Manual**, immediately before **About**, opens the
+bundled [PDF user manual](docs/CIF%20Crystal%20Data%20User%20Manual.pdf) in the
+default PDF viewer. The editable Word version is in the same `docs` folder.
+
+### Inspect and export refinement plots
+
+Scroll over the fit to zoom horizontally around the pointer. Intensity and
+difference Y scales stay fixed during zooming and panning. Zooming out stops at
+the original 2θ limits. Drag the plot to pan horizontally within those limits,
+or use Reset view to show the full pattern. X tick labels
+start at multiples of 10° and adapt during zooming. Horizontal grid
+lines are omitted. Drag the vertically stacked legend to move all entries together;
+Legend entries lets you hide or restore individual labels without hiding the data.
+
+**Export Plot** opens a separate editor with a snapshot of the displayed fit.
+Set width and height in inches, resolution (300 dpi by default), colors, line or
+circle styles, thickness, circle diameter, labels and legend visibility. The
+export preview is fixed except for dragging its legend. Its area stays fixed as
+dimensions change; the drawing adjusts its aspect ratio to fit. Controls scroll
+separately, and the resizable window stays within the monitor work area. Set the
+major X tick interval (default 10°) and the number of evenly spaced labels between
+major ticks (default zero). Exported axis limits match the preview; Full pattern
+restores the entire scan.
+PNG (default), JPG and TIFF include resolution metadata. SVG and PDF contain
+vector graphics and do not depend on dpi. Raster output is limited to 40 megapixels.
+Completed fits retain every profile sample for detailed zoom and export; live
+snapshots use the preview data available at the time Export Plot is clicked.
+
+The engine is [rietx](https://github.com/yue-here/rietx), pinned at 1.4.0;
+the previous GSAS-II integration has been removed.
+Build-machine setup requires Windows x64, PowerShell 7 and Python 3.12 with pip:
+run `npm run setup:refinement`, then `npm run test:refinement`.
+`npm run package` bundles the runtime so recipients need no Python installation.
+In this checkout use `./npm.cmd` if npm is not installed globally.
+
 The parser is regression-tested against the current PCD, ICSD, and CCDC/CSD corpus. It
 accepts CCDC moiety formulas when a sum formula is absent, resolves the corpus's symbol-only
 space groups, and stores CCDC deposition numbers, CSD refcodes, ICSD identifiers, and DOI
@@ -65,6 +115,12 @@ npm run package   # builds + runs electron-builder for Windows
 
 `npm run package` produces a `release/win-unpacked` folder (runnable directly) plus an NSIS
 installer and a portable executable, targeting Windows x64.
+
+For macOS, `npm run setup:refinement:mac` prepares a native bundled runtime and
+`npm run package:mac` builds a DMG and ZIP on a Mac. The **Build macOS installers**
+GitHub Actions workflow builds Apple Silicon and Intel packages separately.
+See [macOS build instructions](docs/macos-build.md) for native validation,
+artifact downloads, and optional Developer ID signing and notarization.
 
 ## Local crystal viewer
 

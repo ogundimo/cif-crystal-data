@@ -40,6 +40,15 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
 }));
 
 window.cifApi = {
+  openRefinementWindow: async () => undefined,
+  importRefinementCheckpoint: async () => null,
+  importExperimental: async () => null,
+  getExperimental: async () => { throw new Error('No experimental fixture selected'); },
+  refinementEngineStatus: async () => ({ available: false }),
+  runRefinement: async () => { throw new Error('No refinement engine in UI fixtures'); },
+  cancelRefinement: async () => undefined,
+  openRefinementOutput: async () => undefined,
+  onRefinementProgress: () => () => undefined,
   getAllEntries: async () => [],
   getEntryCount: async () => 0,
   getAtomSites: async (entryId) => [{
@@ -91,6 +100,10 @@ window.cifApi = {
   exportPxrd: async () => ({ exported: false }),
   resolvePublication: async () => ({ status: 'not-found' }),
   openExternal: async () => undefined,
+  openManual: async () => undefined,
+  openPlotExport: async () => undefined,
+  getPlotExport: async () => { throw new Error('No export snapshot in this harness'); },
+  savePlotExport: async () => null,
   search: async () => [],
   searchPage: async () => ({ rows: [], total: 0 }),
   restraints: async () => [],

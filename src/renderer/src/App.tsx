@@ -31,7 +31,7 @@ function AppInner() {
   const startupScanStarted = useRef(false);
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
-  const [qsOpen, setQsOpen] = useState(false);
+  const [qsOpen, setQsOpen] = useState(true);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
   const [importing, setImporting] = useState(false);
@@ -344,6 +344,9 @@ function AppInner() {
           </button>
         </div>
         <div className="mx-1.5 h-6 w-px bg-stroke-strong" />
+        <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={() => void window.cifApi.openManual().catch(error => showApiError('open the manual', error))} title="Open the user manual PDF">
+          <span aria-hidden="true">▤</span> Manual
+        </button>
         <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={() => setAboutOpen(true)}>
           <span aria-hidden="true">ⓘ</span> About
         </button>

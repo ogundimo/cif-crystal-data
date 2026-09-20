@@ -9,8 +9,8 @@
   "main": "dist-electron/main/index.js",
   "type": "module",
   "scripts": {
-    "start": "electron-vite dev",
-    "dev": "electron-vite dev",
+    "start": "electron-vite dev --watch",
+    "dev": "electron-vite dev --watch",
     "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
@@ -19,7 +19,13 @@
     "test:worker": "npm run build && electron scripts/import-worker-smoke-electron.cjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
-    "package": "npm run build && electron-builder"
+    "package": "node scripts/check-refinement-runtime.mjs && npm run build && electron-builder",
+    "package:mac": "node scripts/package-mac.mjs",
+    "setup:refinement:mac": "node scripts/setup-refinement-mac.mjs",
+    "setup:refinement": "pwsh -NoProfile -File scripts/setup-refinement.ps1",
+    "test:refinement": "node scripts/check-refinement-runtime.mjs && node scripts/test-refinement.mjs",
+    "test:refinement:ui": "npm run build && electron scripts/refinement-smoke-electron.cjs",
+    "test:plot-export": "npm run build && electron scripts/plot-export-smoke.cjs"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.20.5",
@@ -46,6 +52,29 @@
     "appId": "com.cif.crystaldata",
     "productName": "CIF Crystal Data",
     "npmRebuild": false,
+    "extraResources": [
+      {
+        "from": "docs/CIF Crystal Data User Manual.pdf",
+        "to": "docs/CIF Crystal Data User Manual.pdf"
+      },
+      {
+        "from": "engine",
+        "to": "engine",
+        "filter": [
+          "refinement.py",
+          "requirements.txt"
+        ]
+      },
+      {
+        "from": ".tools/rietx-runtime",
+        "to": "rietx-runtime",
+        "filter": [
+          "**/*",
+          "!**/__pycache__/**",
+          "!**/*.pyc"
+        ]
+      }
+    ],
     "files": [
       "dist-electron/**/*",
       "dist/**/*",
