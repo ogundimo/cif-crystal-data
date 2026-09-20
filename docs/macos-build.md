@@ -67,6 +67,11 @@ refuses to overwrite a Windows runtime or a runtime for another architecture;
 use a clean checkout for each platform. If setup fails partway through, use a
 fresh checkout rather than reusing the partial runtime.
 
+Intel macOS uses rietx's supported NumPy execution tier because current Numba
+and llvmlite wheels do not support Intel Macs. It retains all three refinement
+methods, with potentially slower fitting. Apple Silicon uses the compiled tier.
+Both configurations must pass the same numerical and checkpoint tests.
+
 Output names include the app version and architecture, for example
 `CIF Crystal Data-1.1.0-mac-arm64.dmg`. The packaging command always builds the
 host architecture and never publishes automatically. With `CSC_LINK` and the

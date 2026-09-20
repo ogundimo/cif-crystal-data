@@ -40,8 +40,21 @@ const python = join(runtime, 'python', 'bin', 'python3');
 // satisfying this validation instead of the bundled runtime.
 const architecture = run(python, ['-I', '-c', 'import platform; print(platform.machine())'], true);
 if (architecture !== (process.arch === 'arm64' ? 'arm64' : 'x86_64')) throw new Error('Python architecture does not match Node.js.');
-run('uv', ['pip', 'install', '--python', python, '--break-system-packages', '--link-mode', 'copy',
-  '-r', 'engine/requirements.txt', `https://github.com/yue-here/rietx/archive/${commit}.zip`]);
+const install = ['pip', 'install', '--python', python, '--break-system-packages', '--link-mode', 'copy'];
+if (process.arch === 'x64') {
+  // Current Numba/LLVM wheels no longer support Intel macOS. rietx explicitly
+  // supports a NumPy execution tier when Numba is absent; keep the same engine
+  // and model, and test every method on this architecture before packaging.
+  const requirements = readFileSync('engine/requirements.txt', 'utf8')
+    .split(/\r?\n/).filter(line => !/^(numba|llvmlite)==/.test(line)).join('\n');
+  const requirementsPath = join(runtime, 'requirements-mac-x64.txt');
+  writeFileSync(requirementsPath, requirements);
+  run('uv', [...install, '-r', requirementsPath]);
+  run('uv', [...install, '--no-deps', `https://github.com/yue-here/rietx/archive/${commit}.zip`]);
+  writeFileSync(join(runtime, 'execution-tier.txt'), 'NumPy fallback on Intel macOS; Numba is not bundled.\n');
+} else {
+  run('uv', [...install, '-r', 'engine/requirements.txt', `https://github.com/yue-here/rietx/archive/${commit}.zip`]);
+}
 for (const name of ['LICENSE', 'LICENSE-3RD-PARTY.md', 'ATTRIBUTION.md']) {
   const response = await fetch(`https://raw.githubusercontent.com/yue-here/rietx/${commit}/${name}`);
   if (!response.ok) throw new Error(`Could not fetch ${name}: HTTP ${response.status}`);

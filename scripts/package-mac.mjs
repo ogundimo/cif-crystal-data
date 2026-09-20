@@ -3,6 +3,11 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
 if (process.platform !== 'darwin') throw new Error('Mac installers must be built on macOS. Use the Build macOS installers workflow.');
+// An empty CSC_LINK is interpreted as a path to the current directory by
+// electron-builder. Missing optional credentials must be absent, not blank.
+for (const key of ['CSC_LINK', 'CSC_KEY_PASSWORD', 'APPLE_ID', 'APPLE_APP_SPECIFIC_PASSWORD', 'APPLE_TEAM_ID']) {
+  if (!process.env[key]) delete process.env[key];
+}
 const marker = JSON.parse(readFileSync('.tools/rietx-runtime/platform.json', 'utf8'));
 if (marker.platform !== 'darwin' || marker.arch !== process.arch) throw new Error('Run npm run setup:refinement:mac for this Mac architecture first.');
 function run(command, args) {
