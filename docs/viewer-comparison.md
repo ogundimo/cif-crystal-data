@@ -14,6 +14,16 @@ CIF metadata. Selection and the personal overlay live in renderer session state,
 including when an empty search unmounts the details panel. Restart persistence is
 not provided. No source bytes, stored metadata or export identities change.
 
+The compact toolbar above the plot groups wavelength/FWHM, Import/Clear, and
+Export in one row. Clear always occupies its place and is disabled until import.
+The FWHM degree suffix is visual; its value remains a native numeric input with
+0.01-degree steps. The column divider reserves at least 500 CSS pixels for the
+viewer/PXRD column, including after restoring layout preferences or resizing.
+Exports always contain two tab-separated numeric columns: 2-theta in degrees
+(four decimals), then normalized intensity (six decimals). No header, model
+metadata or diagnostics are written; model diagnostics remain in the panel.
+Import still accepts comments and a recognizable column header for compatibility.
+
 The file picker exposes only a user-selected file through the browser File API.
 Size is checked before reading, then the parser checks numeric finiteness, angular
 range, strict ordering, point count and positive normalization maximum. Negative

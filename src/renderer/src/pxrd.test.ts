@@ -47,7 +47,8 @@ describe('simulatePxrd', () => {
     // d100 = 4 Å; first-order Bragg law 2d sin(theta) = wavelength.
     const expected = 2 * Math.asin(value / 8) * 180 / Math.PI;
     expect(result.peaks[0].twoTheta).toBeCloseTo(expected, 6);
-    expect(serializePxrdProfile(createPxrdProfile(result.peaks), true, {result, fwhm:PXRD_FWHM_TWO_THETA})).toContain(`wavelength_A=${value};`);
+    const rows = serializePxrdProfile(createPxrdProfile(result.peaks)).trim().split('\n');
+    expect(rows.every(row => /^\d+\.\d{4}\t\d+\.\d{6}$/.test(row))).toBe(true);
   });
   it('accepts integer rotations with thirds translations without subtraction roundoff', () => {
     const operations = ['x,y,z', 'x,y,z+1/3', 'x,y,z+2/3'].map((operation_xyz, i) =>
@@ -240,9 +241,8 @@ describe('simulatePxrd', () => {
 describe('serializePxrdProfile', () => {
   const profile = [{ twoTheta: 12.34567, intensity: 98.7654321 }];
 
-  it('writes two tab-separated columns with an optional header', () => {
-    expect(serializePxrdProfile(profile, true)).toBe('2theta\tintensity\n12.3457\t98.765432\n');
-    expect(serializePxrdProfile(profile, false)).toBe('12.3457\t98.765432\n');
+  it('writes two tab-separated numeric columns without a header', () => {
+    expect(serializePxrdProfile(profile)).toBe('12.3457\t98.765432\n');
   });
 });
 
@@ -269,7 +269,7 @@ describe('profile boundaries', () => {
     const profile = createPxrdProfile([{ twoTheta: 5, intensity: 100, hkl: '1 0 0' }]);
     expect(profile[0]).toEqual({ twoTheta: 5, intensity: 100 });
     expect(profile.at(-1)!.twoTheta).toBe(80);
-    const rows = serializePxrdProfile(profile, false).trim().split('\n').map(row => row.split('\t').map(Number));
+    const rows = serializePxrdProfile(profile).trim().split('\n').map(row => row.split('\t').map(Number));
     expect(rows).toHaveLength(profile.length);
     expect(rows.every(([angle, intensity], index) => Number.isFinite(intensity) && intensity >= 0 && intensity <= 100 &&
       (index === 0 || angle > rows[index - 1][0]))).toBe(true);
@@ -509,10 +509,8 @@ describe('scientific diagnostics and reproducibility', () => {
     expect(createPxrdProfile([peak],.1,75)).toHaveLength(2);
     expect(createPxrdProfile([peak,{...peak,intensity:0}])).toEqual(createPxrdProfile([peak]));
   });
-  it('keeps diagnostic headers on one line without erasing their text', () => {
-    const result=calculatePxrd(entry,[site],identity);
-    result.diagnostics=['first\r\nsecond'];
-    expect(serializePxrdProfile([],true,{result,fwhm:.1})).toContain('# first  second\n');
+  it('writes no content for an empty profile', () => {
+    expect(serializePxrdProfile([])).toBe('');
   });
   it('keeps distinct periodic positions whose undelimited coordinate keys collide', () => {
     // Rounded keys [1,23456,7] and [12,3456,7] both concatenate to 1234567.
@@ -534,9 +532,9 @@ describe('scientific diagnostics and reproducibility', () => {
     expect(result.status).toBe('complete');
     for (const text of ['Wavelength assumed','Missing cell angles','occupancies assumed','displacement assumed','identity symmetry']) expect(result.diagnostics.join(' ')).toContain(text);
     const profile = createPxrdProfile(result.peaks);
-    const header = serializePxrdProfile(profile,true,{result,fwhm:.1});
-    for (const text of ['IT92-neutral-v1','wavelength_A=1.5406','FWHM_2theta_deg=0.1','status=complete','step_deg=0.02']) expect(header).toContain(text);
-    expect(serializePxrdProfile(profile,false,{result,fwhm:.1})).toBe(serializePxrdProfile(profile,false));
+    const exported = serializePxrdProfile(profile);
+    expect(exported).not.toMatch(/#|2theta|wavelength|model=/);
+    expect(exported.trim().split('\n')).toHaveLength(profile.length);
   });
   it.each(['x,y','x,y,z,x','x,,z','x+1/2/3,y,z','2x,y,z','x+y,y,z','x+1/0,y,z'])('rejects unusable operation %s', operation_xyz => {
     expect(calculatePxrd(entry,[site],[{...identity[0],operation_xyz}]).status).toBe('unsupported');

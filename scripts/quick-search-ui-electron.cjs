@@ -309,14 +309,16 @@ async function testCompoundInformationSelection(window) {
       };
     })()
   `);
+  // Drag toward the information pane so this also works when the visual pane
+  // is already at its minimum width after the zoom scenario.
   await window.webContents.executeJavaScript(`
     (() => {
       const separator = document.querySelector('[aria-label="Resize compound information and visual panels"]');
       separator.setPointerCapture = () => undefined;
       separator.hasPointerCapture = () => false;
       separator.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x}, clientY: ${resizeBefore.column.y} }));
-      separator.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x + 30}, clientY: ${resizeBefore.column.y} }));
-      separator.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x + 30}, clientY: ${resizeBefore.column.y} }));
+      separator.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x - 30}, clientY: ${resizeBefore.column.y} }));
+      separator.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x - 30}, clientY: ${resizeBefore.column.y} }));
     })()
   `);
   await pause(50);
@@ -335,7 +337,7 @@ async function testCompoundInformationSelection(window) {
     infoWidth: document.querySelector('[data-testid="compound-info-panel"]').getBoundingClientRect().width,
     viewerHeight: document.querySelector('[aria-label="Crystal structure viewer"]').getBoundingClientRect().height
   })`);
-  assert.ok(resizeAfter.infoWidth > resizeBefore.infoWidth + 20, 'information/viewer divider did not resize its columns');
+  assert.ok(resizeAfter.infoWidth < resizeBefore.infoWidth - 20, `information/viewer divider did not resize its columns: ${JSON.stringify({ resizeBefore, resizeAfter })}`);
   assert.ok(resizeAfter.viewerHeight > resizeBefore.viewerHeight + 10, 'viewer/lower-panel divider did not resize its rows');
   await pause(50);
   await waitForRenderer(window,"!!document.querySelector('[data-role=pxrd-profile]')",'PXRD worker result');
@@ -744,6 +746,13 @@ async function run() {
   assert.ok(Math.abs(restored.width - storedWidth) < 1);
   assert.equal(restored.column, 210);
   assert.ok(restored.values.every(e => e.target && Number(e.value) >= 0 && Number(e.value) <= 100));
+  await window.webContents.executeJavaScript("(()=>{const d=document.querySelectorAll('[data-resize-handle]')[1];for(let i=0;i<80;i++)d.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));})()");
+  await pause(100);
+  assert.ok(await window.webContents.executeJavaScript("(()=>{const b=document.querySelector('[data-testid=pxrd-toolbar]');return b.clientWidth>=498&&b.scrollWidth===b.clientWidth;})()"), 'divider keeps PXRD controls fully visible');
+  window.setContentSize(900,800); await pause(150);
+  assert.ok(await window.webContents.executeJavaScript("(()=>{const b=document.querySelector('[data-testid=pxrd-toolbar]');return b.clientWidth>=498&&b.scrollWidth===b.clientWidth;})()"), 'window resize clamps saved column width');
+  window.setContentSize(1200,800);
+  await window.webContents.executeJavaScript("document.querySelectorAll('[data-resize-handle]')[1].dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");
   console.log('✓ About focus/Escape, persisted layout after reload, and splitter accessibility');
   await require('./batch-export-ui.cjs')(window, { search, scrollToEnd, waitForRenderer, pause });
   await clickButton('Reset search');

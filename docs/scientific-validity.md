@@ -58,7 +58,8 @@ the separately tracked plot/sampling redesign.
 
 ## Visible defaults, unsupported inputs and limits
 
-The collapsible assumptions panel and optional export header disclose:
+The collapsible assumptions panel discloses the following. XY exports are
+headerless numeric data; these diagnostics remain visible in the application:
 
 - Missing wavelength: 1.5406 Å. Missing radiation: monochromatic X-rays.
 - Missing angles: 90°; missing occupancy: one; missing isotropic displacement: zero.

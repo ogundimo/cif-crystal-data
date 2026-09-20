@@ -44,22 +44,41 @@ module.exports = async function(window,testUrl) {
   await ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Export .xy').click()");
   await wait('!!window.exportedPattern');
   const exported=await ui('window.exportedPattern');
-  assert.equal(exported.id,5); assert.match(exported.text,/wavelength_A=0.5609;/);
+  assert.equal(exported.id,5);
+  assert.ok(exported.text.trim().split('\n').every(line=>/^\d+\.\d{4}\t\d+\.\d{6}$/.test(line)), 'export contains only two numeric columns');
   const importXY = async (text, name) => {
     await ui(`(()=>{const input=document.querySelector('input[type=file]');const files=new DataTransfer();files.items.add(new File([${JSON.stringify(text)}],${JSON.stringify(name)},{type:'text/plain'}));input.files=files.files;input.dispatchEvent(new Event('change',{bubbles:true}));})()`);
   };
+  assert.equal(await ui("document.querySelector('[aria-label=\"Clear imported pattern\"]').disabled"), true);
+  assert.equal(await ui("document.querySelectorAll('[data-testid=pxrd-toolbar] input[type=checkbox]').length"), 0);
+  await ui("document.querySelector('[data-testid=pxrd-fwhm-input]').focus()");
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'UP'});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'UP'});
+  await wait("Number(document.querySelector('[data-testid=pxrd-fwhm-input]').value)===0.11");
+  window.webContents.sendInputEvent({type:'keyDown',keyCode:'DOWN'});
+  window.webContents.sendInputEvent({type:'keyUp',keyCode:'DOWN'});
+  await wait("Number(document.querySelector('[data-testid=pxrd-fwhm-input]').value)===0.1");
+  const beforeImport = await ui("[...document.querySelectorAll('[data-testid=pxrd-toolbar] [role=group]')].map(e=>e.getBoundingClientRect().width)");
   await importXY('# synthetic\n0 1\n5 5\n40 10\n80 2\n90 1','personal.xy');
   await wait("!!document.querySelector('[data-role=pxrd-imported-profile]')");
+  assert.equal(await ui("document.querySelector('[aria-label=\"Clear imported pattern\"]').disabled"), false);
+  assert.deepEqual(await ui("[...document.querySelectorAll('[data-testid=pxrd-toolbar] [role=group]')].map(e=>e.getBoundingClientRect().width)"), beforeImport);
+  await ui("document.querySelector('[data-testid=pxrd-pattern]').style.width='500px'");
   const toolbar = await ui(`(() => {
     const bar = document.querySelector('[data-testid=pxrd-toolbar]');
     const controls = [...bar.querySelectorAll('select,input:not([type=file]),button,label.btn-w32')].map(el => {
       const r = el.getBoundingClientRect(); return { left:r.left, right:r.right, center:r.top+r.height/2 };
     });
-    return { controls, groups:bar.querySelectorAll('[role=group]').length, wrap:getComputedStyle(bar).flexWrap };
+    return { controls, groups:bar.querySelectorAll('[role=group]').length, wrap:getComputedStyle(bar).flexWrap, width:bar.clientWidth, scroll:bar.scrollWidth, left:bar.getBoundingClientRect().left, right:bar.getBoundingClientRect().right, overflow:getComputedStyle(bar).overflowX };
   })()`);
   assert.equal(toolbar.groups, 3);
+  assert.equal(toolbar.scroll, toolbar.width, 'all controls fit without horizontal overflow at minimum width');
+  assert.equal(toolbar.overflow, 'visible');
+  assert.ok(toolbar.controls.every(r=>r.left>=toolbar.left && r.right<=toolbar.right), 'no control is clipped');
+  assert.ok(await ui("(()=>{const field=document.querySelector('.pxrd-fwhm-field').getBoundingClientRect(), unit=document.querySelector('.pxrd-fwhm-unit').getBoundingClientRect();return unit.left>field.left&&unit.right<field.right;})()"));
+  await ui("document.querySelector('[data-testid=pxrd-pattern]').style.width=''");
   assert.equal(toolbar.wrap, 'nowrap');
-  assert.equal(toolbar.controls.length, 6);
+  assert.equal(toolbar.controls.length, 5);
   assert.ok(toolbar.controls.every(r => Math.abs(r.center-toolbar.controls[0].center)<2), 'PXRD controls must share one row');
   assert.ok(toolbar.controls.slice(1).every((r,i)=>r.left>=toolbar.controls[i].right), 'PXRD controls must not overlap');
   // Error feedback can resize the plot. Compare the trace's relative geometry,
@@ -89,9 +108,10 @@ module.exports = async function(window,testUrl) {
     assert.deepEqual(await overlayGeometry(),overlay);
     await ui("[...document.querySelectorAll('button')].find(b=>b.textContent==='Export .xy').click()");
     await wait('!!window.exportedPattern');
-    assert.ok((await ui('window.exportedPattern.text')).includes('wavelength_A='+wavelength+';'));
+    assert.ok((await ui('window.exportedPattern.text')).trim().split('\n').every(line=>/^\d+\.\d{4}\t\d+\.\d{6}$/.test(line)));
+    assert.notEqual(await ui('window.exportedPattern.text'), '', 'profile exported for each wavelength');
   }
-  // The app's own exported header format is accepted unchanged as an overlay.
+  // The headerless export is accepted unchanged as an overlay.
   await importXY(exported.text,'export-roundtrip.xy');
   await wait("document.body.textContent.includes('export-roundtrip.xy')");
   await importXY('100 1\n110 2','outside.xy');
@@ -110,6 +130,7 @@ module.exports = async function(window,testUrl) {
   assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),true);
   window.setContentSize(1200,800);
   await ui("document.querySelector('[aria-label=\"Clear imported pattern\"]').click()");
+  await wait("document.querySelector('[aria-label=\"Clear imported pattern\"]').disabled");
   assert.equal(await ui("!!document.querySelector('[data-role=pxrd-imported-profile]')"),false);
   await ui('window.pxrdHarness.setEntry({...window.pxrdHarness.entry,cell_a_angstrom:60});');
   await wait("document.querySelector('[data-calculation-status]')?.dataset.calculationStatus==='incomplete'");

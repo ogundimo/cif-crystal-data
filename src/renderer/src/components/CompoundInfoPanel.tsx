@@ -13,6 +13,7 @@ interface Props {
 
 const DIVIDER_SIZE = 6;
 const MIN_COLUMN_WIDTH = 220;
+const MIN_PATTERN_COLUMN_WIDTH = 500;
 const MIN_VIEWER_ROW_HEIGHT = 44;
 const MIN_LOWER_ROW_HEIGHT = 44;
 
@@ -21,7 +22,7 @@ export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
   const viewerRowsRef = useRef<HTMLDivElement>(null);
   const columnDragStart = useRef<{ x: number; width: number } | null>(null);
   const rowDragStart = useRef<{ y: number; height: number } | null>(null);
-  const [infoWidth, setInfoWidth] = usePanelSize('information-width', panelRef, MIN_COLUMN_WIDTH, 16 + DIVIDER_SIZE + MIN_COLUMN_WIDTH, 'width');
+  const [infoWidth, setInfoWidth] = usePanelSize('information-width', panelRef, MIN_COLUMN_WIDTH, 16 + DIVIDER_SIZE + MIN_PATTERN_COLUMN_WIDTH, 'width');
   const [viewerHeight, setViewerHeight] = usePanelSize('viewer-height', viewerRowsRef, MIN_VIEWER_ROW_HEIGHT, DIVIDER_SIZE + MIN_LOWER_ROW_HEIGHT, 'height');
   const infoPercentage = usePanePercentage(panelRef, '#information-pane', 'width');
   const viewerPercentage = usePanePercentage(viewerRowsRef, '[aria-label="Crystal structure viewer"]', 'height');
@@ -97,7 +98,7 @@ export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
   function resizeColumns(event: React.PointerEvent<HTMLDivElement>): void {
     if (!columnDragStart.current || !panelRef.current) return;
     const contentWidth = panelRef.current.clientWidth - 16;
-    const maximum = Math.max(MIN_COLUMN_WIDTH, contentWidth - DIVIDER_SIZE - MIN_COLUMN_WIDTH);
+    const maximum = Math.max(MIN_COLUMN_WIDTH, contentWidth - DIVIDER_SIZE - MIN_PATTERN_COLUMN_WIDTH);
     const nextWidth = columnDragStart.current.width + event.clientX - columnDragStart.current.x;
     setInfoWidth(Math.min(maximum, Math.max(MIN_COLUMN_WIDTH, nextWidth)));
   }
@@ -133,7 +134,7 @@ export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
         aria-label="Compound information"
         data-testid="compound-info-panel"
         className="min-w-0 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-[#f1f3f5]"
-        style={infoWidth === null ? undefined : { flex: `0 0 ${infoWidth}px` }}
+        style={{ maxWidth: `calc(100% - ${DIVIDER_SIZE + MIN_PATTERN_COLUMN_WIDTH}px)`, ...(infoWidth === null ? {} : { flex: `0 0 ${infoWidth}px` }) }}
       >
         <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
           <caption className="info-section-label">Sample details</caption>
@@ -283,7 +284,7 @@ export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
           if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || !panelRef.current) return;
           event.preventDefault();
           const current = panelRef.current.querySelector('[data-testid="compound-info-panel"]')?.getBoundingClientRect().width ?? MIN_COLUMN_WIDTH;
-          const maximum = Math.max(MIN_COLUMN_WIDTH, panelRef.current.clientWidth - 16 - DIVIDER_SIZE - MIN_COLUMN_WIDTH);
+          const maximum = Math.max(MIN_COLUMN_WIDTH, panelRef.current.clientWidth - 16 - DIVIDER_SIZE - MIN_PATTERN_COLUMN_WIDTH);
           setInfoWidth(Math.min(maximum, Math.max(MIN_COLUMN_WIDTH, current + (event.key === 'ArrowRight' ? 16 : -16))));
         }}
         onDoubleClick={() => {
@@ -305,8 +306,9 @@ export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
       />
       <div
         ref={viewerRowsRef}
-        className="grid min-w-0 flex-1"
+        className="grid flex-1"
         style={{
+          minWidth: MIN_PATTERN_COLUMN_WIDTH,
           gridTemplateRows: viewerHeight === null
             ? `minmax(${MIN_VIEWER_ROW_HEIGHT}px, 1fr) ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`
             : `${viewerHeight}px ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`

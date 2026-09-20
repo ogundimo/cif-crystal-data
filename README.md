@@ -39,11 +39,16 @@ Cu is the initial default; the selected preset stays in effect while browsing.
 **Import .xy** adds a red personal pattern beside the blue simulation. Imported
 angles stay unchanged when the simulation wavelength changes, so direct comparison
 requires matching wavelengths. **Clear imported pattern** removes that overlay;
-**Export .xy** still exports only the simulation.
+**Export .xy** still exports only the simulation as two numeric columns (2θ in
+degrees, then normalized intensity), with no header or metadata comments.
+The single-row toolbar stays above the plot. **Clear** stays visible and disabled
+until a pattern is imported; the degree suffix is inside the FWHM field. The
+viewer/PXRD column retains at least 500 CSS pixels so the controls stay visible
+without a toolbar scrollbar.
 
 Personal patterns accept two whitespace-separated numeric columns (2θ in degrees,
 intensity), blank lines, `#` comments and an optional initial `2theta intensity`
-header, including this application's exports. Angles must increase strictly within
+header for compatibility with other programs and older exports. Angles must increase strictly within
 0–180°, with at least two points and some positive intensity. Negative intensities
 are rejected without baseline correction. Limits are 4 MiB and 100,000 points.
 Original values are retained in memory; display intensities are scaled to a maximum
@@ -119,7 +124,7 @@ The import preserves the inputs used by the simulated powder-diffraction view: u
 lengths in ångströms, formula units per cell, radiation type and wavelength, symmetry
 operations, atom positions and occupancies, and available displacement parameters. The PXRD
 panel supports a per-pattern wavelength, configurable peak broadening, reflection hover labels,
-and two-column `.xy` export with an optional header. Files containing multiple `data_` blocks
+and headerless two-column `.xy` export. Files containing multiple `data_` blocks
 are indexed as separate structures while retaining their shared physical source file.
 
 PXRD uses neutral-atom IT92 X-ray form factors and runs in a cancellable local worker.
