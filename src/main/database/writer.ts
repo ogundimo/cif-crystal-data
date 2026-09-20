@@ -33,6 +33,54 @@ export interface EntryWriter {
   isUnchanged?: (file: FileFingerprint) => boolean;
 }
 
+/**
+ * The entry columns written by both the create and the update path, in statement
+ * order, each paired with the parsed field it takes its value from.
+ *
+ * Both prepared statements and both argument lists are generated from this list,
+ * so the two paths cannot drift into disagreeing about which value lands in which
+ * column. `source_filename` is written only on insert and `id` appears only in the
+ * update's WHERE clause, so neither belongs here.
+ */
+const ENTRY_COLUMNS: ReadonlyArray<{ column: string; value: (entry: CifEntry) => string | number | null }> = [
+  { column: 'formula', value: entry => entry.formula },
+  { column: 'cell_a', value: entry => entry.cell_a },
+  { column: 'cell_b', value: entry => entry.cell_b },
+  { column: 'cell_c', value: entry => entry.cell_c },
+  { column: 'cell_angle_alpha', value: entry => entry.cellAlpha },
+  { column: 'cell_angle_beta', value: entry => entry.cellBeta },
+  { column: 'cell_angle_gamma', value: entry => entry.cellGamma },
+  { column: 'cell_volume', value: entry => entry.cellVolume },
+  { column: 'sg_number', value: entry => entry.sg_number },
+  { column: 'space_group', value: entry => entry.space_group },
+  { column: 'reference', value: entry => entry.reference },
+  { column: 'level_struct_studies', value: entry => entry.level },
+  { column: 'sample_type', value: entry => entry.sampleType },
+  { column: 'crystal_colour', value: entry => entry.crystalColour },
+  { column: 'publ_title', value: entry => entry.publTitle },
+  { column: 'citation_doi', value: entry => entry.citationDoi },
+  { column: 'database_code_ccdc', value: entry => entry.databaseCodeCcdc },
+  { column: 'database_code_csd', value: entry => entry.databaseCodeCsd },
+  { column: 'database_code_icsd', value: entry => entry.databaseCodeIcsd },
+  { column: 'journal_language', value: entry => entry.journalLanguage },
+  { column: 'cell_a_angstrom', value: entry => entry.cellAAngstrom },
+  { column: 'cell_b_angstrom', value: entry => entry.cellBAngstrom },
+  { column: 'cell_c_angstrom', value: entry => entry.cellCAngstrom },
+  { column: 'formula_units_z', value: entry => entry.formulaUnitsZ },
+  { column: 'radiation_type', value: entry => entry.radiationType },
+  { column: 'radiation_wavelength_angstrom', value: entry => entry.radiationWavelengthAngstrom }
+];
+
+const UPDATE_ENTRY_SQL = `UPDATE entries SET ${ENTRY_COLUMNS.map(({ column }) => `${column} = ?`).join(', ')} WHERE id = ?`;
+const INSERT_ENTRY_COLUMNS = ['source_filename', ...ENTRY_COLUMNS.map(({ column }) => column)];
+const INSERT_ENTRY_SQL = `INSERT INTO entries (${INSERT_ENTRY_COLUMNS.join(', ')})
+     VALUES (${INSERT_ENTRY_COLUMNS.map(() => '?').join(', ')})`;
+
+/** Entry column values in the order both statements bind them. */
+function entryColumnValues(entry: CifEntry): (string | number | null)[] {
+  return ENTRY_COLUMNS.map(({ value }) => value(entry));
+}
+
 /** Prepare one reusable writer whose batches commit once while each file remains atomic. */
 export function createEntryWriter(database: Database.Database = getDb()): EntryWriter {
   const selectEntry = database.prepare('SELECT id FROM entries WHERE source_key = ? AND block_key = ?');
@@ -41,26 +89,9 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
   const setIdentity = database.prepare('UPDATE entries SET source_key = ?, block_key = ?, source_filename = ? WHERE id = ?');
   const findDuplicate = database.prepare('SELECT 1 FROM imported_files f JOIN entries e ON e.id = f.entry_id WHERE f.content_hash = ? AND e.source_key != ? LIMIT 1');
   const storeContent = database.prepare('INSERT OR IGNORE INTO source_contents(hash, content) VALUES (?, ?)');
-  const updateEntry = database.prepare(
-    `UPDATE entries SET formula = ?, cell_a = ?, cell_b = ?, cell_c = ?, cell_angle_alpha = ?,
-     cell_angle_beta = ?, cell_angle_gamma = ?, cell_volume = ?, sg_number = ?,
-     space_group = ?, reference = ?, level_struct_studies = ?, sample_type = ?,
-     crystal_colour = ?, publ_title = ?, citation_doi = ?, database_code_ccdc = ?,
-     database_code_csd = ?, database_code_icsd = ?, journal_language = ?, cell_a_angstrom = ?,
-     cell_b_angstrom = ?, cell_c_angstrom = ?, formula_units_z = ?, radiation_type = ?,
-     radiation_wavelength_angstrom = ? WHERE id = ?`
-  );
+  const updateEntry = database.prepare(UPDATE_ENTRY_SQL);
   const deleteElements = database.prepare('DELETE FROM entry_elements WHERE entry_id = ?');
-  const insertEntry = database.prepare(
-    `INSERT INTO entries
-     (source_filename, formula, cell_a, cell_b, cell_c, cell_angle_alpha, cell_angle_beta,
-      cell_angle_gamma, cell_volume, sg_number, space_group, reference,
-      level_struct_studies, sample_type, crystal_colour, publ_title, citation_doi,
-      database_code_ccdc, database_code_csd, database_code_icsd, journal_language,
-      cell_a_angstrom, cell_b_angstrom, cell_c_angstrom, formula_units_z, radiation_type,
-      radiation_wavelength_angstrom)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  );
+  const insertEntry = database.prepare(INSERT_ENTRY_SQL);
   const insertElement = database.prepare(
     'INSERT INTO entry_elements (entry_id, element, count) VALUES (?, ?, ?)'
   );
@@ -119,65 +150,9 @@ export function createEntryWriter(database: Database.Database = getDb()): EntryW
     let entryId: number;
     if (existing) {
       entryId = existing.id;
-      updateEntry.run(
-        entry.formula,
-        entry.cell_a,
-        entry.cell_b,
-        entry.cell_c,
-        entry.cellAlpha,
-        entry.cellBeta,
-        entry.cellGamma,
-        entry.cellVolume,
-        entry.sg_number,
-        entry.space_group,
-        entry.reference,
-        entry.level,
-        entry.sampleType,
-        entry.crystalColour,
-        entry.publTitle,
-        entry.citationDoi,
-        entry.databaseCodeCcdc,
-        entry.databaseCodeCsd,
-        entry.databaseCodeIcsd,
-        entry.journalLanguage,
-        entry.cellAAngstrom,
-        entry.cellBAngstrom,
-        entry.cellCAngstrom,
-        entry.formulaUnitsZ,
-        entry.radiationType,
-        entry.radiationWavelengthAngstrom,
-        entryId
-      );
+      updateEntry.run(...entryColumnValues(entry), entryId);
     } else {
-      const info = insertEntry.run(
-        sourceFilename,
-        entry.formula,
-        entry.cell_a,
-        entry.cell_b,
-        entry.cell_c,
-        entry.cellAlpha,
-        entry.cellBeta,
-        entry.cellGamma,
-        entry.cellVolume,
-        entry.sg_number,
-        entry.space_group,
-        entry.reference,
-        entry.level,
-        entry.sampleType,
-        entry.crystalColour,
-        entry.publTitle,
-        entry.citationDoi,
-        entry.databaseCodeCcdc,
-        entry.databaseCodeCsd,
-        entry.databaseCodeIcsd,
-        entry.journalLanguage,
-        entry.cellAAngstrom,
-        entry.cellBAngstrom,
-        entry.cellCAngstrom,
-        entry.formulaUnitsZ,
-        entry.radiationType,
-        entry.radiationWavelengthAngstrom
-      );
+      const info = insertEntry.run(sourceFilename, ...entryColumnValues(entry));
       entryId = Number(info.lastInsertRowid);
     }
     setIdentity.run(key, blockKey, sourceFilename, entryId);
