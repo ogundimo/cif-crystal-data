@@ -122,7 +122,7 @@ export default function PxrdPattern({ entry }: Props) {
   return (
     <section aria-label="Simulated PXRD pattern" data-testid="pxrd-pattern" data-calculation-ms={response?.calculationMs} data-calculation-status={response?.result.status} className="flex min-h-0 min-w-0 flex-col overflow-hidden border border-stroke bg-white">
       <div data-testid="pxrd-toolbar" className="z-[1] flex min-w-0 shrink-0 items-center gap-1 border-b border-stroke bg-[#f7f9fb] px-1.5 py-1 text-xs text-[#2f4052]">
-        <div role="group" aria-label="Simulation settings" className="flex shrink-0 items-center gap-1.5">
+        <div role="group" aria-label="Simulation settings" className="flex shrink-0 items-center gap-1">
           <label className="flex items-center gap-1 whitespace-nowrap font-medium">
             λ
             <select
@@ -156,7 +156,7 @@ export default function PxrdPattern({ entry }: Props) {
             </span>
           </label>
         </div>
-        <div role="group" aria-label="Pattern comparison" className="flex shrink-0 items-center gap-1.5 border-l border-stroke pl-2">
+        <div role="group" aria-label="Pattern comparison" className="flex shrink-0 items-center gap-1 border-l border-stroke pl-1">
           <label title="Import a measured pattern for comparison" className="btn-w32 relative h-6 cursor-pointer whitespace-nowrap px-1.5 py-0 focus-within:outline focus-within:outline-2 focus-within:outline-accent">Import .xy<input aria-label="Import personal XY pattern" className="sr-only" type="file" accept=".xy" onChange={event => {
             const file = event.currentTarget.files?.[0];
             event.currentTarget.value = '';
@@ -164,7 +164,7 @@ export default function PxrdPattern({ entry }: Props) {
           }} /></label>
           <button disabled={!imported} aria-label="Clear imported pattern" title="Clear imported pattern" className="btn-w32 h-6 px-1.5 py-0" onClick={() => { importSequence.current++; setImported(null); setImportError(null); }}>Clear</button>
         </div>
-        <div role="group" aria-label="Export pattern" className="flex shrink-0 items-center border-l border-stroke pl-2">
+        <div role="group" aria-label="Export pattern" className="flex shrink-0 items-center border-l border-stroke pl-1">
           <button className="btn-w32 h-6 w-[4.5rem] whitespace-nowrap px-1.5 py-0" disabled={profile.length === 0 || exporting} onClick={() => void exportPattern()}>
             {exporting ? 'Exporting…' : 'Export .xy'}
           </button>
