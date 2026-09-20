@@ -12,7 +12,8 @@ import type {
 import { validateSearchFilter } from './searchFilterValidation';
 import { ImportWorkerError, runImportWorker } from './importRunner';
 import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
-import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
+import { buildPxrdExportFilename } from './exportCif';
+import { buildCifExportFilename } from '../shared/exportFilename';
 import { sourceKey } from './sourceIdentity';
 import { resolvePublication } from './publicationResolver';
 import { validateBatchRequest, validateBatchScope } from './batchExportValidation';

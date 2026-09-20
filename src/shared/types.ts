@@ -257,7 +257,7 @@ export interface SourceRecoveryResult {
   cancelled?: boolean;
 }
 
-export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter };
+export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter; excludedIds?: number[] };
 export interface BatchExportRequest {
   scope: BatchExportScope;
   mode: 'cif' | 'both' | 'csv';

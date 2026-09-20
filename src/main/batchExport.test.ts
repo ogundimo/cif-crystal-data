@@ -48,11 +48,37 @@ function fixture(count = 3) {
 }
 
 describe('batch export contracts', () => {
-  it('uses deterministic Windows-safe names with globally unique ID suffixes', () => {
-    const names = ['CON.txt.cif', 'nul.cif', 'COM¹.cif', 'A.cif', 'a.cif', '../bad:*?.cif', 'x'.repeat(400)].map((name, i) => batchFilename(i + 1, name, 1));
-    expect(new Set(names.map(name => name.toLowerCase())).size).toBe(names.length);
-    expect(names.every(name => !/[<>:"/\\|?*]/.test(name) && name.length < 130)).toBe(true);
-    expect(batchFilename(2, 'CON.txt.cif', 1)).toBe('entry-2_CON.txt_block-2.cif');
+  it('matches individual filenames and disambiguates case, sanitization and truncation collisions', () => {
+    const used = new Set<string>();
+    expect(batchFilename(1, 'Na1 Cl1', 225, used)).toBe('Na1 Cl1_225.cif');
+    expect(batchFilename(2, 'na1 cl1', 225, used)).toBe('na1 cl1_225_entry-2.cif');
+    expect(batchFilename(3, 'Fe/O', 1, used)).toBe('Fe_O_1.cif');
+    expect(batchFilename(4, 'Fe:O', 1, used)).toBe('Fe_O_1_entry-4.cif');
+    const first = batchFilename(5, 'x'.repeat(400), 1, used);
+    const next = batchFilename(6, 'x'.repeat(401), 1, used);
+    expect(first.length).toBeLessThan(200);
+    expect(next).not.toBe(first);
+    used.add('ca_1_entry-7.cif'); used.add('ca_1.cif');
+    expect(batchFilename(7, 'Ca', 1, used)).toBe('Ca_1_entry-7-1.cif');
+  });
+  it('counts and exports all matches except excluded IDs, without broadening the filter', async () => {
+    const f = fixture();
+    const scope = { kind: 'matching' as const, filter, excludedIds: [2, 999] };
+    expect(countBatchExport(scope, f.db)).toBe(2);
+    const result = await f.run({ scope, expectedCount: 2 });
+    expect(result).toMatchObject({ total: 2, completed: 2, failed: 0 });
+    const csv = readFileSync(join(f.root, result.folderName, 'summary.csv'), 'utf8');
+    expect(csv.split('\r\n').slice(1).filter(Boolean).map(line => Number(line.split(',')[0]))).toEqual([1, 3]);
+    expect(countBatchExport({ ...scope, filter: { ...filter, referenceQuery: 'absent' } }, f.db)).toBe(0);
+    expect(countBatchExport({ ...scope, excludedIds: [] }, f.db)).toBe(3);
+    expect(countBatchExport({ ...scope, excludedIds: [1, 2, 3] }, f.db)).toBe(0);
+  });
+  it('validates and normalizes exclusions at the IPC boundary', () => {
+    for (const excludedIds of [null, [0], [1, 1], ['1'], [Infinity], Array(100_001).fill(1)]) {
+      expect(() => validateBatchScope({ kind: 'matching', filter, excludedIds })).toThrow();
+    }
+    expect(validateBatchScope({ kind: 'matching', filter, excludedIds: [3, 1] }))
+      .toEqual({ kind: 'matching', filter, excludedIds: [1, 3] });
   });
   it('quotes UTF-8 CSV, leaves missing values empty and reversibly escapes spreadsheet text', () => {
     expect(csvCell('α,"β"\nγ')).toBe('"α,""β""\nγ"');
@@ -72,7 +98,7 @@ describe('batch export contracts', () => {
     const result = await f.run({ scope: { kind: 'selected', ids: [1, 2, 999] } });
     expect(result).toMatchObject({ completed: 2, failed: 1, notAttempted: 0, cancelled: false });
     const folder = join(f.root, result.folderName);
-    expect(readFileSync(join(folder, batchFilename(2, 'CON.txt.cif', 1)), 'utf8')).toBe(f.blocks[1].text);
+    expect(readFileSync(join(folder, 'Cl1Na1_1_entry-2.cif'), 'utf8')).toBe(f.blocks[1].text);
     const csv = readFileSync(join(folder, 'summary.csv'), 'utf8');
     expect(csv).toContain('999,,failed,Entry no longer available.');
     expect(csv).not.toContain(f.root); expect(csv).toContain('cell_a_angstrom');
@@ -108,7 +134,7 @@ describe('batch export contracts', () => {
     const f = fixture();
     writeFileSync(join(f.root, 'input-0.cif'), 'modified external original');
     const good = await f.run({ scope: { kind: 'selected', ids: [1] }, expectedCount: 1 });
-    expect(readFileSync(join(f.root, good.folderName, batchFilename(1, 'same.cif', 0)), 'utf8')).toBe(f.blocks[0].text);
+    expect(readFileSync(join(f.root, good.folderName, 'Cl1Na1_1.cif'), 'utf8')).toBe(f.blocks[0].text);
     f.db.exec('UPDATE imported_files SET data_block_index=99 WHERE entry_id=1');
     expect(await f.run()).toMatchObject({ completed: 2, failed: 1 });
     f.db.prepare('UPDATE source_contents SET content=?').run(Buffer.from('corrupt stored bytes'));
@@ -131,12 +157,12 @@ describe('batch export contracts', () => {
     const f = fixture();
     const result = await f.run({}, undefined, () => {
       const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif-export-'))!);
-      faults.path = join(folder, batchFilename(2, 'CON.txt.cif', 1) + '.partial');
+      faults.path = join(folder, 'Cl1Na1_1_entry-2.cif' + '.partial');
     });
     expect(result).toMatchObject({ completed: 2, failed: 1, notAttempted: 0 });
     const names = readdirSync(join(f.root, result.folderName));
-    expect(names).toContain(batchFilename(2, 'CON.txt.cif', 1) + '.partial');
-    expect(names).not.toContain(batchFilename(2, 'CON.txt.cif', 1));
+    expect(names).toContain('Cl1Na1_1_entry-2.cif' + '.partial');
+    expect(names).not.toContain('Cl1Na1_1_entry-2.cif');
   });
   it('stops on report write failure without claiming unpublished CSV rows', async () => {
     const f = fixture();
@@ -162,12 +188,12 @@ describe('batch export contracts', () => {
     const result = await f.run({}, undefined, () => {
       if (injected) return; injected = true;
       const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif-export-'))!);
-      writeFileSync(join(folder, batchFilename(1, 'same.cif', 0)), 'existing');
-      mkdirSync(join(folder, batchFilename(2, 'CON.txt.cif', 1) + '.partial'));
+      writeFileSync(join(folder, 'Cl1Na1_1.cif'), 'existing');
+      mkdirSync(join(folder, 'Cl1Na1_1_entry-2.cif' + '.partial'));
     });
     expect(result).toMatchObject({ completed: 1, failed: 2 });
     expect(readFileSync(original, 'utf8')).toBe('original');
-    expect(readFileSync(join(f.root, result.folderName, batchFilename(1, 'same.cif', 0)), 'utf8')).toBe('existing');
+    expect(readFileSync(join(f.root, result.folderName, 'Cl1Na1_1.cif'), 'utf8')).toBe('existing');
   });
   it('rejects stale counts and invalid destinations before creating output', async () => {
     const f = fixture();

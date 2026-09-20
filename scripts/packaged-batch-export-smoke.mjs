@@ -86,12 +86,13 @@ try {
   await new Promise(resolve => setTimeout(resolve, 300));
   await run.ui("document.querySelector('.quick-search-dialog form').requestSubmit()");
   for (let i=0;i<100;i++) {
-    if(await run.ui("!!document.querySelector('input[aria-label^=\"Select entry\"]')")) break;
+    if(await run.ui("!!document.querySelector('tr[data-entry-id]')")) break;
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  await run.ui("document.querySelector('input[aria-label^=\"Select entry\"]').click()");
+  await run.ui("document.querySelector('tr[data-entry-id]').click()");
   await new Promise(resolve => setTimeout(resolve, 100));
-  await run.ui("[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Batch export')).click()");
+  await run.ui("[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Export…')).click()");
+  await run.ui("document.querySelectorAll('input[name=batch-scope]')[1].click()");
   for (let i=0;i<200;i++) {
     if(await run.ui("[...document.querySelectorAll('dialog button')].some(b=>b.textContent.includes('Choose folder and export 1')&&!b.disabled)")) break;
     await new Promise(resolve => setTimeout(resolve, 100));

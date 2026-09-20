@@ -81,12 +81,16 @@ close to the center as the available scroll range permits.
 
 ![Batch export dialog with one checked structure selected, an alternative scope for all search matches, CIF files and CSV summary format, and the confirmed count before choosing a destination.](docs/images/batch-export.png)
 
-After a Quick search, check rows for batch selection or choose **All matching the
-current search** in **Batch export…**. Review the exact count, then export CIFs,
+After a Quick search, click a row to select it, Ctrl+click to add or remove rows,
+or Shift+click to select a range. Use **Ctrl+A** for all matches, or choose **All matching the
+current search** in **Export…**. Review the exact count, then export CIFs,
 CIFs with a CSV summary, or CSV alone into a new subfolder. Progress and cancellation
-retain completed files and report failed and not-attempted entries. Checkbox
-selection survives paging and sorting and clears on new searches or data refresh.
-The highlighted detail row and single-entry **Export CIF** remain independent.
+retain completed files and report failed and not-attempted entries. Row
+selection survives paging and sorting; new searches select their first result.
+**Esc** clears selection while keeping the current details visible. Selection
+defaults to a single-file save for one structure and batch export for several.
+Ctrl+A includes results that have not loaded yet; Ctrl+click can exclude individual
+rows afterward. Import, refresh and reset clear the previous selection.
 See [Batch export](docs/batch-export.md) for snapshot behavior, CSV fields, reversible
 spreadsheet escaping, destination requirements and validation.
 

@@ -3,23 +3,38 @@
 Current guidance: selection, export and recovery behavior. The recorded packaged
 run is historical evidence for its stated build and workload.
 
-Run a Quick search, then use **Batch export…** below the toolbar. Choose
+Run a Quick search, then use **Export…** in the toolbar. Choose
 **Selected structures** or **All matching the current search**, review the exact
 request count, and choose CIF files plus a CSV summary, CIF files plus a compact
 outcome report, or a CSV summary alone. All matching includes results beyond the
 500-row loading pages. It evaluates the same complete, validated database filter.
-The original **Export CIF** button still exports the highlighted detail row.
+One selected structure defaults to a single-file save dialog; multiple selected
+structures default to batch export. The focused structure remains available as an
+explicit single-file option. Both actions use the same filename convention.
 
 ## Selection and consistency
 
-Each results row has a labelled checkbox. Tab and Space operate checkboxes;
-with the results region focused, Up/Down selects the detail row and Space toggles
-that row's batch checkbox. The visible batch count is independent of the detail
-highlight. Paging and sorting preserve checked IDs, including IDs outside the
-currently loaded page. A new search, reset, successful import/refresh, clear,
-relink or restore clears the batch selection. **Clear selection** only clears
-checkboxes. Selected requests support up to 100,000 distinct IDs; all-matching
-requests do not have that selection-array limit.
+Click selects one row and shows its details. Ctrl+click toggles an individual row;
+Shift+click selects the inclusive range from the last anchor in the displayed sort
+order. Repeated Shift gestures extend or shrink that range; Ctrl+Shift adds a range.
+Ranges include all intervening rows across loaded pages, including rows outside
+the virtualized viewport. Sorting preserves selected identities and resets the
+range anchor to the new focused position for the next range gesture.
+
+With the results grid focused, arrows, Home and End move to loaded rows and select
+them; Shift extends a range, and Ctrl moves focus without changing selection.
+Ctrl+Space toggles the focused row. Ctrl+A selects **all search matches**, including
+unloaded pages, without fetching their metadata. Ctrl+click afterward excludes
+individual structures from that selection; export honors these exclusions.
+Escape clears selection while retaining the focused structure's details.
+Shortcuts do not act in text inputs or modal dialogs. The focused row has an outline,
+and all selected rows have a highlighted background and accessible selected state.
+
+Paging and sorting preserve selection. A new search selects its first result;
+reset, successful import/refresh and clear discard the prior selection. Recovery
+selects the opened entry or the refreshed first result. Selected requests support
+up to 100,000 individual IDs (or exclusions); all-matching selection has no total
+selection limit. The selection count and export preview state the chosen scope.
 
 Starting an export captures the chosen IDs or filter. The main process validates
 the payload and count and excludes app imports, refreshes, clear, relink, backup
@@ -35,9 +50,11 @@ of the grid's display sort. A missing selected ID is a reported failure.
 Choose an existing destination folder. Each run creates a new `cif-export-*`
 subfolder, so retries cannot overwrite a previous run or the original sources.
 Canceling the picker writes nothing. Filenames have the form
-`entry-ID_SOURCE_block-N.cif`: invalid Windows characters are sanitized, the source
-stem is limited to 80 characters, the fixed prefix avoids device names, and the ID
-prevents case-insensitive collisions. N is the one-based source block index.
+`FORMULA_SPACE-GROUP-NUMBER.cif`, matching individual exports. Invalid Windows
+characters are sanitized and the formula is limited to 160 characters. Duplicate
+names (including case, sanitization and truncation collisions) receive an
+`_entry-ID` suffix before `.cif`, with a counter if needed. The report records
+each final filename.
 
 Each CIF is exactly the verified managed block used by the single-entry export.
 Complete-file and selected-block checksums are checked; current external originals
@@ -88,7 +105,7 @@ consistent snapshots during deletion/update, selected subsets and missing IDs,
 multiple blocks, duplicate basenames, missing/modified originals, corrupt managed
 sources, cancellation/retry, competing output files, write failures and incomplete
 report publication. IPC tests cover validation, cancelled pickers, stale counts,
-mutation exclusion and lock release after failure. `npm run test:ui` covers mouse
+mutation exclusion and lock release after failure. `npm run test:ui` covers Explorer-style mouse
 and keyboard selection, paging/sorting retention, search/import reset, exact scopes,
 progress and cancelled/partial results. Production worker tests retain the database
 chunk's independent-loading and recovery checks.
