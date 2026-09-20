@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { jsmolAssetUrls } from './runtime';
+import { jsmolAssetUrls } from './runtimeLoader';
 
 function filesBelow(path: string): string[] {
   return readdirSync(path, { withFileTypes: true }).flatMap((entry) => {
@@ -31,9 +31,12 @@ describe('packaged JSmol resources', () => {
   });
 
   it('introduces no CDN or remote JSmol dependency in application-authored files', () => {
+    // Every module that configures or loads the runtime, so that moving the
+    // applet configuration between them cannot move it out of this check.
+    const jsmolSources = ['runtime.ts', 'runtimeLoader.ts', 'appletSession.ts', 'commandBridge.ts'];
     const authored = [
       readFileSync(resolve(process.cwd(), 'src', 'renderer', 'index.html'), 'utf8'),
-      readFileSync(resolve(process.cwd(), 'src', 'renderer', 'src', 'jsmol', 'runtime.ts'), 'utf8')
+      ...jsmolSources.map(name => readFileSync(resolve(process.cwd(), 'src', 'renderer', 'src', 'jsmol', name), 'utf8'))
     ].join('\n');
     expect(authored).not.toMatch(/https?:\/\//i);
     expect(authored).not.toMatch(/cdn/i);
