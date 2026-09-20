@@ -7,7 +7,7 @@ import { initDb } from './database/connection';
 import { createEntryWriter } from './database/writer';
 import { parseCif, splitCifDataBlocks } from '../parser/cifParser';
 import { contentHash } from './sourceIdentity';
-import { batchFilename, csvCell, countBatchExport, runBatchExport } from './batchExport';
+import { batchFilename, countBatchExport, runBatchExport } from './batchExport';
 import { validateBatchRequest, validateBatchScope } from './batchExportValidation';
 import type { BatchExportRequest, BatchExportProgress } from '../shared/types';
 
@@ -42,7 +42,7 @@ function fixture(count = 3) {
     blockHash: contentHash(blocks[index === 1 ? 1 : 0].text), entry: parseCif(blocks[index === 1 ? 1 : 0].text)
   })));
   expect(failures).toEqual([]);
-  const request: BatchExportRequest = { scope: { kind: 'matching', filter }, mode: 'both', expectedCount: count };
+  const request: BatchExportRequest = { scope: { kind: 'matching', filter }, expectedCount: count };
   return { root, db, blocks, request, run: (options: Partial<BatchExportRequest> = {}, signal = new AbortController().signal,
     progress: (p: BatchExportProgress) => void = () => {}) => runBatchExport({ ...request, ...options }, root, signal, progress, db.name) };
 }
@@ -67,8 +67,7 @@ describe('batch export contracts', () => {
     expect(countBatchExport(scope, f.db)).toBe(2);
     const result = await f.run({ scope, expectedCount: 2 });
     expect(result).toMatchObject({ total: 2, completed: 2, failed: 0 });
-    const csv = readFileSync(join(f.root, result.folderName, 'summary.csv'), 'utf8');
-    expect(csv.split('\r\n').slice(1).filter(Boolean).map(line => Number(line.split(',')[0]))).toEqual([1, 3]);
+    expect(readdirSync(join(f.root, result.folderName))).toEqual(['Cl1Na1_1.cif', 'Cl1Na1_1_entry-3.cif']);
     expect(countBatchExport({ ...scope, filter: { ...filter, referenceQuery: 'absent' } }, f.db)).toBe(0);
     expect(countBatchExport({ ...scope, excludedIds: [] }, f.db)).toBe(3);
     expect(countBatchExport({ ...scope, excludedIds: [1, 2, 3] }, f.db)).toBe(0);
@@ -80,18 +79,14 @@ describe('batch export contracts', () => {
     expect(validateBatchScope({ kind: 'matching', filter, excludedIds: [3, 1] }))
       .toEqual({ kind: 'matching', filter, excludedIds: [1, 3] });
   });
-  it('quotes UTF-8 CSV, leaves missing values empty and reversibly escapes spreadsheet text', () => {
-    expect(csvCell('α,"β"\nγ')).toBe('"α,""β""\nγ"');
-    expect(csvCell(null)).toBe(''); expect(csvCell(0)).toBe('0'); expect(csvCell(-2.5)).toBe('-2.5');
-    for (const text of ['=SUM(A1)', ' +Fe', '-Fe', '@text', '\ttext', "'original", '\ntext']) expect(csvCell(text).replace(/^"|"$/g, '')).toBe("'" + text);
-    expect(csvCell('Fe2 O3')).toBe('Fe2 O3');
-  });
   it('rejects malformed scopes, IDs, filters, formats and counts', () => {
     for (const scope of [null, {}, { kind: 'selected', ids: [1, 1] }, { kind: 'selected', ids: [0] }, { kind: 'selected', ids: ['2'] },
       { kind: 'matching', filter: { ...filter, aMin: Infinity } }, { kind: 'matching', filter: { ...filter, slot1: ['Bad'] } }]) expect(() => validateBatchScope(scope)).toThrow();
     expect(validateBatchScope({ kind: 'selected', ids: [4, 1] })).toEqual({ kind: 'selected', ids: [1, 4] });
     expect(() => validateBatchRequest({ scope: { kind: 'matching', filter }, mode: 'zip', expectedCount: 2 })).toThrow();
-    expect(() => validateBatchRequest({ scope: { kind: 'matching', filter }, mode: 'csv', expectedCount: 0 })).toThrow();
+    for (const mode of ['cif', 'both', 'csv']) expect(() => validateBatchRequest({ scope: { kind: 'matching', filter }, mode, expectedCount: 2 })).toThrow();
+    expect(() => validateBatchRequest({ scope: { kind: 'matching', filter }, expectedCount: 0 })).toThrow();
+    expect(validateBatchRequest({ scope: { kind: 'matching', filter }, expectedCount: 2 })).toEqual({ scope: { kind: 'matching', filter }, expectedCount: 2 });
   });
   it('exports chosen blocks from managed bytes despite absent originals and reports missing IDs', async () => {
     const f = fixture();
@@ -99,10 +94,9 @@ describe('batch export contracts', () => {
     expect(result).toMatchObject({ completed: 2, failed: 1, notAttempted: 0, cancelled: false });
     const folder = join(f.root, result.folderName);
     expect(readFileSync(join(folder, 'Cl1Na1_1_entry-2.cif'), 'utf8')).toBe(f.blocks[1].text);
-    const csv = readFileSync(join(folder, 'summary.csv'), 'utf8');
-    expect(csv).toContain('999,,failed,Entry no longer available.');
-    expect(csv).not.toContain(f.root); expect(csv).toContain('cell_a_angstrom');
-    expect(readdirSync(folder).some(name => name.endsWith('.partial'))).toBe(false);
+    expect(result.failures).toEqual([{ entryId: 999, reason: 'Entry no longer available.' }]);
+    expect(readdirSync(folder)).toEqual(['Cl1Na1_1.cif', 'Cl1Na1_1_entry-2.cif']);
+    expect(result.folderName).toMatch(/^cif_batch_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(?:_\d+)?$/);
   });
   it('evaluates more than 1,000 matches once with full filters and a stable snapshot under changes', async () => {
     const f = fixture(1205);
@@ -113,22 +107,23 @@ describe('batch export contracts', () => {
     expect(result).toMatchObject({ total: 1205, completed: 1205, failed: 0 });
     const folder = join(f.root, result.folderName);
     expect(readdirSync(folder).filter(name => name.endsWith('.cif'))).toHaveLength(1205);
-    const csv = readFileSync(join(folder, 'summary.csv'), 'utf8');
-    expect(csv).not.toContain('Changed');
-    expect(csv.split('\r\n').filter(Boolean)).toHaveLength(1206);
+    expect(readdirSync(folder)).toHaveLength(1205);
+    expect(readFileSync(join(folder, 'Cl1Na1_1_entry-1100.cif'), 'utf8')).toBe(f.blocks[0].text);
+    expect(readFileSync(join(folder, 'Cl1Na1_1_entry-1101.cif'), 'utf8')).toBe(f.blocks[0].text);
     expect(countBatchExport({ kind: 'matching', filter: { ...filter, referenceQuery: 'nonexistent' } }, f.db)).toBe(0);
   // This integration case fsyncs and atomically publishes 1,205 real CIF files.
   // Hosted Windows disk latency can exceed 30 seconds under coverage; elapsed
   // time is not its contract. Keep every file/snapshot assertion and allow I/O
   // to finish before fixture teardown closes and removes the temporary database.
   }, 120_000);
-  it('handles corrupt and legacy blocks per entry, but CSV-only still exports metadata', async () => {
+  it('reports corrupt and legacy blocks in memory and writes only verified CIFs', async () => {
     const f = fixture();
     f.db.exec("UPDATE imported_files SET block_hash='bad' WHERE entry_id=1; UPDATE imported_files SET content_hash=NULL WHERE entry_id=2");
-    expect(await f.run()).toMatchObject({ completed: 1, failed: 2 });
-    const result = await f.run({ mode: 'csv' });
-    expect(result).toMatchObject({ completed: 3, failed: 0 });
-    expect(readdirSync(join(f.root, result.folderName))).toEqual(['summary.csv']);
+    const result = await f.run();
+    expect(result).toMatchObject({ completed: 1, failed: 2 });
+    expect(result.failures.map(failure => failure.entryId)).toEqual([1, 2]);
+    expect(result.failures.every(failure => failure.reason.includes('Verified stored block unavailable'))).toBe(true);
+    expect(readdirSync(join(f.root, result.folderName))).toEqual(['Cl1Na1_1_entry-3.cif']);
   });
   it('rejects missing blocks and corrupt complete-file bytes without external substitution', async () => {
     const f = fixture();
@@ -141,45 +136,41 @@ describe('batch export contracts', () => {
     expect(await f.run()).toMatchObject({ completed: 0, failed: 3 });
     expect(readFileSync(join(f.root, 'input-0.cif'), 'utf8')).toBe('modified external original');
   });
-  it('does not claim a completed CSV when atomic report publication fails', async () => {
-    const f = fixture(); let injected = false;
-    const result = await f.run({ mode: 'csv' }, undefined, () => {
-      if (injected) return; injected = true;
-      const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif-export-'))!);
-      writeFileSync(join(folder, 'summary.csv'), 'competing file');
-    });
-    expect(result).toMatchObject({ completed: 0, failed: 3, notAttempted: 0 });
-    expect(result.error).toContain('report could not be completed');
-    expect(result.reportName).toBeUndefined();
-    expect(readFileSync(join(f.root, result.folderName, 'summary.csv'), 'utf8')).toBe('competing file');
+  it('creates a separate folder when the timestamp name is already reserved', async () => {
+    const f = fixture();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date(2026, 8, 20, 14, 30, 5));
+      const folderName = 'cif_batch_2026-09-20_14-30-05';
+      mkdirSync(join(f.root, folderName));
+      writeFileSync(join(f.root, folderName, 'keep.cif'), 'existing');
+      const first = await f.run();
+      const second = await f.run();
+      expect(first.folderName).toBe(folderName + '_2');
+      expect(second.folderName).toBe(folderName + '_3');
+      expect(readFileSync(join(f.root, folderName, 'keep.cif'), 'utf8')).toBe('existing');
+      expect(first.completed).toBe(3); expect(second.completed).toBe(3);
+    } finally { vi.useRealTimers(); }
   });
-  it('retains failed writes only as partial files and continues with the next entry', async () => {
+  it('cleans up failed partial writes and continues with the next entry', async () => {
     const f = fixture();
     const result = await f.run({}, undefined, () => {
-      const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif-export-'))!);
+      const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif_batch_'))!);
       faults.path = join(folder, 'Cl1Na1_1_entry-2.cif' + '.partial');
     });
     expect(result).toMatchObject({ completed: 2, failed: 1, notAttempted: 0 });
     const names = readdirSync(join(f.root, result.folderName));
-    expect(names).toContain('Cl1Na1_1_entry-2.cif' + '.partial');
+    expect(names).toEqual(['Cl1Na1_1.cif', 'Cl1Na1_1_entry-3.cif']);
+    expect(result.failures[0]).toMatchObject({ entryId: 2, fileName: 'Cl1Na1_1_entry-2.cif' });
     expect(names).not.toContain('Cl1Na1_1_entry-2.cif');
   });
-  it('stops on report write failure without claiming unpublished CSV rows', async () => {
-    const f = fixture();
-    const result = await f.run({ mode: 'csv' }, undefined, () => {
-      const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif-export-'))!);
-      faults.path = join(folder, 'summary.csv.partial');
-    });
-    expect(result).toMatchObject({ completed: 0, failed: 1, notAttempted: 2 });
-    expect(result.error).toBeTruthy();
-    expect(readdirSync(join(f.root, result.folderName))).toEqual(['summary.csv.partial']);
-  });
-  it('cancels at a file boundary, reports every request and supports a fresh retry', async () => {
+  it('cancels at a file boundary, keeps only completed CIFs and supports a fresh retry', async () => {
     const f = fixture(60); const abort = new AbortController();
     const result = await f.run({}, abort.signal, p => { if (p.completed >= 25) abort.abort(); });
     expect(result).toMatchObject({ completed: 25, failed: 0, notAttempted: 35, cancelled: true });
-    const csv = readFileSync(join(f.root, result.folderName, 'summary.csv'), 'utf8');
-    expect(csv.match(/not-attempted/g)).toHaveLength(35);
+    const names = readdirSync(join(f.root, result.folderName));
+    expect(names).toHaveLength(25);
+    expect(names.every(name => name.endsWith('.cif'))).toBe(true);
     expect(await f.run()).toMatchObject({ completed: 60, cancelled: false });
   });
   it('never overwrites a competing destination or original and isolates a write failure', async () => {
@@ -187,7 +178,7 @@ describe('batch export contracts', () => {
     const original = join(f.root, 'same.cif'); writeFileSync(original, 'original');
     const result = await f.run({}, undefined, () => {
       if (injected) return; injected = true;
-      const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif-export-'))!);
+      const folder = join(f.root, readdirSync(f.root).find(name => name.startsWith('cif_batch_'))!);
       writeFileSync(join(folder, 'Cl1Na1_1.cif'), 'existing');
       mkdirSync(join(folder, 'Cl1Na1_1_entry-2.cif' + '.partial'));
     });

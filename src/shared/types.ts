@@ -260,7 +260,6 @@ export interface SourceRecoveryResult {
 export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter; excludedIds?: number[] };
 export interface BatchExportRequest {
   scope: BatchExportScope;
-  mode: 'cif' | 'both' | 'csv';
   expectedCount: number;
 }
 export interface BatchExportProgress {
@@ -272,7 +271,7 @@ export interface BatchExportProgress {
 export interface BatchExportResult extends BatchExportProgress {
   cancelled: boolean;
   folderName: string;
-  reportName?: string;
+  failures: Array<{ entryId: number; fileName?: string; reason: string }>;
   error?: string;
 }
 

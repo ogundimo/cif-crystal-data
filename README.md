@@ -84,20 +84,20 @@ close to the center as the available scroll range permits.
 
 ## Batch export
 
-![Batch export dialog with one checked structure selected, an alternative scope for all search matches, CIF files and CSV summary format, and the confirmed count before choosing a destination.](docs/images/batch-export.png)
-
 After a Quick search, click a row to select it, Ctrl+click to add or remove rows,
 or Shift+click to select a range. Use **Ctrl+A** for all matches, or choose **All matching the
-current search** in **Export…**. Review the exact count, then export CIFs,
-CIFs with a CSV summary, or CSV alone into a new subfolder. Progress and cancellation
-retain completed files and report failed and not-attempted entries. Row
+current search** in **Export…**. Review the exact count, then export only CIF files
+into a new `cif_batch_YYYY-MM-DD_HH-mm-ss` subfolder using local date and time.
+Filenames use `formula_space-group-number.cif`, with an entry-ID suffix for duplicates.
+No CSV summary or outcome report is created. Progress and cancellation
+retain completed files; the dialog shows failures and not-attempted counts. Row
 selection survives paging and sorting; new searches select their first result.
 **Esc** clears selection while keeping the current details visible. Selection
 defaults to a single-file save for one structure and batch export for several.
 Ctrl+A includes results that have not loaded yet; Ctrl+click can exclude individual
 rows afterward. Import, refresh and reset clear the previous selection.
-See [Batch export](docs/batch-export.md) for snapshot behavior, CSV fields, reversible
-spreadsheet escaping, destination requirements and validation.
+See [Batch export](docs/batch-export.md) for snapshot behavior, filename collision
+handling, destination requirements and validation.
 
 ## Importing CIF files
 

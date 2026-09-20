@@ -98,10 +98,10 @@ describe('main-process IPC contracts', () => {
   });
 
   it('validates batch scopes before opening dialogs and writes nothing after picker cancellation', async () => {
-    await expect(invoke('cif:batchExport', { scope: { kind: 'selected', ids: [0] }, mode: 'both', expectedCount: 2 })).rejects.toThrow('Invalid');
+    await expect(invoke('cif:batchExport', { scope: { kind: 'selected', ids: [0] }, expectedCount: 2 })).rejects.toThrow('Invalid');
     expect(doubles.open).not.toHaveBeenCalled();
     doubles.open.mockResolvedValue({ canceled: true, filePaths: [] });
-    const request = { scope: { kind: 'selected', ids: [1, 2] }, mode: 'both', expectedCount: 2 };
+    const request = { scope: { kind: 'selected', ids: [1, 2] }, expectedCount: 2 };
     await expect(invoke('cif:batchExport', request)).resolves.toBeNull();
     expect(doubles.db.runBatchExport).not.toHaveBeenCalled();
     doubles.db.countBatchExport.mockReturnValue(3);
@@ -116,7 +116,7 @@ describe('main-process IPC contracts', () => {
     doubles.db.runBatchExport.mockImplementation((_request, _destination, abort) => {
       signal = abort; return new Promise((_resolve, no) => { reject = no; });
     });
-    const operation = invoke('cif:batchExport', { scope: { kind: 'matching', filter }, mode: 'csv', expectedCount: 2 });
+    const operation = invoke('cif:batchExport', { scope: { kind: 'matching', filter }, expectedCount: 2 });
     await vi.waitFor(() => expect(doubles.db.runBatchExport).toHaveBeenCalled());
     for (const channel of ['cif:importCifFolder', 'cif:refreshCifFolder', 'cif:clearCifs', 'cif:restoreProfile', 'cif:backupProfile']) {
       await expect(invoke(channel)).rejects.toThrow('already in progress');

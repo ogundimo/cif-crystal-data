@@ -34,9 +34,8 @@ try {
   assert.equal(await run.ui(`window.cifApi.countBatchExport(${JSON.stringify(scope)})`), 1206);
   await run.main(`__smoke.electron.dialog.showOpenDialog=async()=>({canceled:false,filePaths:[${JSON.stringify(output)}]}); true`);
   for (const request of [
-    { scope: { kind: 'selected', ids }, mode: 'both', expectedCount: 2 },
-    { scope, mode: 'both', expectedCount: 1206 },
-    { scope, mode: 'csv', expectedCount: 1206 }
+    { scope: { kind: 'selected', ids }, expectedCount: 2 },
+    { scope, expectedCount: 1206 },
   ]) {
     await run.main(`__smoke.metrics={peakRss:process.memoryUsage().rss,maxGapMs:0,ticks:0,last:performance.now()}; __smoke.timer=setInterval(()=>{const now=performance.now();__smoke.metrics.maxGapMs=Math.max(__smoke.metrics.maxGapMs,now-__smoke.metrics.last);__smoke.metrics.last=now;__smoke.metrics.ticks++;__smoke.metrics.peakRss=Math.max(__smoke.metrics.peakRss,process.memoryUsage().rss);},10); true`);
     await run.ui(`window.batchMetrics={maxGapMs:0,ticks:0,last:performance.now()}; window.batchTimer=setInterval(()=>{const now=performance.now();window.batchMetrics.maxGapMs=Math.max(window.batchMetrics.maxGapMs,now-window.batchMetrics.last);window.batchMetrics.last=now;window.batchMetrics.ticks++;},10); true`);
@@ -48,28 +47,28 @@ try {
     assert.equal(result.completed, request.expectedCount); assert.equal(result.failed, 0); assert.equal(result.error, undefined);
     const folder = join(output, result.folderName);
     const names = await readdir(folder);
-    assert.equal(names.filter(name => name.endsWith('.cif')).length, request.mode === 'csv' ? 0 : request.expectedCount);
-    const summary = await readFile(join(folder, result.reportName), 'utf8');
-    assert.equal(summary.split('\r\n').filter(Boolean).length, request.expectedCount + 1);
-    assert.ok(!summary.includes(root));
+    assert.equal(names.length, request.expectedCount);
+    assert.ok(names.every(name => name.endsWith('.cif')));
+    assert.match(result.folderName, /^cif_batch_/);
     if (request.scope.kind === 'selected') {
       for (let i = 0; i < ids.length; i++) {
-        const name = names.find(name => name.startsWith(`entry-${ids[i]}_`));
+        const name = i === 0 ? 'Cl1Na1_1.cif' : `Cl1Na1_1_entry-${ids[i]}.cif`;
+        assert.ok(names.includes(name));
         assert.equal(await readFile(join(folder, name), 'utf8'), expected[i].text);
       }
       report.selectedFolder = folder;
     }
-    report.benchmarks.push({ mode: request.mode, scope: request.scope.kind, count: result.total, elapsedMs, main, renderer });
+    report.benchmarks.push({ scope: request.scope.kind, count: result.total, elapsedMs, main, renderer });
   }
   // Real IPC cancellation, followed by a valid retry and picker cancellation.
   await run.ui(`window.batchUnsubscribe=window.cifApi.onBatchExportProgress(p=>{if(p.completed>=25)void window.cifApi.cancelBatchExport();}); true`);
-  const cancelled = await run.ui(`window.cifApi.batchExport(${JSON.stringify({ scope, mode: 'both', expectedCount: 1206 })})`);
+  const cancelled = await run.ui(`window.cifApi.batchExport(${JSON.stringify({ scope, expectedCount: 1206 })})`);
   await run.ui('window.batchUnsubscribe();true');
   assert.equal(cancelled.cancelled, true); assert.ok(cancelled.completed >= 25 && cancelled.notAttempted > 0);
   assert.equal(cancelled.completed + cancelled.failed + cancelled.notAttempted, 1206);
   const before = (await readdir(output)).length;
   await run.main('__smoke.electron.dialog.showOpenDialog=async()=>({canceled:true,filePaths:[]}); true');
-  assert.equal(await run.ui(`window.cifApi.batchExport(${JSON.stringify({ scope, mode: 'csv', expectedCount: 1206 })})`), null);
+  assert.equal(await run.ui(`window.cifApi.batchExport(${JSON.stringify({ scope, expectedCount: 1206 })})`), null);
   assert.equal((await readdir(output)).length, before);
   // Reopen exported blocks through the actual import worker in the packaged app.
   await run.main(`__smoke.electron.dialog.showOpenDialog=async()=>({canceled:false,filePaths:[${JSON.stringify(report.selectedFolder)}]}); true`);

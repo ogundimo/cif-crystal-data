@@ -23,8 +23,8 @@ function validateIds(ids: unknown): number[] {
 export function validateBatchRequest(value: unknown): BatchExportRequest {
   if (!value || typeof value !== 'object') throw new TypeError('Invalid batch request');
   const request = value as BatchExportRequest;
-  if (!['cif', 'both', 'csv'].includes(request.mode) || !Number.isSafeInteger(request.expectedCount) || request.expectedCount < 1) {
-    throw new TypeError('Invalid batch format or count');
+  if ('mode' in request || !Number.isSafeInteger(request.expectedCount) || request.expectedCount < 1) {
+    throw new TypeError('Invalid batch request or count');
   }
-  return { scope: validateBatchScope(request.scope), mode: request.mode, expectedCount: request.expectedCount };
+  return { scope: validateBatchScope(request.scope), expectedCount: request.expectedCount };
 }
