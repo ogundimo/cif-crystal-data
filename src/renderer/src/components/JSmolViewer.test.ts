@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { crystalLegendModeForHeight } from './JSmolViewer';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import type { EntryRow } from '../../../shared/types';
+import JSmolViewer, { crystalLegendModeForHeight } from './JSmolViewer';
+
+it('starts as an uncluttered embedded viewer while the structure initializes', () => {
+  const entry = { id: 1, source_filename: 'synthetic.cif' } as EntryRow;
+  const html = renderToStaticMarkup(createElement(JSmolViewer, { entry, atomSites: [] }));
+  expect(html).toContain('Double-click to open viewer controls');
+  expect(html).toContain('Preparing the local viewer');
+  expect(html).not.toContain('<button');
+  expect(html).not.toContain('viewer-picking-status');
+  expect(html).not.toContain('fixed inset-0');
+});
 
 describe('responsive crystal legend layout', () => {
   it('uses a vertical card for a tall viewer', () => {

@@ -12,10 +12,12 @@ import type {
 import { validateSearchFilter } from './searchFilterValidation';
 import { ImportWorkerError, runImportWorker } from './importRunner';
 import { buildDatabaseInitializationMessage } from './databaseDiagnostics';
-import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
+import { buildPxrdExportFilename } from './exportCif';
+import { buildCifExportFilename } from '../shared/exportFilename';
 import { sourceKey } from './sourceIdentity';
 import { resolvePublication } from './publicationResolver';
 import { validateBatchRequest, validateBatchScope } from './batchExportValidation';
+import { registerSourceRecovery } from './sourceRecoveryIpc';
 
 if (process.env.CIF_TRACE_FILE && process.env.CIF_TEST_PROFILE) app.setPath('userData', process.env.CIF_TEST_PROFILE);
 traceEvent('main.loaded');
@@ -25,7 +27,7 @@ type DbModule = typeof import('./db');
 let importController: AbortController | null = null;
 let batchController: AbortController | null = null;
 let dbReady: Promise<DbModule> | null = null;
-let dataMutationInFlight: 'import' | 'refresh' | 'clear' | 'backup' | 'restore' | 'relink' | 'export' | null = null;
+let dataMutationInFlight: 'import' | 'refresh' | 'clear' | 'backup' | 'restore' | 'relink' | 'export' | 'recovery' | null = null;
 let lastDatabaseErrorMessage: string | null = null;
 
 function databaseInitializationError(error: unknown): Error {
@@ -86,6 +88,12 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   const handle: typeof ipcMain.handle = (channel, listener) => ipcMain.handle(channel, (event, ...args) => traceOperation(channel, () => listener(event, ...args)));
+  registerSourceRecovery(handle, async operation => {
+    if (dataMutationInFlight) throw new Error('A CIF data operation is already in progress');
+    dataMutationInFlight = 'recovery';
+    try { return await operation(await getDbModule()); }
+    finally { dataMutationInFlight = null; }
+  });
   traceEvent('app.ready');
   handle('cif:traceMilestone', (_event, name: unknown) => {
     if (typeof name !== 'string' || !['controls-ready', 'search-results', 'controls-restored'].includes(name)) throw new TypeError('Invalid trace milestone');

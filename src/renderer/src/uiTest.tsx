@@ -6,6 +6,7 @@ import ResultsWorkspace from './components/ResultsWorkspace';
 import DataGrid from './components/DataGrid';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
 import PxrdPattern from './components/PxrdPattern';
+import SourceRecovery from './components/SourceRecovery';
 import type { EntryRow, SearchPageRequest, SearchPageResult, ImportProgress, ImportResult } from '../../shared/types';
 import syntheticCif from '../../parser/__fixtures__/synthetic-test.cif?raw';
 import './index.css';
@@ -26,11 +27,11 @@ const gridRows: EntryRow[] = Array.from({ length: 10_000 }, (_, index) => ({
   cell_volume: 6,
   sg_number: 1,
   space_group: 'P1',
-  reference: `Reference ${index + 1}`,
+  reference: index === 1 ? 'Reference 2: RE$_3$InSe$_6$' : `Reference ${index + 1}`,
   level_struct_studies: 'Complete structure determined',
   sample_type: index === 0 ? 'Sample crystal' : 'Powder',
   crystal_colour: index === 0 ? 'gray steel' : '',
-  publ_title: `Synthetic structure report ${index + 1}`,
+  publ_title: index === 1 ? 'Synthetic RE$_3$InSe$_6$ structure report' : `Synthetic structure report ${index + 1}`,
   citation_doi: '',
   database_code_ccdc: '',
   database_code_csd: '',
@@ -96,6 +97,7 @@ window.cifApi = {
     { id: entryId + 1, entry_id: entryId, author_order: 1, name: 'Roe, A.', address: null }
   ],
   getViewerSource: async (entryId) => ({ fileName: `${entryId}.cif`, text: syntheticCif }),
+  sourceRecovery: async () => ({ eligible: false }),
   getImportFolder: async () => null,
   countBatchExport: async scope => scope.kind === 'selected' ? scope.ids.length : 1205,
   batchExport: async () => null,
@@ -160,11 +162,31 @@ function PxrdRegression() {
   return <div className="grid h-screen">{mounted && <PxrdPattern entry={entry}/>}</div>;
 }
 const gridShortcutMode = new URLSearchParams(location.search).has('grid-shortcut');
+const sourceRecoveryMode = new URLSearchParams(location.search).has('source-recovery');
+function SourceRecoveryHarness() {
+  const [selected, setSelected] = React.useState<number | null>(null);
+  return <div className="flex h-screen flex-col items-center justify-center bg-[#071018] text-white">
+    <h1>Could not display missing.cif</h1>
+    <SourceRecovery entry={gridRows[0]} onComplete={entry => setSelected(entry?.id ?? -1)} />
+    <output aria-label="Recovery selection">{selected}</output>
+  </div>;
+}
+if (sourceRecoveryMode) {
+  window.cifApi.sourceRecovery = async request => {
+    if (request.action === 'inspect') return { eligible: true, candidates: [gridRows[1]] };
+    if (request.action === 'prepare-remove') return { eligible: true, token: 'remove', removal: true };
+    if (request.action === 'confirm') return { eligible: true, completed: request.token === 'remove' ? 'removed' : 'recovered',
+      entry: request.token === 'remove' ? undefined : gridRows[0], snapshot: 'test-profile/pre-recovery.db' };
+    return { eligible: true, token: 'recover', choices: [{ index: 0, filename: 'synthetic.cif', block: 'synthetic',
+      formula: gridRows[0].formula, reference: 'Synthetic recovery fixture', atoms: 2, cell: [4,4,4,90,90,90] }] };
+  };
+}
 if (appRegressionMode) {
   const regression = {
     progress: (_value: ImportProgress) => {},
     finishImport: (_value: ImportResult) => {},
     cancelled: false,
+    refreshCalls: 0,
     requests: [] as SearchPageRequest[],
     pending: [] as Array<() => void>
   };
@@ -172,6 +194,9 @@ if (appRegressionMode) {
   window.cifApi.onImportProgress = listener => { regression.progress = listener; return () => { regression.progress = () => {}; }; };
   window.cifApi.importCifFolder = () => new Promise(resolve => { regression.finishImport = resolve; });
   window.cifApi.cancelImport = async () => { regression.cancelled = true; return true; };
+  window.cifApi.getImportFolder = async () => 'C:/synthetic-cifs';
+  const originalRefresh = window.cifApi.refreshCifFolder;
+  window.cifApi.refreshCifFolder = async () => { regression.refreshCalls++; return originalRefresh(); };
   window.cifApi.getStartupRefresh = async () => localStorage.getItem('test-startup-refresh') === 'true';
   window.cifApi.setStartupRefresh = async enabled => { localStorage.setItem('test-startup-refresh', String(enabled)); };
   window.cifApi.searchPage = async (request) => {
@@ -181,4 +206,4 @@ if (appRegressionMode) {
     return new Promise<SearchPageResult>((resolve) => regression.pending.push(() => resolve(result)));
   };
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(pxrdRegressionMode ? <PxrdRegression/> : gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);
+ReactDOM.createRoot(document.getElementById('root')!).render(sourceRecoveryMode ? <SourceRecoveryHarness /> : pxrdRegressionMode ? <PxrdRegression/> : gridShortcutMode ? <GridShortcutTest /> : appRegressionMode ? <App /> : <UiTestApp />);

@@ -29,13 +29,13 @@ export function supportsPolyhedron(points: Point[]): boolean {
   return false;
 }
 
-/** Conventional Cartesian basis: a on x; b in xy; c chosen with positive z. */
+/** Unit directions: a on x; b in xy; c with positive z. Lengths do not encode cell size. */
 export function projectedAxes(cell: number[], rotation: number[][]): Point[] {
-  const [a, b, c, alpha, beta, gamma] = cell;
+  const [, , , alpha, beta, gamma] = cell;
   const rad = Math.PI / 180;
   const cy = (Math.cos(alpha * rad) - Math.cos(beta * rad) * Math.cos(gamma * rad)) / Math.sin(gamma * rad);
-  const basis: Point[] = [[a, 0, 0], [b * Math.cos(gamma * rad), b * Math.sin(gamma * rad), 0],
-    [c * Math.cos(beta * rad), c * cy, c * Math.sqrt(Math.max(0, 1 - Math.cos(beta * rad)**2 - cy**2))]];
-  const scale = 30 / Math.max(a, b, c);
+  const basis: Point[] = [[1, 0, 0], [Math.cos(gamma * rad), Math.sin(gamma * rad), 0],
+    [Math.cos(beta * rad), cy, Math.sqrt(Math.max(0, 1 - Math.cos(beta * rad)**2 - cy**2))]];
+  const scale = 30;
   return basis.map(axis => rotation.map(row => dot(row as Point, axis) * scale) as Point);
 }

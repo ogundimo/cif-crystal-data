@@ -1,10 +1,15 @@
 import { sanitizeFilenamePart } from '../shared/exportFilename';
 import { describe, expect, it } from 'vitest';
-import { buildCifExportFilename, buildPxrdExportFilename } from './exportCif';
+import { buildPxrdExportFilename } from './exportCif';
+import { buildCifExportFilename } from '../shared/exportFilename';
 
 describe('CIF export filename', () => {
   it('uses Formula_SG-number.cif', () => {
     expect(buildCifExportFilename('Eu3S9Sb4', 62)).toBe('Eu3S9Sb4_62.cif');
+  });
+
+  it.each(['CON.txt', 'COM\u00b9.data', 'nul.xyz'])('avoids Windows device filenames for %s', formula => {
+    expect(buildCifExportFilename(formula, 1)).toBe(`_${formula}_1.cif`);
   });
 
   it('uses Formula_SG-number.xy for diffraction patterns', () => {

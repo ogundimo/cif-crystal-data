@@ -27,11 +27,12 @@ async function verifyVisibleBibliography() {
   await run.ui("document.querySelector('.quick-search-dialog form').requestSubmit()");
   let visible = false;
   for (let i = 0; i < 200; i++) {
-    visible = await run.ui("!!document.querySelector('[data-testid=publication-authors]') && document.querySelector('[aria-label=\"Data-block authors\"]')?.textContent.includes('Synthetic depositor')");
+    visible = await run.ui("!!document.querySelector('[data-testid=publication-authors]')");
     if (visible) break;
     await new Promise(resolve => setTimeout(resolve, 50));
   }
-  assert.ok(visible, 'publication and data authors must be displayed separately');
+  assert.ok(visible, 'publication authors must be displayed');
+  assert.equal(await run.ui("!!document.querySelector('[aria-label=\"Data-block authors\"]')"), false);
   assert.ok(await run.ui("document.querySelector('[data-testid=compound-info-panel]').textContent.includes('Publication authors')"));
 }
 async function verifyScientificRenderingAndExport(destination) {

@@ -14,6 +14,16 @@ CIF metadata. Selection and the personal overlay live in renderer session state,
 including when an empty search unmounts the details panel. Restart persistence is
 not provided. No source bytes, stored metadata or export identities change.
 
+The compact toolbar above the plot groups wavelength/FWHM, Import/Clear, and
+Export in one row. Clear always occupies its place and is disabled until import.
+The FWHM degree suffix is visual; its value remains a native numeric input with
+0.01-degree steps. The column divider reserves at least 500 CSS pixels for the
+viewer/PXRD column, including after restoring layout preferences or resizing.
+Exports always contain two tab-separated numeric columns: 2-theta in degrees
+(four decimals), then normalized intensity (six decimals). No header, model
+metadata or diagnostics are written; model diagnostics remain in the panel.
+Import still accepts comments and a recognizable column header for compatibility.
+
 The file picker exposes only a user-selected file through the browser File API.
 Size is checked before reading, then the parser checks numeric finiteness, angular
 range, strict ordering, point count and positive normalization maximum. Negative
@@ -41,12 +51,17 @@ cancels picking. Opening/leaving expanded view, changing representation, or load
 a structure/supercell cancels picking; reloading also clears native measurements.
 Clear polyhedra also cancels pending polyhedron selection.
 Rotation, zoom, axis views and fit/reset preserve completed measurements.
+Returning to results reloads the embedded viewer with Atoms, Cells and 1³ selected.
+Labels, polyhedra, measurements and picking are cleared, and cell-parameter text is
+hidden. Reopening the expanded viewer starts with these reset settings.
 
 The native popup is disabled at initialization and after loads, while the viewport
 suppresses browser context menus. Crystallographic axes are an independent SVG
 overlay using the loaded unit cell and native orientation matrix. Unit-cell
-visibility, model scale and translation do not affect the indicator. Its longest
-axis is 30 display units; relative lengths and nonorthogonal angles are preserved.
+visibility, model scale and translation do not affect the indicator. Each axis
+direction has length 30 before projection, preserving nonorthogonal angles without
+encoding cell lengths. This keeps short cell axes visible in elongated cells;
+an axis pointing into the screen still appears foreshortened.
 The pointer-transparent overlay tracks the runtime at 20 Hz and scales down only
 when the viewport itself is smaller than its 96-pixel footprint.
 
@@ -92,6 +107,16 @@ synthetic 20 Å P1 cells, with 1.5 Å distances and right angles checked indepen
 against both app feedback and native measurement data. The nonorthogonal axes fixture
 has γ = 60°. These examples are not research data or corpus-coverage claims.
 
+The elongated-axis regression uses a synthetic 4 × 4 × 40 Å cell with
+α = β = 90° and γ = 120°. Its unit directions are independently known:
+a = (1, 0, 0), b = (−1/2, √3/2, 0), c = (0, 0, 1).
+The Cartesian convention agrees with the bundled JSmol
+[`SimpleUnitCell`](../src/renderer/public/vendor/jsmol/j2s/JU/SimpleUnitCell.js).
+Unit tests check 30-unit direction lengths to 10 decimal places, rotated directions,
+and end-on foreshortening. The live viewer checks both a/b arrows and labels move,
+with projected lengths within 1e-4 display units before rotation; the representative
+CIF also checks all three arrows and labels during rotation.
+
 The Electron runner retains `reports/viewer/usability.json`, `lifecycle.json` and
 comparison captures; regular representation captures remain in `.dist/jsmol-verification`.
 Pointer tests target the actual JSmol canvas mouse handlers, not direct measurement
@@ -111,3 +136,30 @@ native stack, then verifies empty registries, early-initialization cleanup,
 queued paint/resize completion without exceptions, and 27 atoms in a subsequent
 viewer. CI retains these JSON records and the comparison/control captures alongside
 the existing representation captures.
+
+
+## Publication and reference text
+
+Publication links, reference cells, and tooltips share one formatter. It recognizes:
+
+- CIF paired tilde subscripts and paired caret superscripts.
+- Standalone LaTeX script fragments, including braced and escaped-underscore variants.
+- Simple dollar-delimited or backslash-parenthesized math with scripts and flat
+  `\mathrm`, `\mathit`, or `\text` wrappers.
+- Attached braced scripts and `\textsubscript` / `\textsuperscript` commands.
+- Attribute-free HTML/JATS `sub` and `sup` elements (rendered as safe React elements).
+- Existing Unicode subscript/superscript characters, preserved as written.
+
+Ordinary prose, years, page numbers, identifiers, and unmarked formulas in titles are
+not guessed. This is not a full TeX, HTML, mhchem, or MathML renderer: unknown commands,
+complex/nested equations, and malformed notation remain visible for inspection. No
+HTML is executed and stored metadata and publication lookup inputs remain unchanged.
+The formula-only field retains its separate element-count formatter.
+
+Conventions: [IUCr CIF text semantics](https://www.iucr.org/resources/cif/spec/version1.1/semantics),
+[Crossref title markup](https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/titles),
+and [LaTeX documentation](https://www.latex-project.org/help/documentation/).
+Validation covers representative variants and malformed/adversarial text, not every
+possible publishing format. A read-only check of the three available local CIF folders
+found 160 files and 10 distinct extracted publication titles, nine with CIF subscripts;
+the user-provided rare-earth title additionally established standalone LaTeX use.

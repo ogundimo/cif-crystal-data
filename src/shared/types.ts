@@ -200,6 +200,7 @@ export interface CifViewerSource {
 }
 
 export interface CifApi {
+  sourceRecovery: (request: SourceRecoveryRequest) => Promise<SourceRecoveryResult>;
   countBatchExport: (scope: BatchExportScope) => Promise<number>;
   batchExport: (request: BatchExportRequest) => Promise<BatchExportResult | null>;
   cancelBatchExport: () => Promise<boolean>;
@@ -231,10 +232,34 @@ export interface CifApi {
   clearCifs: () => Promise<ClearCifsResult>;
 }
 
-export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter };
+export type SourceRecoveryRequest = { entryId: number } & (
+  { action: 'inspect' | 'choose-cif' | 'choose-backup' | 'prepare-remove' } |
+  { action: 'confirm'; token: string; choice: number }
+);
+export interface RecoveryChoice {
+  index: number;
+  filename: string;
+  block: string;
+  formula: string;
+  reference: string;
+  cell: (number | null)[];
+  atoms: number;
+}
+export interface SourceRecoveryResult {
+  eligible: boolean;
+  entry?: EntryRow;
+  candidates?: EntryRow[];
+  choices?: RecoveryChoice[];
+  token?: string;
+  snapshot?: string;
+  removal?: boolean;
+  completed?: 'recovered' | 'removed';
+  cancelled?: boolean;
+}
+
+export type BatchExportScope = { kind: 'selected'; ids: number[] } | { kind: 'matching'; filter: SearchFilter; excludedIds?: number[] };
 export interface BatchExportRequest {
   scope: BatchExportScope;
-  mode: 'cif' | 'both' | 'csv';
   expectedCount: number;
 }
 export interface BatchExportProgress {
@@ -246,7 +271,7 @@ export interface BatchExportProgress {
 export interface BatchExportResult extends BatchExportProgress {
   cancelled: boolean;
   folderName: string;
-  reportName?: string;
+  failures: Array<{ entryId: number; fileName?: string; reason: string }>;
   error?: string;
 }
 

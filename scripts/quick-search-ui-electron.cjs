@@ -309,14 +309,16 @@ async function testCompoundInformationSelection(window) {
       };
     })()
   `);
+  // Drag toward the information pane so this also works when the visual pane
+  // is already at its minimum width after the zoom scenario.
   await window.webContents.executeJavaScript(`
     (() => {
       const separator = document.querySelector('[aria-label="Resize compound information and visual panels"]');
       separator.setPointerCapture = () => undefined;
       separator.hasPointerCapture = () => false;
       separator.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x}, clientY: ${resizeBefore.column.y} }));
-      separator.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x + 30}, clientY: ${resizeBefore.column.y} }));
-      separator.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x + 30}, clientY: ${resizeBefore.column.y} }));
+      separator.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x - 30}, clientY: ${resizeBefore.column.y} }));
+      separator.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1, clientX: ${resizeBefore.column.x - 30}, clientY: ${resizeBefore.column.y} }));
     })()
   `);
   await pause(50);
@@ -335,7 +337,7 @@ async function testCompoundInformationSelection(window) {
     infoWidth: document.querySelector('[data-testid="compound-info-panel"]').getBoundingClientRect().width,
     viewerHeight: document.querySelector('[aria-label="Crystal structure viewer"]').getBoundingClientRect().height
   })`);
-  assert.ok(resizeAfter.infoWidth > resizeBefore.infoWidth + 20, 'information/viewer divider did not resize its columns');
+  assert.ok(resizeAfter.infoWidth < resizeBefore.infoWidth - 20, `information/viewer divider did not resize its columns: ${JSON.stringify({ resizeBefore, resizeAfter })}`);
   assert.ok(resizeAfter.viewerHeight > resizeBefore.viewerHeight + 10, 'viewer/lower-panel divider did not resize its rows');
   await pause(50);
   await waitForRenderer(window,"!!document.querySelector('[data-role=pxrd-profile]')",'PXRD worker result');
@@ -354,7 +356,7 @@ async function testCompoundInformationSelection(window) {
         authors: Array.from(panel.querySelectorAll('[data-testid="publication-authors"] tbody tr')).map((row) =>
           Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent.trim())
         ),
-        pxrdLabel: document.querySelector('[data-testid="pxrd-pattern"] svg')?.getAttribute('aria-label'),
+        pxrdLabel: document.querySelector('[data-testid="pxrd-chart"] svg')?.getAttribute('aria-label'),
         hasPxrdProfile: Boolean(document.querySelector('[data-testid="pxrd-pattern"] svg path[data-role="pxrd-profile"]')),
         pxrdProfilePath: document.querySelector('[data-testid="pxrd-pattern"] svg path[data-role="pxrd-profile"]')?.getAttribute('d'),
         pxrdFwhm: Number(document.querySelector('[data-testid="pxrd-fwhm-input"]')?.value),
@@ -365,8 +367,8 @@ async function testCompoundInformationSelection(window) {
   `);
   assert.equal(selected.site, 'Sb2', 'information panel did not follow the selected row');
   assert.deepEqual(selected.publication.slice(0, 3), [
-    { label: 'Reference', value: 'Reference 2' },
-    { label: 'Publication link', value: 'Synthetic structure report 2' },
+    { label: 'Reference', value: 'Reference 2: RE3InSe6' },
+    { label: 'Publication link', value: 'Synthetic RE3InSe6 structure report' },
     { label: 'Language', value: 'English' }
   ]);
   assert.equal(selected.publication[3]?.label, 'Publication authors');
@@ -375,6 +377,20 @@ async function testCompoundInformationSelection(window) {
     ['Doe, J.', 'Department of Chemistry, Example University, Springfield'],
     ['Roe, A.', '']
   ]);
+  const formulaLayout = await window.webContents.executeJavaScript(`(() => {
+    const button = document.querySelector('[data-testid="publication-table"] tbody').children[1].querySelector('button');
+    const r = button.getBoundingClientRect();
+    return { style: { overflow:getComputedStyle(button).overflow, lineHeight:getComputedStyle(button).lineHeight,
+      decoration:getComputedStyle(button).textDecorationLine }, rect:r.toJSON(),
+      subs:[...button.querySelectorAll('sub')].map(sub=>({text:sub.textContent, size:getComputedStyle(sub).fontSize, rect:sub.getBoundingClientRect().toJSON()})) };
+  })()`);
+  assert.deepEqual(formulaLayout.subs.map(sub => sub.text), ['3', '6']);
+  assert.ok(formulaLayout.subs.every(sub => sub.rect.bottom <= formulaLayout.rect.bottom && sub.rect.top >= formulaLayout.rect.top),
+    'publication subscripts must fit inside the link without clipping');
+  assert.equal(formulaLayout.style.overflow, 'visible', 'publication title must not clip subscripts');
+  assert.deepEqual(await window.webContents.executeJavaScript(`Array.from(document.querySelector('[data-testid="publication-table"] tbody').children[0].querySelectorAll('sub'), s=>s.textContent)`), ['3','6']);
+  assert.deepEqual(await window.webContents.executeJavaScript(`Array.from(document.querySelector('[data-entry-id="2"]')?.querySelectorAll('td:nth-child(7) sub') ?? [], s=>s.textContent)`), ['3','6']);
+
   await window.webContents.executeJavaScript(`
     (() => {
       window.__publicationLookup = null;
@@ -394,8 +410,8 @@ async function testCompoundInformationSelection(window) {
     destination: window.__publicationDestination
   })`);
   assert.deepEqual(publicationResolution.lookup, {
-    title: 'Synthetic structure report 2',
-    reference: 'Reference 2',
+    title: 'Synthetic RE$_3$InSe$_6$ structure report',
+    reference: 'Reference 2: RE$_3$InSe$_6$',
     authors: ['Doe, J.', 'Roe, A.']
   });
   assert.equal(publicationResolution.destination, 'https://doi.org/10.1000/verified');
@@ -538,6 +554,7 @@ async function run() {
   };
   window.webContents.on('console-message', reportConsole);
   await require('./pxrd-ui-regressions.cjs')(window,testUrl);
+  await require('./source-recovery-ui.cjs')(window, testUrl, waitForRenderer);
   // The comparison capture briefly shows its window. Start layout scenarios in
   // a fresh hidden window, without native display-size constraints from showing.
   const comparisonWindow = window;
@@ -729,6 +746,13 @@ async function run() {
   assert.ok(Math.abs(restored.width - storedWidth) < 1);
   assert.equal(restored.column, 210);
   assert.ok(restored.values.every(e => e.target && Number(e.value) >= 0 && Number(e.value) <= 100));
+  await window.webContents.executeJavaScript("(()=>{const d=document.querySelectorAll('[data-resize-handle]')[1];for(let i=0;i<80;i++)d.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));})()");
+  await pause(100);
+  assert.ok(await window.webContents.executeJavaScript("(()=>{const b=document.querySelector('[data-testid=pxrd-toolbar]');return b.clientWidth>=498&&b.scrollWidth===b.clientWidth;})()"), 'divider keeps PXRD controls fully visible');
+  window.setContentSize(900,800); await pause(150);
+  assert.ok(await window.webContents.executeJavaScript("(()=>{const b=document.querySelector('[data-testid=pxrd-toolbar]');return b.clientWidth>=498&&b.scrollWidth===b.clientWidth;})()"), 'window resize clamps saved column width');
+  window.setContentSize(1200,800);
+  await window.webContents.executeJavaScript("document.querySelectorAll('[data-resize-handle]')[1].dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");
   console.log('✓ About focus/Escape, persisted layout after reload, and splitter accessibility');
   await require('./batch-export-ui.cjs')(window, { search, scrollToEnd, waitForRenderer, pause });
   await clickButton('Reset search');

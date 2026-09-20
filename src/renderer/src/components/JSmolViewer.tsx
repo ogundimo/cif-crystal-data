@@ -4,10 +4,12 @@ import { CrystalViewerRuntime, type PickingMode, type ViewerRequest, type Viewer
 import type { CrystalAxis, CrystalRepresentation, CrystalSupercellSize } from '../jsmol/scripts';
 import CrystalLegend, { type CrystalLegendMode } from './CrystalLegend';
 import CrystalAxes from './CrystalAxes';
+import SourceRecovery from './SourceRecovery';
 
 interface Props {
   entry: EntryRow;
   atomSites: AtomSiteRow[];
+  onRecovery?: (entry?: EntryRow) => void;
 }
 
 type ViewState =
@@ -51,7 +53,7 @@ function formatUnitCell(values: [number, number, number, number, number, number]
   return `a ${a.toFixed(4)} · b ${b.toFixed(4)} · c ${c.toFixed(4)} Å · α ${alpha.toFixed(2)}° · β ${beta.toFixed(2)}° · γ ${gamma.toFixed(2)}°`;
 }
 
-export default function JSmolViewer({ entry, atomSites }: Props) {
+export default function JSmolViewer({ entry, atomSites, onRecovery }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<CrystalViewerRuntime | null>(null);
@@ -62,6 +64,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
   const [labelsVisible, setLabelsVisible] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [supercellSize, setSupercellSize] = useState<CrystalSupercellSize>(1);
+  const [compactResetVersion, setCompactResetVersion] = useState(0);
   const [pickingMode, setPickingMode] = useState<PickingMode>('off');
   const [pickingMessage, setPickingMessage] = useState('Picking off. Drag to rotate; scroll to zoom.');
   const [rotation, setRotation] = useState([[1,0,0],[0,1,0],[0,0,1]]);
@@ -175,7 +178,19 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
     desiredRequest.current = request;
     setView((current) => ({ phase: 'loading', pendingFileName: entry.source_filename, result: current.result }));
     if (readyRef.current) runtimeRef.current?.request(request);
-  }, [entry.id, entry.source_filename, supercellSize]);
+  }, [entry.id, entry.source_filename, supercellSize, compactResetVersion]);
+
+  function closeControls(): void {
+    runtimeRef.current?.setCellParametersVisible(false);
+    setRepresentation('atoms');
+    setUnitCellVisible(true);
+    setLabelsVisible(false);
+    setSupercellSize(1);
+    // Reload even when already at 1³ to clear annotations and supersede any
+    // in-flight expanded-view load with the compact defaults.
+    setCompactResetVersion((version) => version + 1);
+    setControlsOpen(false);
+  }
 
   function chooseRepresentation(value: CrystalRepresentation): void {
     setRepresentation(value);
@@ -222,12 +237,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
         <div className="flex flex-wrap items-center gap-1 border-b border-stroke bg-[#eef2f5] p-1">
           <button
             className="btn-w32 px-2"
-            onClick={() => {
-              runtimeRef.current?.setCellParametersVisible(false);
-              runtimeRef.current?.setPolyhedraPicking(false);
-              runtimeRef.current?.clearPolyhedra(representation);
-              setControlsOpen(false);
-            }}
+            onClick={closeControls}
             aria-label="Back to quick search results"
           >
             ← Back to results
@@ -326,6 +336,7 @@ export default function JSmolViewer({ entry, atomSites }: Props) {
               <>
                 <strong className="text-[#ffb4ab]">Could not display {view.pendingFileName}</strong>
                 <span className="mt-2 max-w-md text-xs text-[#d7e3ee]">{view.message}</span>
+                <SourceRecovery key={entry.id} entry={entry} onComplete={onRecovery} />
               </>
             ) : (
               <>

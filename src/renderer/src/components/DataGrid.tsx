@@ -1,4 +1,5 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { SelectionGesture } from '../rowSelection';
+import { type KeyboardEvent, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -9,7 +10,7 @@ import {
 } from '@tanstack/react-table';
 import type { EntryRow, SearchSortColumn } from '../../../shared/types';
 import { useLayoutPreference, validColumnWidths } from '../layoutPreferences';
-import { formatFormula } from '../formatFormula';
+import { formatCifText, formatFormula, plainCifText } from '../formatFormula';
 import { calculateVirtualRowWindow } from '../virtualRows';
 
 const columnHelper = createColumnHelper<EntryRow>();
@@ -61,6 +62,7 @@ const columns = [
   columnHelper.accessor('reference', {
     id: 'reference',
     header: 'Reference',
+    cell: (info) => formatCifText(info.getValue()),
     size: 260
   }),
   columnHelper.accessor('level_struct_studies', {
@@ -72,12 +74,13 @@ const columns = [
 
 export interface EmptyResultsMessage { title: string; description: string; }
 interface Props {
-  checkedIds?: ReadonlySet<number>;
-  onToggleChecked?: (id: number) => void;
+  isRowSelected?: (id: number) => boolean;
+  onSelectAll?: () => void;
+  onClearSelection?: () => void;
   emptyMessage?: EmptyResultsMessage;
   rows: EntryRow[];
   selectedId?: number | null;
-  onSelect?: (entry: EntryRow) => void;
+  onSelect?: (entry: EntryRow, gesture?: SelectionGesture) => void;
   totalRows?: number;
   loadingMore?: boolean;
   onLoadMore?: () => void;
@@ -87,8 +90,9 @@ interface Props {
 }
 
 export default function DataGrid({
-  checkedIds,
-  onToggleChecked,
+  isRowSelected,
+  onSelectAll,
+  onClearSelection,
   rows,
   selectedId = null,
   onSelect,
@@ -174,46 +178,69 @@ export default function DataGrid({
     return () => resizeObserver.disconnect();
   }, [measureViewport]);
 
+  function revealSelectedRow(event: KeyboardEvent<HTMLDivElement>) {
+    const index = tableRows.findIndex(row => row.original.id === selectedId);
+    if (index < 0) return;
+    event.preventDefault();
+    const container = event.currentTarget;
+    const headerHeight = container.querySelector('thead')?.getBoundingClientRect().height ?? HEADER_HEIGHT;
+    const target = Math.max(0, Math.min(container.scrollHeight - container.clientHeight,
+      index * ROW_HEIGHT + ROW_HEIGHT / 2 - (container.clientHeight - headerHeight) / 2));
+    if (Math.abs(container.scrollTop - target) >= 1) {
+      container.scrollTop = target;
+      // Revealing an already loaded selection must not request another page.
+      revealedScrollTop.current = container.scrollTop;
+      measureViewport();
+    }
+  }
+
+
+  function moveFocus(event: KeyboardEvent<HTMLDivElement>) {
+    if (!onSelect || rows.length === 0 || !['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const current = rows.findIndex(row => row.id === selectedId);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? rows.length - 1 : Math.max(0, Math.min(rows.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)));
+    onSelect(rows[next], { toggle: event.ctrlKey || event.metaKey, range: event.shiftKey, focusOnly: (event.ctrlKey || event.metaKey) && !event.shiftKey });
+    const container = event.currentTarget;
+    const top = HEADER_HEIGHT + next * ROW_HEIGHT;
+    if (top < container.scrollTop + HEADER_HEIGHT) container.scrollTop = top - HEADER_HEIGHT;
+    else if (top + ROW_HEIGHT > container.scrollTop + container.clientHeight) container.scrollTop = top + ROW_HEIGHT - container.clientHeight;
+    if (next === rows.length - 1 && rows.length < totalRows && !loadingMore) onLoadMore?.();
+  }
+
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget || event.nativeEvent.isComposing || event.altKey || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+    const toggle = event.ctrlKey || event.metaKey;
+    if (toggle && event.key.toLowerCase() === 'a' && onSelectAll) {
+      event.preventDefault(); onSelectAll(); return;
+    }
+    if (event.key === 'Escape' && onClearSelection) {
+      event.preventDefault(); onClearSelection(); return;
+    }
+    if (event.key === ' ' && selectedId !== null) {
+      const entry = rows.find(row => row.id === selectedId);
+      if (entry) { event.preventDefault(); onSelect?.(entry, { toggle, range: event.shiftKey }); }
+      return;
+    }
+    if (event.ctrlKey && event.shiftKey && !event.metaKey && event.key === 'Enter') {
+      revealSelectedRow(event); return;
+    }
+    moveFocus(event);
+  }
+
   return (
     <div
       ref={scrollContainerRef}
       data-testid="data-grid-scroll"
       tabIndex={0}
-      role="region"
-      aria-label="Search results. Use Up and Down arrow keys to select a row. Space toggles batch selection. Control+Shift+Enter shows the selected row."
-      aria-keyshortcuts="Control+Shift+Enter"
-      onKeyDown={(event) => {
-        if (event.target === event.currentTarget && event.key === ' ' && selectedId !== null && onToggleChecked) {
-          event.preventDefault(); onToggleChecked(selectedId); return;
-        }
-        if (event.target === event.currentTarget && event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey && event.key === 'Enter' && !event.nativeEvent.isComposing) {
-          if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
-          const index = tableRows.findIndex(row => row.original.id === selectedId);
-          if (index < 0) return;
-          event.preventDefault();
-          const container = event.currentTarget;
-          const headerHeight = container.querySelector('thead')?.getBoundingClientRect().height ?? HEADER_HEIGHT;
-          const target = Math.max(0, Math.min(container.scrollHeight - container.clientHeight,
-            index * ROW_HEIGHT + ROW_HEIGHT / 2 - (container.clientHeight - headerHeight) / 2));
-          if (Math.abs(container.scrollTop - target) >= 1) {
-            container.scrollTop = target;
-            // Revealing an already loaded selection must not request another page.
-            revealedScrollTop.current = container.scrollTop;
-            measureViewport();
-          }
-          return;
-        }
-        if (event.target !== event.currentTarget || !onSelect || rows.length === 0 || !['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
-        event.preventDefault();
-        const current = rows.findIndex(row => row.id === selectedId);
-        const next = event.key === 'Home' ? 0 : event.key === 'End' ? rows.length - 1 : Math.max(0, Math.min(rows.length - 1, current + (event.key === 'ArrowDown' ? 1 : -1)));
-        onSelect(rows[next]);
-        const container = event.currentTarget;
-        const top = HEADER_HEIGHT + next * ROW_HEIGHT;
-        if (top < container.scrollTop + HEADER_HEIGHT) container.scrollTop = top - HEADER_HEIGHT;
-        else if (top + ROW_HEIGHT > container.scrollTop + container.clientHeight) container.scrollTop = top + ROW_HEIGHT - container.clientHeight;
-        if (next === rows.length - 1 && rows.length < totalRows && !loadingMore) onLoadMore?.();
-      }}
+      role="grid"
+      aria-multiselectable={Boolean(isRowSelected)}
+      aria-rowcount={totalRows + 1}
+      aria-activedescendant={visibleRows.some(row => row.original.id === selectedId) ? `structure-row-${selectedId}` : undefined}
+      aria-label="Search results. Use Up and Down arrow keys to select a row. Control+click toggles selection. Shift selects a range. Control+A selects all matches. Escape clears selection. Control+Shift+Enter shows the selected row."
+      aria-keyshortcuts="Control+A Escape Control+Shift+Enter"
+      onKeyDown={handleKeyDown}
       className="mx-2 mt-2 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-white"
       style={{ overflowAnchor: 'none' }}
       onScroll={measureViewport}
@@ -231,15 +258,15 @@ export default function DataGrid({
         </div>
       ) : (
         <table
-          aria-rowcount={totalRows + 1}
+          role="presentation"
           className="w-full table-fixed border-separate border-spacing-0 text-xs"
         >
         <thead>
           {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id}>
-              {onToggleChecked && <th className="sticky top-0 z-[2] w-9 bg-[#f6f6f6]" scope="col" title="Select for batch export">✓</th>}
+            <tr key={hg.id} role="row">
               {hg.headers.map((header) => (
                 <th
+                  role="columnheader"
                   key={header.id}
                   title={header.id === 'sg_number' ? 'Space group number' : header.id === 'level_struct_studies' ? 'Level of structural studies' : String(header.column.columnDef.header)}
                   style={{ width: header.getSize(), height: HEADER_HEIGHT }}
@@ -265,7 +292,7 @@ export default function DataGrid({
           {virtualWindow.paddingTop > 0 && (
             <tr aria-hidden="true" className="pointer-events-none">
               <td
-                colSpan={columns.length + (onToggleChecked ? 1 : 0)}
+                colSpan={columns.length}
                 style={{ height: virtualWindow.paddingTop, padding: 0, border: 0 }}
               />
             </tr>
@@ -274,28 +301,32 @@ export default function DataGrid({
             const rowIndex = virtualWindow.start + visibleIndex;
             return (
               <tr
+                role="row"
+                id={`structure-row-${row.original.id}`}
                 key={row.id}
                 aria-rowindex={rowIndex + 2}
                 data-entry-id={row.original.id}
-                aria-selected={selectedId === row.original.id}
-                onClick={() => onSelect?.(row.original)}
+                aria-selected={isRowSelected ? isRowSelected(row.original.id) : selectedId === row.original.id}
+                data-focused={selectedId === row.original.id}
+                onMouseDown={event => { if (event.shiftKey) event.preventDefault(); }}
+                onClick={event => {
+                  scrollContainerRef.current?.focus({ preventScroll: true });
+                  onSelect?.(row.original, { toggle: event.ctrlKey || event.metaKey, range: event.shiftKey });
+                }}
                 style={{ height: ROW_HEIGHT }}
-                className={`cursor-default ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : ''} hover:bg-[#f0f6fc] ${
-                  selectedId === row.original.id ? 'bg-accent-soft hover:bg-accent-soft' : ''
+                className={`cursor-default select-none ${selectedId === row.original.id ? 'outline outline-1 -outline-offset-1 outline-[#6b92bb]' : ''} ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : ''} hover:bg-[#f0f6fc] ${
+                  (isRowSelected ? isRowSelected(row.original.id) : selectedId === row.original.id) ? 'bg-accent-soft hover:bg-accent-soft' : ''
                 }`}
               >
-                {onToggleChecked && <td className="border-b border-r text-center" onClick={event => event.stopPropagation()}>
-                  <input type="checkbox" aria-label={`Select entry ${row.original.id} for batch export`} checked={checkedIds?.has(row.original.id) ?? false}
-                    onChange={() => onToggleChecked(row.original.id)} />
-                </td>}
                 {row.getVisibleCells().map((cell) => (
                   <td
+                    role="gridcell"
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
                     className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#f0f0f0] border-r border-[#f0f0f0] px-2 py-0.5 leading-[15px]"
                     title={
                       typeof cell.getValue() === 'string'
-                        ? (cell.getValue() as string)
+                        ? plainCifText(cell.getValue() as string)
                         : undefined
                     }
                   >
@@ -308,7 +339,7 @@ export default function DataGrid({
           {virtualWindow.paddingBottom > 0 && (
             <tr aria-hidden="true" className="pointer-events-none">
               <td
-                colSpan={columns.length + (onToggleChecked ? 1 : 0)}
+                colSpan={columns.length}
                 style={{ height: virtualWindow.paddingBottom, padding: 0, border: 0 }}
               />
             </tr>

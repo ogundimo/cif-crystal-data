@@ -142,7 +142,7 @@ async function run() {
     return svg && svg.getBoundingClientRect().bottom <= chart.getBoundingClientRect().bottom + 1;
   })()`);
   await capture('powder-diffraction', '[data-testid=pxrd-pattern]');
-  await click('Clear imported pattern');
+  await click('Clear');
   await click('Quick search');
   await waitFor("Boolean(document.querySelector('#quick-search-space-group-number'))");
   await ui(`(() => {
@@ -162,8 +162,9 @@ async function run() {
   await rotateCrystal();
   await capture('crystal-viewer');
   await ui("document.querySelector('[aria-label=\"Back to quick search results\"]').click()");
-  await ui("document.querySelector('input[aria-label=\"Select entry 1 for batch export\"]').click()");
-  await click('Batch export…');
+  await ui("document.querySelector('tr[data-entry-id=\"1\"]').click()");
+  await click('Export…');
+  await ui("document.querySelectorAll('input[name=batch-scope]')[1].click()");
   await waitFor("document.querySelector('[aria-labelledby=batch-export-title]')?.innerText.includes('1 structures will be requested.')");
   await capture('batch-export');
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', windowsHide: true }).trim();

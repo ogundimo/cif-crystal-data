@@ -4,30 +4,30 @@ import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import JSmolViewer from './JSmolViewer';
 import PxrdPattern from './PxrdPattern';
 import PublicationReference from './PublicationReference';
-import { formatFormula } from '../formatFormula';
+import { formatCifText, formatFormula } from '../formatFormula';
 
 interface Props {
   entry: EntryRow;
+  onRecovery?: (entry?: EntryRow) => void;
 }
 
 const DIVIDER_SIZE = 6;
 const MIN_COLUMN_WIDTH = 220;
+const MIN_PATTERN_COLUMN_WIDTH = 500;
 const MIN_VIEWER_ROW_HEIGHT = 44;
 const MIN_LOWER_ROW_HEIGHT = 44;
 
-export default function CompoundInfoPanel({ entry }: Props) {
+export default function CompoundInfoPanel({ entry, onRecovery }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const viewerRowsRef = useRef<HTMLDivElement>(null);
   const columnDragStart = useRef<{ x: number; width: number } | null>(null);
   const rowDragStart = useRef<{ y: number; height: number } | null>(null);
-  const [infoWidth, setInfoWidth] = usePanelSize('information-width', panelRef, MIN_COLUMN_WIDTH, 16 + DIVIDER_SIZE + MIN_COLUMN_WIDTH, 'width');
+  const [infoWidth, setInfoWidth] = usePanelSize('information-width', panelRef, MIN_COLUMN_WIDTH, 16 + DIVIDER_SIZE + MIN_PATTERN_COLUMN_WIDTH, 'width');
   const [viewerHeight, setViewerHeight] = usePanelSize('viewer-height', viewerRowsRef, MIN_VIEWER_ROW_HEIGHT, DIVIDER_SIZE + MIN_LOWER_ROW_HEIGHT, 'height');
   const infoPercentage = usePanePercentage(panelRef, '#information-pane', 'width');
   const viewerPercentage = usePanePercentage(viewerRowsRef, '[aria-label="Crystal structure viewer"]', 'height');
   const [atomSites, setAtomSites] = useState<AtomSiteRow[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [dataAuthors, setDataAuthors] = useState<PublAuthorRow[]>([]);
-  const [dataAuthorStatus, setDataAuthorStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [authors, setAuthors] = useState<PublAuthorRow[]>([]);
   const [authorStatus, setAuthorStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
@@ -53,8 +53,6 @@ export default function CompoundInfoPanel({ entry }: Props) {
   useEffect(() => {
     let active = true;
     setAuthors([]);
-    setDataAuthors([]); setDataAuthorStatus('loading');
-    window.cifApi.getDataAuthors(entry.id).then(rows => { if (active) { setDataAuthors(rows); setDataAuthorStatus('ready'); } }, () => { if (active) setDataAuthorStatus('error'); });
     setAuthorStatus('loading');
     window.cifApi.getPublAuthors(entry.id).then(
       (rows) => {
@@ -83,7 +81,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
     }
   ];
   const publication = [
-    { label: 'Reference', value: entry.reference },
+    { label: 'Reference', value: formatCifText(entry.reference) },
     { label: 'Publication link', value: <PublicationReference entry={entry} authors={authors} /> },
     { label: 'Language', value: entry.journal_language }
   ];
@@ -96,7 +94,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
   function resizeColumns(event: React.PointerEvent<HTMLDivElement>): void {
     if (!columnDragStart.current || !panelRef.current) return;
     const contentWidth = panelRef.current.clientWidth - 16;
-    const maximum = Math.max(MIN_COLUMN_WIDTH, contentWidth - DIVIDER_SIZE - MIN_COLUMN_WIDTH);
+    const maximum = Math.max(MIN_COLUMN_WIDTH, contentWidth - DIVIDER_SIZE - MIN_PATTERN_COLUMN_WIDTH);
     const nextWidth = columnDragStart.current.width + event.clientX - columnDragStart.current.x;
     setInfoWidth(Math.min(maximum, Math.max(MIN_COLUMN_WIDTH, nextWidth)));
   }
@@ -132,8 +130,9 @@ export default function CompoundInfoPanel({ entry }: Props) {
         aria-label="Compound information"
         data-testid="compound-info-panel"
         className="min-w-0 flex-1 overflow-x-auto overflow-y-scroll border border-stroke bg-[#f1f3f5]"
-        style={infoWidth === null ? undefined : { flex: `0 0 ${infoWidth}px` }}
-      >        <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
+        style={{ maxWidth: `calc(100% - ${DIVIDER_SIZE + MIN_PATTERN_COLUMN_WIDTH}px)`, ...(infoWidth === null ? {} : { flex: `0 0 ${infoWidth}px` }) }}
+      >
+        <table data-testid="compound-sample-metadata" className="w-full border-collapse border-b-2 border-[#b9c7d5] bg-white text-xs">
           <caption className="info-section-label">Sample details</caption>
           <tbody>
             {metadata.map((field) => (
@@ -146,10 +145,6 @@ export default function CompoundInfoPanel({ entry }: Props) {
             ))}
           </tbody>
         </table>
-        <section aria-label="Data-block authors" className="bg-white p-2 text-xs">
-          <h3 className="font-semibold">Data-block authors (not publication authors)</h3>
-          {dataAuthorStatus === 'loading' ? <p>Loading data authors…</p> : dataAuthorStatus === 'error' ? <p role="alert">Could not load data authors.</p> : dataAuthors.length === 0 ? <p>No data authors supplied in this source.</p> : <ul>{dataAuthors.map(author => <li key={author.id}>{author.name}{author.address ? ` — ${author.address}` : ''}</li>)}</ul>}
-        </section>
         <table data-testid="cell-parameters-table" className="mt-1.5 w-full min-w-[15rem] border-collapse border-y-2 border-[#b9c7d5] bg-white text-xs">
           <caption className="info-section-label">Cell angles</caption>
           <thead>
@@ -281,7 +276,7 @@ export default function CompoundInfoPanel({ entry }: Props) {
           if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || !panelRef.current) return;
           event.preventDefault();
           const current = panelRef.current.querySelector('[data-testid="compound-info-panel"]')?.getBoundingClientRect().width ?? MIN_COLUMN_WIDTH;
-          const maximum = Math.max(MIN_COLUMN_WIDTH, panelRef.current.clientWidth - 16 - DIVIDER_SIZE - MIN_COLUMN_WIDTH);
+          const maximum = Math.max(MIN_COLUMN_WIDTH, panelRef.current.clientWidth - 16 - DIVIDER_SIZE - MIN_PATTERN_COLUMN_WIDTH);
           setInfoWidth(Math.min(maximum, Math.max(MIN_COLUMN_WIDTH, current + (event.key === 'ArrowRight' ? 16 : -16))));
         }}
         onDoubleClick={() => {
@@ -303,14 +298,15 @@ export default function CompoundInfoPanel({ entry }: Props) {
       />
       <div
         ref={viewerRowsRef}
-        className="grid min-w-0 flex-1"
+        className="grid flex-1"
         style={{
+          minWidth: MIN_PATTERN_COLUMN_WIDTH,
           gridTemplateRows: viewerHeight === null
             ? `minmax(${MIN_VIEWER_ROW_HEIGHT}px, 1fr) ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`
             : `${viewerHeight}px ${DIVIDER_SIZE}px minmax(${MIN_LOWER_ROW_HEIGHT}px, 1fr)`
         }}
       >
-        <JSmolViewer entry={entry} atomSites={atomSites} />
+        <JSmolViewer entry={entry} atomSites={atomSites} onRecovery={onRecovery} />
         <div
           role="separator" data-resize-handle="true"
           aria-label="Resize crystal viewer and lower visual panel"

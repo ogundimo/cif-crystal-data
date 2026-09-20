@@ -326,13 +326,8 @@ export function createPxrdProfile(
 
 export const PXRD_RANGE = { min: MIN_TWO_THETA, max: MAX_TWO_THETA } as const;
 
-export function serializePxrdProfile(profile: PxrdProfilePoint[], includeHeader: boolean, metadata?: { result: PxrdResult; fwhm: number }): string {
+/** Headerless XY: degrees 2-theta and normalized intensity, one pair per line. */
+export function serializePxrdProfile(profile: PxrdProfilePoint[]): string {
   const rows = profile.map((point) => `${point.twoTheta.toFixed(4)}\t${point.intensity.toFixed(6)}`);
-  if (includeHeader) rows.unshift('2theta\tintensity');
-  if (includeHeader && metadata) rows.unshift(
-    `# model=${metadata.result.model}; radiation=monochromatic X-ray; status=${metadata.result.status}`,
-    `# wavelength_A=${metadata.result.wavelength}; Gaussian_FWHM_2theta_deg=${metadata.fwhm}; range_2theta_deg=5:80; step_deg=0.02; normalized_max=100`,
-    ...metadata.result.diagnostics.map(message => `# ${message.replace(/[\r\n]/g, ' ')}`)
-  );
-  return `${rows.join('\n')}\n`;
+  return rows.length ? `${rows.join('\n')}\n` : '';
 }

@@ -39,11 +39,16 @@ Cu is the initial default; the selected preset stays in effect while browsing.
 **Import .xy** adds a red personal pattern beside the blue simulation. Imported
 angles stay unchanged when the simulation wavelength changes, so direct comparison
 requires matching wavelengths. **Clear imported pattern** removes that overlay;
-**Export .xy** still exports only the simulation.
+**Export .xy** still exports only the simulation as two numeric columns (2θ in
+degrees, then normalized intensity), with no header or metadata comments.
+The single-row toolbar stays above the plot. **Clear** stays visible and disabled
+until a pattern is imported; the degree suffix is inside the FWHM field. The
+viewer/PXRD column retains at least 500 CSS pixels so the controls stay visible
+without a toolbar scrollbar.
 
 Personal patterns accept two whitespace-separated numeric columns (2θ in degrees,
 intensity), blank lines, `#` comments and an optional initial `2theta intensity`
-header, including this application's exports. Angles must increase strictly within
+header for compatibility with other programs and older exports. Angles must increase strictly within
 0–180°, with at least two points and some positive intensity. Negative intensities
 are rejected without baseline correction. Limits are 4 MiB and 100,000 points.
 Original values are retained in memory; display intensities are scaled to a maximum
@@ -79,16 +84,20 @@ close to the center as the available scroll range permits.
 
 ## Batch export
 
-![Batch export dialog with one checked structure selected, an alternative scope for all search matches, CIF files and CSV summary format, and the confirmed count before choosing a destination.](docs/images/batch-export.png)
-
-After a Quick search, check rows for batch selection or choose **All matching the
-current search** in **Batch export…**. Review the exact count, then export CIFs,
-CIFs with a CSV summary, or CSV alone into a new subfolder. Progress and cancellation
-retain completed files and report failed and not-attempted entries. Checkbox
-selection survives paging and sorting and clears on new searches or data refresh.
-The highlighted detail row and single-entry **Export CIF** remain independent.
-See [Batch export](docs/batch-export.md) for snapshot behavior, CSV fields, reversible
-spreadsheet escaping, destination requirements and validation.
+After a Quick search, click a row to select it, Ctrl+click to add or remove rows,
+or Shift+click to select a range. Use **Ctrl+A** for all matches, or choose **All matching the
+current search** in **Export…**. Review the exact count, then export only CIF files
+into a new `cif_batch_YYYY-MM-DD_HH-mm-ss` subfolder using local date and time.
+Filenames use `formula_space-group-number.cif`, with an entry-ID suffix for duplicates.
+No CSV summary or outcome report is created. Progress and cancellation
+retain completed files; the dialog shows failures and not-attempted counts. Row
+selection survives paging and sorting; new searches select their first result.
+**Esc** clears selection while keeping the current details visible. Selection
+defaults to a single-file save for one structure and batch export for several.
+Ctrl+A includes results that have not loaded yet; Ctrl+click can exclude individual
+rows afterward. Import, refresh and reset clear the previous selection.
+See [Batch export](docs/batch-export.md) for snapshot behavior, filename collision
+handling, destination requirements and validation.
 
 ## Importing CIF files
 
@@ -99,13 +108,14 @@ separate structures. Refresh hashes each file, skips unchanged sources, and repo
 structures, updates, identical copies kept separately, and failures. A failed block leaves
 the entire previous version of that file intact.
 
-The selected folder is remembered. Startup refresh defaults off; enable it under **Sources & backups**. **Refresh CIFs** scans it again.
-A changed file updates structures with the same unique data-block labels. Renamed or copied
-files remain separate unless you explicitly relink the existing source to an identical copy.
+The selected folder is remembered. **Refresh CIFs** scans it again when requested;
+opening the app does not scan automatically. A changed file updates structures with
+the same unique data-block labels. Renamed or copied files remain separate sources.
 
-Use **Sources & backups** to save a portable backup, restore one, or relink the selected
-source. Viewing and export use the managed imported version even after the original is
-moved, edited, or deleted. Backup and export require a new destination filename.
+Import, refresh, and deletion of app entries never modify or delete original CIF files.
+Viewing and export use the managed imported version even after the original is moved,
+edited, or deleted. Export requires a new destination filename. The main toolbar contains
+Import CIFs, Refresh CIFs, and Clear CIFs; backup, restore, and relink controls are not shown.
 See [Import and search reliability](docs/import-search-reliability.md) for cancellation, diagnostics, author roles, and startup behavior.
 See [Data preservation](docs/data-preservation.md) for identity, migration, legacy-source,
 relinking, backup, and recovery policies.
@@ -114,7 +124,7 @@ The import preserves the inputs used by the simulated powder-diffraction view: u
 lengths in ångströms, formula units per cell, radiation type and wavelength, symmetry
 operations, atom positions and occupancies, and available displacement parameters. The PXRD
 panel supports a per-pattern wavelength, configurable peak broadening, reflection hover labels,
-and two-column `.xy` export with an optional header. Files containing multiple `data_` blocks
+and headerless two-column `.xy` export. Files containing multiple `data_` blocks
 are indexed as separate structures while retaining their shared physical source file.
 
 PXRD uses neutral-atom IT92 X-ray form factors and runs in a cancellable local worker.

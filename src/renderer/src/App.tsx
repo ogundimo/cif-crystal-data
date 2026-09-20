@@ -1,3 +1,4 @@
+import { emptySelection } from './rowSelection';
 import BatchExportDialog from './components/BatchExportDialog';
 import { createSearchController } from './searchController';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -5,11 +6,15 @@ import ResultsWorkspace from './components/ResultsWorkspace';
 import QuickSearchDialog from './components/QuickSearchDialog';
 import ImportResultsPanel from './components/ImportResultsPanel';
 import ImportProgressIndicator from './components/ImportProgressIndicator';
-import type { EntryRow, ImportProgress, ImportResult, SearchFilter, SearchSortColumn } from '../../shared/types';
+import type { BatchExportScope, EntryRow, ImportProgress, ImportResult, SearchFilter, SearchSortColumn } from '../../shared/types';
 import AboutDialog from './components/AboutDialog';
 
 const NO_CRITERIA_LABEL = 'A0 (No selection criteria)';
 
+
+function singleExportId(scope: BatchExportScope, focusedId: number | null): number | null {
+  return scope.kind === 'selected' && scope.ids.length === 1 ? scope.ids[0] : focusedId;
+}
 
 export default function App() {
   if (typeof window.cifApi === 'undefined') {
@@ -30,13 +35,10 @@ export default function App() {
 }
 
 function AppInner() {
-  const [checkedIds, setCheckedIds] = useState<Set<number>>(new Set());
+  const [selection, setSelection] = useState(emptySelection);
   const [batchOpen, setBatchOpen] = useState(false);
   const [batchBusy, setBatchBusy] = useState(false);
   const [batchFilter, setBatchFilter] = useState<SearchFilter | null>(null);
-  const batchIds = useMemo(() => [...checkedIds], [checkedIds]);
-  const startupScanStarted = useRef(false);
-  const [startupRefresh, setStartupRefresh] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [entries, setEntries] = useState<EntryRow[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
@@ -47,15 +49,13 @@ function AppInner() {
   const [refreshing, setRefreshing] = useState(false);
   const [importFolder, setImportFolder] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
-  const [preserving, setPreserving] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [exportMessage, setExportMessage] = useState<string | null>(null);
   const [searchActive, setSearchActive] = useState(false);
   const [searchResetSignal, setSearchResetSignal] = useState(0);
   const [answerSetLabel, setAnswerSetLabel] = useState(NO_CRITERIA_LABEL);
   const [databaseEntryCount, setDatabaseEntryCount] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [workspaceVersion, setWorkspaceVersion] = useState(0);
   const [searchTotal, setSearchTotal] = useState(0);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -84,6 +84,7 @@ function AppInner() {
     if (state.active && !state.busy) void window.cifApi.traceMilestone('search-results').catch(() => {});
     setEntries(state.entries);
     setSelectedEntryId(state.selectedEntryId);
+    setSelection(state.selection);
     setSearchTotal(state.total);
     setSearchActive(state.active);
     setLoadingMore(state.busy);
@@ -93,9 +94,7 @@ function AppInner() {
   const controller = controllerRef.current;
   const clearAnswerSet = useCallback((resetSearchForm = false) => {
     controller.reset();
-    setCheckedIds(new Set());
     setBatchFilter(null);
-    setExportMessage(null);
     if (resetSearchForm) setSearchResetSignal(value => value + 1);
   }, [controller]);
   useEffect(() => {
@@ -103,62 +102,14 @@ function AppInner() {
   }, [refreshDatabaseCount]);
 
   useEffect(() => {
-    if (startupScanStarted.current) return;
-    startupScanStarted.current = true;
-
-    async function scanSavedFolder() {
-      try {
-        const folder = await window.cifApi.getImportFolder();
-        setImportFolder(folder);
-        const enabled = await window.cifApi.getStartupRefresh();
-        setStartupRefresh(enabled);
-        if (!folder || !enabled) return;
-
-        setRefreshing(true);
-        setImportProgress(null);
-        setCancelling(false);
-        const result = await window.cifApi.refreshCifFolder();
-        if (result.cancelled || result.importedCount > 0 || result.failures.length > 0) setImportResult(result);
-        await refreshDatabaseCount();
-      } catch (error) {
-        showApiError('scan the saved CIF folder at startup', error);
-      } finally {
-        setRefreshing(false);
-        setImportProgress(null);
-        setCancelling(false);
-      }
-    }
-
-    void scanSavedFolder();
-  }, [refreshDatabaseCount, showApiError]);
+    let active = true;
+    window.cifApi.getImportFolder().then(folder => {
+      if (active) setImportFolder(folder);
+    }).catch(error => { if (active) showApiError('load the saved CIF folder', error); });
+    return () => { active = false; };
+  }, [showApiError]);
 
   useEffect(() => window.cifApi.onImportProgress(setImportProgress), []);
-
-  async function handlePreservation(action: 'backupProfile' | 'restoreProfile' | 'relinkSource') {
-    setPreserving(true);
-    setApiError(null);
-    try {
-      const changed = action === 'relinkSource'
-        ? selectedEntryId !== null && await window.cifApi.relinkSource(selectedEntryId)
-        : action === 'backupProfile'
-          ? await window.cifApi.backupProfile(Object.fromEntries(Object.keys(localStorage).filter(key => key.startsWith('cif-layout-v1:')).map(key => [key, localStorage.getItem(key)!])))
-          : await window.cifApi.restoreProfile();
-      if (changed) {
-        if (action === 'restoreProfile') {
-          const layout = await window.cifApi.getPreservedLayout();
-          for (const key of Object.keys(localStorage)) if (key.startsWith('cif-layout-v1:')) localStorage.removeItem(key);
-          for (const [key, value] of Object.entries(layout)) if (key.startsWith('cif-layout-v1:') && typeof value === 'string') localStorage.setItem(key, value);
-          window.location.reload();
-          return;
-        }
-        clearAnswerSet(true);
-        setImportFolder(await window.cifApi.getImportFolder());
-        await refreshDatabaseCount();
-        setExportMessage(action === 'backupProfile' ? 'Portable backup saved.' : 'Source relinked to the verified copy.');
-      }
-    } catch (error) { showApiError('complete source preservation', error); }
-    finally { setPreserving(false); }
-  }
 
   async function handleImport() {
     setImporting(true);
@@ -220,28 +171,24 @@ function AppInner() {
     }
   }
 
-  async function handleExportCif() {
-    if (selectedEntryId === null) return;
-    setExporting(true);
-    setExportMessage(null);
-    setApiError(null);
-    try {
-      const result = await window.cifApi.exportCif(selectedEntryId);
-      if (result.exported) setExportMessage(`Exported ${result.fileName ?? 'CIF file'}`);
-    } catch (error) {
-      showApiError('export the selected CIF', error);
-    } finally {
-      setExporting(false);
-    }
-  }
-
   async function handleSearch(filter: SearchFilter) {
-    setCheckedIds(new Set());
     setBatchFilter(structuredClone(filter));
     setApiError(null);
     await controller.search(filter);
   }
   const loadMoreResults = controller.loadMore;
+  function handleSourceRecovery(entry?: EntryRow) {
+    setWorkspaceVersion(value => value + 1);
+    void refreshDatabaseCount();
+    if (entry) { setBatchFilter(null); controller.openEntry(entry); setAnswerSetLabel('Selected source entry'); }
+    else void controller.refresh();
+  }
+  const selectionCount = selection.all ? Math.max(0, searchTotal - selection.ids.size) : selection.ids.size;
+  const selectionScope = useMemo<BatchExportScope>(() => selection.all && batchFilter
+    ? { kind: 'matching', filter: batchFilter, excludedIds: [...selection.ids] }
+    : { kind: 'selected', ids: [...selection.ids] }, [selection, batchFilter]);
+  const isRowSelected = useCallback((id: number) => selection.all !== selection.ids.has(id), [selection]);
+  const exportCurrentId = singleExportId(selectionScope, selectedEntryId);
   const sortSearchResults = controller.sort;
   return (
     <div className="mx-auto flex h-screen max-w-full flex-col overflow-hidden bg-mica">
@@ -260,33 +207,19 @@ function AppInner() {
           </button>
         </div>
         <div className="mx-1.5 h-6 w-px bg-stroke-strong" aria-hidden="true" />
-        <div className="toolbar-group" role="group" aria-label="Selected entry">
+        <div className="toolbar-group" role="group" aria-label="Export">
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
-            onClick={handleExportCif}
-            disabled={selectedEntryId === null || importing || refreshing || clearing || preserving || batchBusy || exporting}
-            title={selectedEntryId === null ? 'Select a Quick Search result first' : 'Export the selected original CIF file'}
+            onClick={() => setBatchOpen(true)}
+            disabled={(selectedEntryId === null && !selectionCount && !batchFilter) || importing || refreshing || clearing || batchBusy}
+            title="Export the highlighted structure, checked structures, or search matches"
           >
-            <span aria-hidden="true">⇩</span> {exporting ? 'Exporting...' : 'Export CIF'}
+            <span aria-hidden="true">⇩</span> Export…
           </button>
         </div>
         <div className="mx-1.5 h-6 w-px bg-stroke-strong" aria-hidden="true" />
         <div className="toolbar-group" role="group" aria-label="Database">
-          <details className="relative">
-            <summary className="btn-w32 cursor-pointer px-2.5">Sources &amp; backups</summary>
-            <div className="absolute right-0 z-50 flex w-56 flex-col gap-1 border border-stroke bg-white p-2 shadow-lg">
-              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving || batchBusy} onClick={() => handlePreservation('backupProfile')}>Save portable backup...</button>
-              <button className="btn-w32" disabled={importing || refreshing || clearing || preserving || batchBusy} onClick={() => handlePreservation('restoreProfile')}>Restore backup...</button>
-              <button className="btn-w32" disabled={selectedEntryId === null || importing || refreshing || clearing || preserving || batchBusy} onClick={() => handlePreservation('relinkSource')}>Relink selected source...</button>
-              <label className="text-xs"><input type="checkbox" checked={startupRefresh} disabled={importing || refreshing || clearing || preserving || batchBusy} onChange={async (event) => {
-                const enabled = event.target.checked;
-                try { await window.cifApi.setStartupRefresh(enabled); setStartupRefresh(enabled); }
-                catch (error) { showApiError('save startup refresh preference', error); }
-              }} /> Refresh saved folder at startup</label>
-              <p className="text-xs">New imports keep a managed copy. Relinking requires identical content. Export and backup require new destination filenames.</p>
-            </div>
-          </details>
-          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing || preserving || batchBusy}>
+          <button className="btn-w32 flex items-center gap-1.5 px-2.5" onClick={handleImport} disabled={importing || refreshing || clearing || batchBusy}>
             <span aria-hidden="true">&#128193;</span>{' '}
             {importing && importProgress
               ? `Importing ${importProgress.processed}/${importProgress.total}...`
@@ -297,7 +230,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 disabled:cursor-not-allowed disabled:border-[#cfcfcf] disabled:bg-[#ededed] disabled:text-[#8a8a8a] disabled:opacity-70"
             onClick={handleRefresh}
-            disabled={!importFolder || importing || refreshing || clearing || preserving || batchBusy}
+            disabled={!importFolder || importing || refreshing || clearing || batchBusy}
             title={importFolder ? `Scan again: ${importFolder}` : 'Choose a folder with Import CIFs first'}
           >
             <span aria-hidden="true">↻</span>{' '}
@@ -317,7 +250,7 @@ function AppInner() {
           <button
             className="btn-w32 flex items-center gap-1.5 px-2.5 text-[#c42b1c]"
             onClick={handleClearCifs}
-            disabled={importing || refreshing || clearing || preserving || batchBusy}
+            disabled={importing || refreshing || clearing || batchBusy}
             title="Remove all imported entries from the local database"
           >
             <span aria-hidden="true">⌫</span> {clearing ? 'Clearing...' : 'Clear CIFs'}
@@ -334,18 +267,19 @@ function AppInner() {
       </div>
 
       <div className="flex items-center gap-3 px-3 pt-2 text-sm">
-        <button className="btn-w32" onClick={() => setBatchOpen(true)} disabled={!searchActive || importing || refreshing || clearing || preserving || batchBusy}>Batch export…</button>
-        <span role="status">{checkedIds.size} selected for batch export</span>
-        <button className="btn-w32" disabled={!checkedIds.size} onClick={() => setCheckedIds(new Set())}>Clear selection</button>
-        <span className="text-text-dim">Checkboxes select exports; the highlighted row shows details. Selection survives paging and sorting; new searches and data refresh clear it.</span>
+        <span role="status">{selectionCount} selected</span>
+        <span className="text-text-dim">Ctrl+click to toggle · Shift+click for a range · Ctrl+A for all matches · Esc to clear</span>
       </div>
       <ResultsWorkspace
-        checkedIds={checkedIds}
-        onToggleChecked={id => setCheckedIds(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; })}
+        key={workspaceVersion}
+        onRecovery={handleSourceRecovery}
+        isRowSelected={isRowSelected}
+        onSelectAll={controller.selectAll}
+        onClearSelection={controller.clearSelection}
         emptyMessage={loadingMore ? { title: 'Searching…', description: 'Finding matching structures.' } : searchActive ? { title: 'No matching results', description: 'Open Quick search to adjust or remove criteria.' } : databaseEntryCount === 0 ? { title: 'No structures imported', description: 'Use Import CIFs to add structures, then run a Quick search.' } : databaseEntryCount === null ? { title: 'Loading database…', description: 'Checking the available structures.' } : { title: 'Run a search', description: 'Use Quick search to filter the imported structures.' }}
         rows={entries}
         selectedId={selectedEntryId}
-        onSelect={(entry) => controller.select(entry.id)}
+        onSelect={(entry, gesture) => controller.select(entry.id, gesture)}
         totalRows={searchTotal || entries.length}
         loadingMore={loadingMore}
         onLoadMore={loadMoreResults}
@@ -370,9 +304,9 @@ function AppInner() {
               ? 'Refreshing...'
               : clearing
                 ? 'Clearing...'
-                : exporting
+                : batchBusy
                   ? 'Exporting...'
-                  : exportMessage ?? 'Ready'}
+                  : 'Ready'}
         </div>
       </div>
 
@@ -394,7 +328,7 @@ function AppInner() {
         </div>
       )}
       {importResult && <ImportResultsPanel result={importResult} onDismiss={() => setImportResult(null)} />}
-      {batchOpen && <BatchExportDialog ids={batchIds} filter={batchFilter} onClose={() => setBatchOpen(false)} onBusy={setBatchBusy} />}
+      {batchOpen && <BatchExportDialog currentId={exportCurrentId} selectionScope={selectionScope} selectionCount={selectionCount} filter={batchFilter} onClose={() => setBatchOpen(false)} onBusy={setBatchBusy} />}
       <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </div>
   );

@@ -1,15 +1,18 @@
+import type { SelectionGesture } from '../rowSelection';
 import React, { Component, lazy, Suspense, useRef } from 'react';
 import type { EntryRow, SearchSortColumn } from '../../../shared/types';
 import { usePanelSize, usePanePercentage } from '../layoutPreferences';
 import DataGrid, { type EmptyResultsMessage } from './DataGrid';
 
 interface Props {
-  checkedIds?: ReadonlySet<number>;
-  onToggleChecked?: (id: number) => void;
+  onRecovery?: (entry?: EntryRow) => void;
+  isRowSelected?: (id: number) => boolean;
+  onSelectAll?: () => void;
+  onClearSelection?: () => void;
   emptyMessage?: EmptyResultsMessage;
   rows: EntryRow[];
   selectedId: number | null;
-  onSelect: (entry: EntryRow) => void;
+  onSelect: (entry: EntryRow, gesture?: SelectionGesture) => void;
   totalRows?: number;
   loadingMore?: boolean;
   onLoadMore?: () => void;
@@ -32,7 +35,7 @@ class DetailsBoundary extends Component<{ children: React.ReactNode }, { failed:
   }
 }
 
-export default function ResultsWorkspace({ checkedIds, onToggleChecked, emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
+export default function ResultsWorkspace({ onRecovery, isRowSelected, onSelectAll, onClearSelection, emptyMessage, rows, selectedId, onSelect, totalRows, loadingMore, onLoadMore, onSortChange, sortColumn, sortDirection }: Props) {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef<{ y: number; height: number } | null>(null);
   const [panelHeight, setPanelHeight] = usePanelSize('details-height', workspaceRef, MIN_PANEL_HEIGHT, MIN_RESULTS_HEIGHT + 6, 'height');
@@ -69,8 +72,9 @@ export default function ResultsWorkspace({ checkedIds, onToggleChecked, emptyMes
     >
       <div className="flex min-h-0 overflow-hidden">
         <DataGrid
-          checkedIds={checkedIds}
-          onToggleChecked={onToggleChecked}
+          isRowSelected={isRowSelected}
+          onSelectAll={onSelectAll}
+          onClearSelection={onClearSelection}
           rows={rows}
           selectedId={selectedId}
           onSelect={onSelect}
@@ -117,7 +121,7 @@ export default function ResultsWorkspace({ checkedIds, onToggleChecked, emptyMes
       />
       <DetailsBoundary>
         <Suspense fallback={<div role="status" className="p-4">Loading structure details…</div>}>
-          <CompoundInfoPanel entry={selectedEntry} />
+          <CompoundInfoPanel entry={selectedEntry} onRecovery={onRecovery} />
         </Suspense>
       </DetailsBoundary>
     </div>

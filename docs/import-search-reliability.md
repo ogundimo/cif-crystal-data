@@ -26,11 +26,9 @@ committed. The main mutation lock is retained until the worker closes its connec
 and exits, then listeners and cancellation subscriptions are removed. There is no
 persistent/resumable job queue.
 
-**Startup refresh defaults off**, including profiles without an explicit setting.
-Enable it under **Sources & backups → Refresh saved folder at startup**. The choice
-persists in the profile and portable backup. Manual Refresh remains available.
-Restore still clears the remembered source folder. This default is a usability
-choice, not evidence that the reported cold-start delay has been diagnosed.
+**Refresh is manual.** Opening the app only reads the saved folder location;
+it does not scan it, including profiles with the former startup-refresh preference
+enabled. Use **Refresh CIFs** to rescan. The Sources & backups menu has been removed.
 
 ## Bibliography and upgrades
 

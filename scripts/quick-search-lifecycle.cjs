@@ -83,10 +83,13 @@ module.exports = async function testQuickSearchLifecycle(window, testUrl, waitFo
   await js("window.appRegression.finishImport({cancelled:true,discoveryComplete:false,processed:0,unattempted:2,total:2,importedCount:0,skippedCount:0,failures:[{phase:'discovery',filename:'restricted',reason:'Access denied'}]})");
   await wait("document.body.textContent.includes('Import cancelled') && document.body.textContent.includes('Access denied')");
   await wait("[...document.querySelectorAll('button')].some(b => b.textContent.includes('Import CIFs') && !b.disabled)");
-  await js("document.querySelector('summary').click(); document.querySelector('input[type=checkbox]').click()");
-  await wait("localStorage.getItem('test-startup-refresh') === 'true'");
+  await js("localStorage.setItem('test-startup-refresh','true')");
   await window.loadURL(testUrl + '?app-regression');
-  await wait("document.querySelector('input[type=checkbox]')?.checked");
-  console.log('✓ import discovery, accessible cancellation, partial diagnostics and startup preference persistence');
+  await wait("document.body.textContent.includes('Import CIFs')");
+  assert.equal(await js("document.body.textContent.includes('Sources & backups')"), false);
+  assert.equal(await js("window.appRegression.refreshCalls"), 0, 'old startup preference must not trigger an automatic scan');
+  await click('Refresh CIFs');
+  await wait('window.appRegression.refreshCalls === 1');
+  console.log('✓ import discovery, cancellation, diagnostics and manual-only refresh');
   console.log('✓ quick-search validation, stale preview, retry, Enter, draft cancellation, reset and focus trapping');
 };

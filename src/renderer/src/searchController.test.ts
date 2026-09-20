@@ -18,6 +18,63 @@ function setup() {
   return { controller, searchPage, requests, error, state };
 }
 describe('renderer search lifecycle', () => {
+  it('selects across pages, preserves IDs through sorting, and resets selection with a new search', async () => {
+    const t = setup(); const initial = t.controller.search(filter);
+    t.requests[0].resolve({ rows: [row(8), row(3)], total: 4 }); await initial;
+    t.controller.select(3);
+    const page = t.controller.loadMore();
+    t.requests[1].resolve({ rows: [row(12), row(6)], total: 4 }); await page;
+    t.controller.select(6, { range: true });
+    expect([...t.state().selection.ids]).toEqual([3, 12, 6]);
+    const sorted = t.controller.sort('formula', 'desc');
+    t.requests[2].resolve({ rows: [row(6), row(12)], total: 4 }); await sorted;
+    expect([...t.state().selection.ids]).toEqual([3, 12, 6]);
+    expect(t.state().selection.anchor).toBeNull();
+    t.controller.select(12, { range: true });
+    expect([...t.state().selection.ids]).toEqual([6, 12]);
+    const again = t.controller.search(filter);
+    t.requests[3].resolve({ rows: [row(8)], total: 4 }); await again;
+    expect([...t.state().selection.ids]).toEqual([8]);
+  });
+  it('selects all unloaded matches symbolically and clears without changing details', async () => {
+    const t = setup(); const initial = t.controller.search(filter);
+    t.requests[0].resolve({ rows: [row(1), row(2)], total: 200_000 }); await initial;
+    t.controller.selectAll();
+    expect(t.state().selection).toMatchObject({ all: true, ids: new Set() });
+    expect(t.searchPage).toHaveBeenCalledTimes(1);
+    t.controller.select(2, { toggle: true });
+    expect(t.state().selection).toMatchObject({ all: true, ids: new Set([2]) });
+    t.controller.select(1, { focusOnly: true });
+    expect(t.state().selection.ids).toEqual(new Set([2]));
+    t.controller.clearSelection();
+    expect(t.state().selection).toMatchObject({ all: false, ids: new Set() });
+    expect(t.state().selectedEntryId).toBe(1);
+    t.controller.select(999); expect(t.state().selectedEntryId).toBe(1);
+    t.controller.openEntry(row(9)); t.controller.selectAll();
+    expect(t.state().selection).toMatchObject({ all: false, ids: new Set([9]) });
+  });
+  it('keeps the prior selection and reports an excessive range', async () => {
+    const t = setup(); const initial = t.controller.search(filter);
+    t.requests[0].resolve({ rows: Array.from({ length: 100_001 }, (_, i) => row(i + 1)), total: 100_001 }); await initial;
+    t.controller.select(100_001, { range: true });
+    expect(t.error).toHaveBeenCalledWith('select structures', expect.objectContaining({ message: expect.stringContaining('100,000') }));
+    expect(t.state().selectedEntryId).toBe(1);
+    expect(t.state().selection.ids).toEqual(new Set([1]));
+  });
+  it('opens a recovery candidate without stale search responses replacing it', async () => {
+    const t = setup(); const pending = t.controller.search(filter);
+    t.controller.openEntry(row(9));
+    t.requests[0].resolve({ rows: [row(1)], total: 1 }); await pending;
+    expect(t.state()).toMatchObject({ entries: [row(9)], selectedEntryId: 9, total: 1, busy: false });
+    await t.controller.refresh(); expect(t.state().entries).toEqual([]);
+  });
+  it('refreshes the active search after removal', async () => {
+    const t = setup(); const initial = t.controller.search(filter);
+    t.requests[0].resolve({ rows: [row(1), row(2)], total: 2 }); await initial;
+    const refreshed = t.controller.refresh();
+    t.requests[1].resolve({ rows: [row(2)], total: 1 }); await refreshed;
+    expect(t.state()).toMatchObject({ entries: [row(2)], selectedEntryId: 2, total: 1 });
+  });
   it('hands off filters, replaces results, selects the first row, pages once and preserves selection', async () => {
     const t = setup(); const first = t.controller.search(filter);
     expect(t.searchPage).toHaveBeenCalledWith({ filter, offset: 0, limit: 500 });

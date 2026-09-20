@@ -195,6 +195,8 @@ async function run() {
 
   await require('./viewer-usability-regressions.cjs')(window, { waitFor, clickByText, pause, representativeCif });
 
+  await require('./viewer-compact-regressions.cjs')(window, { waitFor, clickByText });
+
   for (const control of ['Cells', 'Labels', 'Fit / reset', 'a', 'b', 'c']) await clickByText(window, control);
   await window.webContents.executeJavaScript(`
     (() => {

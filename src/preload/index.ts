@@ -8,6 +8,7 @@ import type {
 } from '../shared/types';
 
 const api: CifApi = {
+  sourceRecovery: request => ipcRenderer.invoke('cif:sourceRecovery', request),
   countBatchExport: scope => ipcRenderer.invoke('cif:countBatchExport', scope),
   batchExport: request => ipcRenderer.invoke('cif:batchExport', request),
   cancelBatchExport: () => ipcRenderer.invoke('cif:cancelBatchExport'),
