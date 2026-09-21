@@ -56,6 +56,6 @@ try {
   assert.deepEqual(await run.main('__smoke.errors'), []);
   const report = { executable: exe, profile, backup, entries: restored.total, restoredIntoFreshProfile: true,
     restarted: true, originalFolderUnavailable: true, exportMatchesImportedVersion: true };
-  await writeFile(join(root, 'report.json'), JSON.stringify(report, null, 2));
+  await writeFile(process.argv[3] ?? join(root, 'report.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
 } finally { if (run) await run.stop(); }

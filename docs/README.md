@@ -22,6 +22,7 @@ recorded test counts and timings apply only to their stated revisions and worklo
 | [Viewer and PXRD comparison](viewer-comparison.md) | Comparison controls, viewer measurements, polyhedra and implementation evidence. |
 | [Scientific validity](scientific-validity.md) | PXRD assumptions, reference comparisons, tolerances and unsupported inputs. |
 | [Scientific recovery](scientific-recovery.md) | Failure and responsiveness contracts, reproduction commands and dated validation. |
+| [Windows release acceptance](release-validation.md) | Packaged publication gate, artifact evidence, and manual installer/upgrade/uninstall/portable checks. |
 | [Code-quality measurements](code-quality.md) | Measurement commands, report interpretation, scope and unused-code enforcement. |
 | [Regression protection](regression-protection.md) | Enforced coverage/complexity rules and baseline governance; advisory mutation comparisons. |
 | [Duplication policy](duplication-policy.md) | Enforced clone comparison and the evidence supporting the retained writer allowance. |

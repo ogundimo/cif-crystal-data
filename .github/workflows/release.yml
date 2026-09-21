@@ -1,6 +1,16 @@
 name: Release Windows application
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'scripts/*packaged*'
+      - 'scripts/*release-validation*'
+      - 'scripts/*launcher*'
+      - 'scripts/*distribution*'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'electron.vite.config.ts'
   push:
     tags:
       - 'v*'
@@ -15,19 +25,24 @@ concurrency:
   group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
-  release:
-    name: Test, package, and publish
+  validate:
+    name: Test and package Windows release
     runs-on: windows-latest
-    timeout-minutes: 30
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
+    timeout-minutes: 45
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
+      commit: ${{ steps.revision.outputs.commit }}
+      artifact: cif-crystal-data-${{ steps.release.outputs.version || github.sha }}-windows
 
     env:
-      CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
-      CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+      CSC_LINK: ${{ github.event_name != 'pull_request' && secrets.WINDOWS_CERTIFICATE || '' }}
+      CSC_KEY_PASSWORD: ${{ github.event_name != 'pull_request' && secrets.WINDOWS_CERTIFICATE_PASSWORD || '' }}
 
     steps:
       - name: Check out release tag
@@ -43,6 +58,7 @@ jobs:
           cache: npm
 
       - name: Validate tag and package version
+        if: github.event_name != 'pull_request'
         id: release
         shell: pwsh
         run: |
@@ -82,14 +98,76 @@ jobs:
           "version=$packageVersion" >> $env:GITHUB_OUTPUT
           "prerelease=$($packageVersion.Contains('-').ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
 
+      - name: Record tested revision
+        id: revision
+        shell: pwsh
+        run: '"commit=$(git rev-parse HEAD)" >> $env:GITHUB_OUTPUT'
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Run complete test suite
-        run: npm run test:all
+      - name: Verify release gate failure handling
+        run: npm run test:release-validation
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run Electron UI tests
+        run: npm run test:ui
+
+      - name: Build production bundles once
+        run: npm run build
+
+      - name: Verify production import worker
+        run: npx --no-install electron scripts/import-worker-smoke-electron.cjs
+
+      - name: Verify viewer on the release revision
+        run: node scripts/run-jsmol-viewer-test.mjs
 
       - name: Package Windows installers
-        run: npm run package -- --publish never
+        run: npx --no-install electron-builder --publish never
+
+      - name: Validate packaged workflows
+        run: npm run test:packaged
+
+      - name: Validate portable launcher
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          npm run test:portable-launcher -- "release/CIF Crystal Data $version.exe"
+
+      - name: Build a newer-version upgrade fixture
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: |
+          $version = [version]((Get-Content package.json -Raw | ConvertFrom-Json).version.Split('-')[0])
+          $probeVersion = "$($version.Major).$($version.Minor).$($version.Build + 1)-upgrade-probe"
+          "UPGRADE_PROBE_VERSION=$probeVersion" >> $env:GITHUB_ENV
+          npx --no-install electron-builder --win nsis --publish never "--config.extraMetadata.version=$probeVersion" --config.directories.output=release/upgrade-probe
+
+      - name: Validate installer lifecycle on disposable Windows
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: |
+          $previous = Join-Path $env:RUNNER_TEMP 'CIF.Crystal.Data.Setup.1.1.0.exe'
+          Invoke-WebRequest 'https://github.com/ogundimo/cif-crystal-data/releases/download/v1.1.0/CIF.Crystal.Data.Setup.1.1.0.exe' -OutFile $previous
+          if ((Get-FileHash -LiteralPath $previous -Algorithm SHA256).Hash.ToLowerInvariant() -ne '13c1651071c13e43d60feda5d6a8ffb3901d0e1454e4eb0c31ab5ccadaed3e2b') {
+            throw 'Previous installer does not match the pinned release digest.'
+          }
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          npm run test:installer-distribution -- "release/CIF Crystal Data Setup $version.exe" "release/upgrade-probe/CIF Crystal Data Setup $env:UPGRADE_PROBE_VERSION.exe" $previous
+
+      - name: Retain release acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-validation-${{ github.sha }}
+          path: |
+            reports/release-validation/
+            reports/viewer/
+            .dist/jsmol-verification/
+          include-hidden-files: true
+          retention-days: 30
 
       - name: Verify Windows signatures
         if: env.CSC_LINK != ''
@@ -125,7 +203,7 @@ jobs:
       - name: Retain packaged assets
         uses: actions/upload-artifact@v6
         with:
-          name: cif-crystal-data-${{ steps.release.outputs.version }}-windows
+          name: cif-crystal-data-${{ steps.release.outputs.version || github.sha }}-windows
           path: |
             release/*.exe
             release/SHA256SUMS.txt
@@ -133,6 +211,37 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
+
+  publish:
+    name: Publish validated Windows release
+    needs: validate
+    if: github.event_name != 'pull_request'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Check out validated release notes
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.validate.outputs.commit }}
+
+      - name: Verify tag still identifies the tested revision
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ needs.validate.outputs.tag }}
+          TESTED_COMMIT: ${{ needs.validate.outputs.commit }}
+        run: |
+          $tagCommit = git rev-list -n 1 $env:RELEASE_TAG
+          if ($LASTEXITCODE -ne 0 -or $tagCommit -ne $env:TESTED_COMMIT) { throw 'Release tag changed after validation.' }
+
+      - name: Download validated assets
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ needs.validate.outputs.artifact }}
+          path: release
 
       - name: Attest installers and SBOM
         if: github.event.repository.visibility == 'public'
@@ -145,9 +254,9 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.release.outputs.tag }}
-          RELEASE_VERSION: ${{ steps.release.outputs.version }}
-          IS_PRERELEASE: ${{ steps.release.outputs.prerelease }}
+          RELEASE_TAG: ${{ needs.validate.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          IS_PRERELEASE: ${{ needs.validate.outputs.prerelease }}
         run: |
           $assets = @(
             Get-ChildItem release -File |

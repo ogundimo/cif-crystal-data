@@ -12,6 +12,7 @@ reports/architecture/
 reports/mutation/
 reports/scientific/
 reports/viewer/
+reports/release-validation/
 reports/additional-measurements/
 reports/measurement-candidate/
 .stryker-tmp/
