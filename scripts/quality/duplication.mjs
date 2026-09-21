@@ -4,10 +4,24 @@ import { relative } from 'node:path';
 import { category } from './scope.mjs';
 import { measureDuplication } from './analyzers.mjs';
 import { cloneIdentity, compareDuplication, digest, protectDuplicationPolicy } from './duplication-policy.mjs';
+import { sameMeasurementLock } from './release-metadata.mjs';
 
 const baselinePath = 'docs/baselines/duplication-policy.json';
 const git = (...args) => execFileSync('git', args, {encoding:'utf8', windowsHide:true}).trim();
 const read = async path => JSON.parse(await readFile(path, 'utf8'));
+async function compareWithReleaseMetadata(current, policy) {
+  const file = 'package-lock.json';
+  if (current.contract[file] !== policy.contract[file]) {
+    const revision = policy.review?.sourceCommit;
+    if (!/^[a-f0-9]{40}$/.test(revision ?? '')) throw new Error('Missing baseline lockfile provenance');
+    const previousText = execFileSync('git', ['show', `${revision}:${file}`], { encoding: 'utf8', windowsHide: true });
+    if (sameMeasurementLock(await readFile(file, 'utf8'), previousText, policy.contract[file])) {
+      current = structuredClone(current);
+      current.contract[file] = policy.contract[file];
+    }
+  }
+  return compareDuplication(current, policy);
+}
 await mkdir('reports/quality', {recursive:true});
 try {
   if (process.versions.node.split('.')[0] !== '22') throw new Error('Duplication measurements require Node 22');
@@ -28,7 +42,7 @@ try {
   for (const [file, text] of sources) if (digest(await readFile(file, 'utf8')) !== digest(text)) throw new Error(`Input changed during duplication measurement: ${file}`);
   await writeFile('reports/quality/duplication-current.json', JSON.stringify(current, null, 2)+'\n');
   const policy = await read(baselinePath);
-  const assessment = compareDuplication(current, policy);
+  const assessment = await compareWithReleaseMetadata(current, policy);
   const baseIndex = process.argv.indexOf('--base');
   if (baseIndex !== -1) {
     const ref = process.argv[baseIndex + 1];
@@ -36,7 +50,7 @@ try {
     if (git('ls-tree', ref, '--', baselinePath)) {
       const previous = JSON.parse(git('show', `${ref}:${baselinePath}`));
       assessment.failures.push(...protectDuplicationPolicy(policy, previous).failures,
-        ...compareDuplication(current, previous).failures.map(message => `Target-branch policy: ${message}`));
+        ...(await compareWithReleaseMetadata(current, previous)).failures.map(message => `Target-branch policy: ${message}`));
     } else console.log('Initial duplication-policy adoption; no target-branch allowance exists.');
   }
   await writeFile('reports/quality/duplication-regression.json', JSON.stringify(assessment, null, 2)+'\n');
