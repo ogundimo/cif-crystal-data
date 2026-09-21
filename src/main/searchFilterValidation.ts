@@ -1,4 +1,5 @@
 import { ELEMENT_SYMBOLS, SELECTABLE_PERIODS } from '../shared/periodicTableData';
+import { validateNumericSearchInput } from '../shared/searchValidation';
 import type { ElementSelection, SearchFilter } from '../shared/types';
 
 const ELEMENT_SET = new Set<string>(ELEMENT_SYMBOLS);
@@ -62,6 +63,14 @@ function validateSelection(value: unknown, field: string): ElementSelection {
   };
 }
 
+function validateNumericQueries(filter: SearchFilter): void {
+  const errors = validateNumericSearchInput({
+    sgQuery: filter.sgQuery ?? '',
+    elementCountQuery: filter.elementCountQuery ?? ''
+  });
+  for (const [field, message] of Object.entries(errors)) fail(`${field}: ${message}`);
+}
+
 /** Validate the untrusted value received over IPC before database code sees it. */
 export function validateSearchFilter(value: unknown): SearchFilter {
   if (!isRecord(value)) fail('payload must be an object');
@@ -119,5 +128,7 @@ export function validateSearchFilter(value: unknown): SearchFilter {
     }
   }
 
-  return value as unknown as SearchFilter;
+  const filter = value as unknown as SearchFilter;
+  validateNumericQueries(filter);
+  return filter;
 }

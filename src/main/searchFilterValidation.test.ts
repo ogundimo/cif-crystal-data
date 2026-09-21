@@ -10,6 +10,29 @@ const validFilter = {
 };
 
 describe('validateSearchFilter', () => {
+  it.each(['sgQuery', 'elementCountQuery'] as const)('rejects invalid numeric criteria in %s', (field) => {
+    for (const query of ['abc', 'many', '1.5', '1e2', '0x10', '-1', '0', '4-2', '1-2-3', '1-999', '9'.repeat(200)]) {
+      for (const exclude of [false, true]) {
+        expect(() => validateSearchFilter({
+          ...validFilter, [field]: query, sgExclude: exclude, elementCountExclude: exclude
+        })).toThrow(`Invalid search filter: ${field}:`);
+      }
+    }
+  });
+
+  it.each([
+    ['sgQuery', 230], ['elementCountQuery', 118]
+  ] as const)('accepts only in-range boundaries for %s without changing the filter', (field, maximum) => {
+    for (const query of ['', ' \t ', '1', String(maximum), ` 1 - ${maximum} `, `${maximum}-${maximum}`]) {
+      const filter = { ...validFilter, [field]: query, sgExclude: true, elementCountExclude: true };
+      const before = structuredClone(filter);
+      expect(validateSearchFilter(filter)).toBe(filter);
+      expect(filter).toEqual(before);
+    }
+    expect(() => validateSearchFilter({ ...validFilter, [field]: String(maximum + 1) }))
+      .toThrow(`Enter a value from 1 to ${maximum}.`);
+  });
+
   it.each([null, undefined, [], 'Fe', 7])('rejects a non-object IPC payload: %j', (value) => {
     expect(() => validateSearchFilter(value)).toThrow('payload must be an object');
   });

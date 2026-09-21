@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { migrateDatabase } from '../migrations';
+import { validateSearchFilter } from '../searchFilterValidation';
 import type { SearchFilter } from '../../shared/types';
 
 const doubles = vi.hoisted(() => ({ db: null as Database.Database | null }));
@@ -216,11 +217,16 @@ describe('computeRestraints text and numeric fields', () => {
       .toEqual({ field: 'Number of elements', content: "NOT('3')", entries: 3 });
   });
 
-  it('reports the whole database for a numeric field that parses to no condition', () => {
-    // parseSgQuery and parseElementCountQuery fall back to 1=1 for unparseable
-    // text, so the row is shown with the unfiltered entry count. See issue #109.
-    expect(restraints({ sgQuery: 'abc' })[0]).toEqual({ field: 'Space group number', content: 'abc', entries: 4 });
-    expect(restraints({ elementCountQuery: 'many' })[0]).toEqual({ field: 'Number of elements', content: 'many', entries: 4 });
+  it('rejects unparseable numeric criteria at the boundary before producing misleading restraint rows', () => {
+    // Match the IPC path: malformed criteria never reach computeRestraints (#109).
+    for (const fields of [{ sgQuery: 'abc' }, { elementCountQuery: 'many' }]) {
+      for (const exclude of [false, true]) {
+        expect(() => computeRestraints(validateSearchFilter({
+          slot1: [], slot2: [], mode: 'AND', ...fields,
+          sgExclude: exclude, elementCountExclude: exclude
+        }))).toThrow('Invalid search filter:');
+      }
+    }
   });
 });
 
