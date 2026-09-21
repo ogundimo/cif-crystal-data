@@ -22,6 +22,29 @@ native dialogs with controlled paths and disables the GPU. They run `win-unpacke
 not the NSIS installer or portable extraction launcher. Existing database backups
 and exports in a normal user profile are never used.
 
+The workflow also invokes the actual portable launcher with a private extraction
+directory and synthetic profile, checking initial import/export, restart and
+relocation of the executable. `portable-launcher.json` identifies the tested
+launcher hash and records each instrumented launch. This is separate from the
+payload report and does not claim uninstrumented launch or default-profile behavior.
+
+Changes to release tooling trigger the same validation job on pull requests, with
+read-only repository permissions and no signing credentials. Publication is a
+separate dependent job, excluded for pull requests. It downloads the tested assets
+without rebuilding and verifies that the release tag still identifies the tested
+commit. PR runs cannot attest or publish a GitHub release.
+
+On these PR runs only, disposable GitHub-hosted Windows runners exercise silent
+NSIS install, restart, uninstall, reinstall and a version upgrade. The test refuses
+to run outside that environment. It uses the default profile of the disposable
+account and verifies database/original-file preservation and shortcut removal.
+The old v1.1.0 installer is pinned by its published SHA-256 digest. The newer
+installer uses current bundles with a test-only incremented patch version; it is
+stored under `release/upgrade-probe` and excluded from release assets. The upgrade
+checks identity before explicit refresh, which establishes managed bytes for legacy
+records. This is migration/lifecycle evidence, not verification of the eventual
+release version or interactive dialogs. Reports identify all three installers.
+
 A nonzero runner exit, missing artifact or artifact change fails the gate and
 prevents the later publication step. The first failure stops subsequent suites.
 No acceptance step uses `continue-on-error`; publication retains GitHub Actions'
@@ -39,6 +62,15 @@ npm run test:release-validation
 npm run package -- --publish never
 npm run test:packaged
 ```
+
+Run the instrumented portable check separately with an explicit executable:
+
+```powershell
+npm run test:portable-launcher -- "release/CIF Crystal Data 1.1.0.exe"
+```
+
+Use the actual candidate filename/version. Do not run the installer test locally;
+open a PR with the release-tooling changes to run it on disposable hosted Windows.
 
 For an isolated candidate output directory:
 
@@ -93,7 +125,8 @@ files only after the app has quit. If a check fails, retain logs/profile snapsho
 do not publish, and investigate before repeating with a new candidate.
 
 The automated report intentionally marks installer and portable-launcher
-acceptance `not-tested`; it does not infer manual approval. Attach the completed
+manual acceptance `not-tested`; separate distribution reports record only the
+automated checks actually performed. It does not infer manual approval. Attach the completed
 manual record to the release issue/PR with the tested artifact hashes. The workflow
 enforces automated acceptance only; it does not wait for a manual attestation.
 Do not describe an automatically published artifact as installer/portable-verified

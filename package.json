@@ -23,6 +23,8 @@
     "test:packaged-batch-export": "node scripts/packaged-batch-export-smoke.mjs",
     "test:packaged": "node scripts/release-validation.mjs",
     "test:release-validation": "node --test scripts/release-validation.test.mjs",
+    "test:portable-launcher": "node scripts/portable-launcher-smoke.mjs",
+    "test:installer-distribution": "node scripts/installer-distribution-smoke.mjs",
     "test:all": "npm test && npm run test:ui && npm run test:worker",
     "benchmark:database": "electron scripts/database-scale-benchmark.cjs",
     "benchmark:pxrd": "node scripts/benchmark-pxrd.mjs",

@@ -1,14 +1,24 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
-export async function launchPackaged({ exe, profile, corpus }) {
+export async function launchPackaged({ exe, profile, corpus, tempDir, launchTimeoutMs = 60000, useDefaultProfile = false }) {
   const reservation = createServer();
   await new Promise(r=>reservation.listen(0, '127.0.0.1', r));
   const port = reservation.address().port;
   await new Promise(r=>reservation.close(r));
-  const child = spawn(exe, [`--inspect-brk=127.0.0.1:${port}`, '--disable-gpu'], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(exe, [`--inspect-brk=127.0.0.1:${port}`, '--disable-gpu'], {
+    windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, ...(tempDir ? { TEMP: tempDir, TMP: tempDir } : {}) }
+  });
+  const terminate = () => {
+    if (child.exitCode !== null || !child.pid) return;
+    if (process.platform === 'win32') spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+    else child.kill();
+  };
+  let launchError;
+  child.on('error', error => { launchError = error; });
   let log = '';
   child.stderr.on('data', b => { log += b; if(String(b).includes('CIF') || String(b).includes('Error')) console.error(String(b)); });
   child.stdout.on('data', b => { log += b; });
@@ -16,7 +26,9 @@ export async function launchPackaged({ exe, profile, corpus }) {
   const pending = new Map(); let sequence = 0; let paused;
   try {
     let url;
-    for (let i = 0; i < 600 && !url; i++) {
+    const deadline = Date.now() + launchTimeoutMs;
+    while (Date.now() < deadline && !url) {
+      if (launchError) throw launchError;
       if (child.exitCode !== null) throw new Error(log);
       try { const targets=await (await fetch(`http://127.0.0.1:${port}/json/list`)).json(); url=targets[0]?.webSocketDebuggerUrl; } catch {}
       if (!url) await pause(100);
@@ -36,7 +48,7 @@ export async function launchPackaged({ exe, profile, corpus }) {
     await send('Runtime.runIfWaitingForDebugger');
     for (let i=0;i<100 && !paused;i++) await pause(50);
     assert.ok(paused, 'No startup breakpoint');
-    const setup = await send('Debugger.evaluateOnCallFrame', { callFrameId: paused.callFrames[0].callFrameId, expression: `process.execArgv.splice(0); { const wt=process.getBuiltinModule('worker_threads'); const OriginalWorker=wt.Worker; wt.Worker=class extends OriginalWorker { constructor(file,options){super(file,{...options,execArgv:[]});} }; process.getBuiltinModule('module').syncBuiltinESMExports(); } global.__smoke = { electron: process.getBuiltinModule('module').createRequire(${JSON.stringify(exe)})('electron') }; __smoke.electron.app.setPath('userData', ${JSON.stringify(profile)}); __smoke.electron.app.on('browser-window-created', (_,w)=>w.hide()); __smoke.errors = []; __smoke.electron.dialog.showErrorBox=(title,message)=>{__smoke.errors.push({title,message});console.error(title,message);}; __smoke.electron.dialog.showOpenDialog = async()=>({canceled:false,filePaths:[${JSON.stringify(corpus)}]}); __smoke.electron.dialog.showSaveDialog = async (...args)=>({canceled:false,filePath:${JSON.stringify(join(profile,'exported.cif'))}}); true`, returnByValue:true });
+    const setup = await send('Debugger.evaluateOnCallFrame', { callFrameId: paused.callFrames[0].callFrameId, expression: `process.execArgv.splice(0); { const wt=process.getBuiltinModule('worker_threads'); const OriginalWorker=wt.Worker; wt.Worker=class extends OriginalWorker { constructor(file,options){super(file,{...options,execArgv:[]});} }; process.getBuiltinModule('module').syncBuiltinESMExports(); } global.__smoke = { electron: process.getBuiltinModule('module').createRequire(process.execPath)('electron') }; ${useDefaultProfile ? '' : `__smoke.electron.app.setPath('userData', ${JSON.stringify(profile)});`} __smoke.electron.app.on('browser-window-created', (_,w)=>w.hide()); __smoke.errors = []; __smoke.electron.dialog.showErrorBox=(title,message)=>{__smoke.errors.push({title,message});console.error(title,message);}; __smoke.electron.dialog.showOpenDialog = async()=>({canceled:false,filePaths:[${JSON.stringify(corpus)}]}); __smoke.electron.dialog.showSaveDialog = async (...args)=>({canceled:false,filePath:${JSON.stringify(join(profile,'exported.cif'))}}); true`, returnByValue:true });
     assert.ok(!setup.exceptionDetails, JSON.stringify(setup.exceptionDetails));
     await send('Debugger.resume');
     await send('Debugger.disable');
@@ -52,8 +64,8 @@ export async function launchPackaged({ exe, profile, corpus }) {
       if(await main("__smoke.electron.BrowserWindow.getAllWindows().length > 0 && !__smoke.electron.BrowserWindow.getAllWindows()[0].webContents.isLoading()")) break;
       await pause(100);
     }
-    assert.equal(await main("__smoke.electron.app.getPath('userData')"), profile);
+    if (!useDefaultProfile) assert.equal(await main("__smoke.electron.app.getPath('userData')"), profile);
     assert.equal(await main('__smoke.electron.app.isPackaged'), true);
-    return { child, ws, main, ui, stop: async()=> { await main('setTimeout(()=>__smoke.electron.app.quit(), 20); true'); ws.close(); await new Promise(r=>{ if(child.exitCode !== null) return r(); const timeout=setTimeout(()=>{child.kill();r();},10000);child.once('exit',()=>{clearTimeout(timeout);r();}); }); } };
-  } catch(error) { ws?.close(); child.kill(); throw error; }
+    return { child, ws, main, ui, stop: async()=> { await main('setTimeout(()=>__smoke.electron.app.quit(), 20); true'); ws.close(); await new Promise(r=>{ if(child.exitCode !== null) return r(); const timeout=setTimeout(()=>{terminate();r();},10000);child.once('exit',()=>{clearTimeout(timeout);r();}); }); } };
+  } catch(error) { ws?.close(); terminate(); throw new Error(`${error.message}; launcher exit=${child.exitCode}; output=${log}`, { cause: error }); }
 }

@@ -83,4 +83,15 @@ test('publication follows acceptance and is not configured to ignore failure', a
   assert.doesNotMatch(workflow, /continue-on-error:/);
   const publish = workflow.slice(workflow.indexOf('- name: Publish GitHub Release'));
   assert.doesNotMatch(publish, /if:.*(?:always|failure)/);
+  assert.match(workflow, /publish:\s+name:.*\r?\n\s+needs: validate\r?\n\s+if: github.event_name != 'pull_request'/);
+  const validationJob = workflow.slice(workflow.indexOf('  validate:'), workflow.indexOf('  publish:'));
+  assert.doesNotMatch(validationJob, /contents: write|attestations: write|id-token: write/);
+});
+
+test('installer experiments refuse execution outside a disposable hosted Windows runner', () => {
+  const child = spawnSync(process.execPath, [fileURLToPath(new URL('./installer-distribution-smoke.mjs', import.meta.url))], {
+    env: { ...process.env, GITHUB_ACTIONS: 'false' }, encoding: 'utf8', windowsHide: true
+  });
+  assert.notEqual(child.status, 0);
+  assert.match(child.stderr, /requires a disposable GitHub-hosted Windows runner/);
 });
