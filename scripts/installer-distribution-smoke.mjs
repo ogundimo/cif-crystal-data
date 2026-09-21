@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { access, cp, mkdir, mkdtemp, readFile, readdir, realpath, rename, writeFile } from 'node:fs/promises';
@@ -31,6 +31,15 @@ const exists = async file => { try { await access(file); return true; } catch { 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 let run, userData, shortcuts;
 
+function installRegistrations() {
+  const command = `$keys = @(Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*' -ErrorAction SilentlyContinue |
+    Where-Object { $_.InstallLocation -and $_.InstallLocation.TrimEnd('\\') -ieq $env:CIF_TEST_INSTALL_LOCATION } |
+    Select-Object -ExpandProperty PSChildName); ConvertTo-Json -InputObject $keys -Compress`;
+  return JSON.parse(execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
+    encoding: 'utf8', windowsHide: true, env: { ...process.env, CIF_TEST_INSTALL_LOCATION: installDir }
+  }).trim());
+}
+
 async function execute(file, args) {
   const child = spawn(file, args, { windowsHide: true, stdio: 'inherit' });
   const [code] = await once(child, 'exit');
@@ -40,6 +49,7 @@ async function execute(file, args) {
 async function install(file) {
   await execute(file, ['/S', `/D=${installDir}`]);
   assert.ok(await exists(installedExe), 'Installer must create the application executable');
+  assert.equal(installRegistrations().length, 1, 'Installer must register the requested installation');
 }
 
 async function verify(phase, { fresh = false, expectedId, expectedExportHash, refresh = false } = {}) {
@@ -89,9 +99,17 @@ async function uninstall(phase) {
   const names = (await readdir(installDir)).filter(name => /^Uninstall.*\.exe$/i.test(name));
   assert.equal(names.length, 1);
   await execute(join(installDir, names[0]), ['/S']);
-  for (let i = 0; i < 600 && await exists(installDir); i++) await pause(100);
+  // NSIS relaunches its uninstaller from TEMP. The original process can exit
+  // before cleanup finishes, and installed files are removed before shortcuts
+  // and the uninstall registry key. Wait for the complete observable outcome.
+  for (let i = 0; i < 600; i++) {
+    const filesRemain = (await Promise.all([installDir, ...shortcuts].map(exists))).some(Boolean);
+    if (!filesRemain && installRegistrations().length === 0) break;
+    await pause(100);
+  }
   assert.equal(await exists(installDir), false, 'Uninstaller must remove the installed application directory');
   for (const file of shortcuts) assert.equal(await exists(file), false, `Shortcut survived uninstall: ${file}`);
+  assert.equal(installRegistrations().length, 0, 'Uninstall registration must be removed before reinstall');
   assert.equal(await hash(database), before, 'Uninstall must preserve the stopped user database bytes');
   assert.deepEqual(await readFile(join(corpus, 'sample.cif')), fixture);
   report.checks.push({ phase, profilePreserved: true, originalUnchanged: true, installationRemoved: true });
