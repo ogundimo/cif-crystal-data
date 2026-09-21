@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { access, cp, mkdir, mkdtemp, readFile, readdir, realpath, rename, writeFile } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { launchPackaged } from './packaged-app-driver.mjs';
 
 // Native installation changes registry/shortcuts: never run on a research account.
@@ -108,8 +108,11 @@ try {
   await verify('reinstall', { expectedId: first.id });
   await uninstall('uninstall-after-reinstall');
   // Move only the stopped synthetic profile created above; retain it as evidence.
-  const archivedProfile = resolve(root, 'clean-install-profile');
-  assert.equal(dirname(archivedProfile), root);
+  // RUNNER_TEMP and APPDATA may be on different drives; keep this move beside
+  // the owned synthetic profile instead of relying on cross-volume rename.
+  const archivedProfile = resolve(dirname(userData), `${basename(root)}-clean-install-profile`);
+  assert.equal(dirname(archivedProfile), dirname(userData));
+  report.archivedProfile = archivedProfile;
   await rename(userData, archivedProfile);
   await install(previous);
   const old = await verify('previous-release', { fresh: true });
