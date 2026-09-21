@@ -42,7 +42,7 @@ async function install(file) {
   assert.ok(await exists(installedExe), 'Installer must create the application executable');
 }
 
-async function verify(phase, { fresh = false, expectedId, refresh = false } = {}) {
+async function verify(phase, { fresh = false, expectedId, expectedExportHash, refresh = false } = {}) {
   run = await launchPackaged({ exe: installedExe, profile, corpus, useDefaultProfile: true });
   const actualProfile = await run.main("__smoke.electron.app.getPath('userData')");
   if (userData) assert.equal(actualProfile, userData, 'Profile location must survive reinstall/upgrade');
@@ -71,14 +71,16 @@ async function verify(phase, { fresh = false, expectedId, refresh = false } = {}
   await run.main(`__smoke.electron.dialog.showSaveDialog=async()=>({canceled:false,filePath:${JSON.stringify(destination)}});true`);
   assert.equal((await run.ui(`window.cifApi.exportCif(${id})`)).exported, true);
   assert.equal(await readFile(destination, 'utf8'), source.text);
+  const exportSha256 = await hash(destination);
+  if (expectedExportHash) assert.equal(exportSha256, expectedExportHash, 'CIF export bytes must survive the lifecycle transition');
   assert.deepEqual(await run.main('__smoke.errors'), []);
   shortcuts = [join(await run.main("__smoke.electron.app.getPath('desktop')"), 'CIF Crystal Data.lnk'),
     join(process.env.APPDATA, 'Microsoft/Windows/Start Menu/Programs/CIF Crystal Data.lnk')];
   for (const file of shortcuts) assert.ok(await exists(file), `Installed shortcut missing: ${file}`);
   await run.stop(); run = null;
-  report.checks.push({ phase, version, id, profile: userData, refreshedAfterUpgrade: refresh, exported: true });
+  report.checks.push({ phase, version, id, profile: userData, refreshedAfterUpgrade: refresh, exportSha256 });
   await save();
-  return { id, version };
+  return { id, version, exportSha256 };
 }
 
 async function uninstall(phase) {
@@ -102,10 +104,10 @@ try {
   }
   await install(candidate);
   const first = await verify('clean-install', { fresh: true });
-  await verify('restart', { expectedId: first.id });
+  await verify('restart', { expectedId: first.id, expectedExportHash: first.exportSha256 });
   await uninstall('uninstall');
   await install(candidate);
-  await verify('reinstall', { expectedId: first.id });
+  await verify('reinstall', { expectedId: first.id, expectedExportHash: first.exportSha256 });
   await uninstall('uninstall-after-reinstall');
   // Move only the stopped synthetic profile created above; retain it as evidence.
   // RUNNER_TEMP and APPDATA may be on different drives; keep this move beside
@@ -119,10 +121,10 @@ try {
   assert.equal(old.version, '1.1.0');
   await cp(userData, join(root, 'pre-upgrade-profile'), { recursive: true });
   await install(upgrade);
-  const upgraded = await verify('version-upgrade', { expectedId: old.id, refresh: true });
+  const upgraded = await verify('version-upgrade', { expectedId: old.id, expectedExportHash: old.exportSha256, refresh: true });
   assert.equal(upgraded.version, process.env.UPGRADE_PROBE_VERSION);
   assert.notEqual(upgraded.version, old.version, 'A same-version reinstall is not upgrade evidence');
-  await verify('restart-after-upgrade', { expectedId: old.id });
+  await verify('restart-after-upgrade', { expectedId: old.id, expectedExportHash: old.exportSha256 });
   await uninstall('uninstall-after-upgrade');
   report.status = 'passed';
 } catch (error) {
