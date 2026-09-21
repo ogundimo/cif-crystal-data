@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 import ts from 'typescript';
 import { compareRegression, identifyFunctions, protectBaseline } from './regression-policy.mjs';
 import { isProduction } from './scope.mjs';
+import { sameMeasurementLock } from './release-metadata.mjs';
 
 const read = async file => JSON.parse(await readFile(file,'utf8'));
 const hash = text => createHash('sha256').update(text.replaceAll('\r\n','\n')).digest('hex');
@@ -12,6 +13,20 @@ const git = (...args) => execFileSync('git',args,{encoding:'utf8',windowsHide:tr
 const baselinePath = 'docs/baselines/regression-policy.json';
 const contractFiles = ['scripts/quality/scope.mjs','scripts/quality/analyzers.mjs','vitest.config.ts',
   'package-lock.json','tsconfig.web.json','tsconfig.node.json'];
+
+async function compareWithReleaseMetadata(current, baseline) {
+  const file = 'package-lock.json';
+  if (current.contract.files[file] !== baseline.contract.files[file]) {
+    const revision = baseline.provenance?.commit;
+    if (!/^[a-f0-9]{40}$/.test(revision ?? '')) throw new Error('Missing baseline lockfile provenance');
+    const previousText = execFileSync('git', ['show', `${revision}:${file}`], { encoding: 'utf8', windowsHide: true });
+    if (sameMeasurementLock(await readFile(file, 'utf8'), previousText, baseline.contract.files[file])) {
+      current = structuredClone(current);
+      current.contract.files[file] = baseline.contract.files[file];
+    }
+  }
+  return compareRegression(current, baseline);
+}
 
 async function snapshot() {
   const report = await read('reports/quality/baseline.json');
@@ -74,7 +89,7 @@ try {
     console.log(`Candidate baseline written to ${baselinePath}; review its full diff before adoption.`);
   } else {
     const baseline=await read(baselinePath);
-    const result=compareRegression(current,baseline);
+    const result=await compareWithReleaseMetadata(current,baseline);
     const baseIndex=process.argv.indexOf('--base');
     if(baseIndex!==-1) {
       const ref=process.argv[baseIndex+1];
@@ -83,7 +98,7 @@ try {
       if(exists) {
         const previous=JSON.parse(git('show',`${ref}:${baselinePath}`));
         result.failures.push(...protectBaseline(baseline,previous).failures.map(s=>`Baseline update: ${s}`));
-        result.failures.push(...compareRegression(current,previous).failures.map(s=>`Target-branch policy: ${s}`));
+        result.failures.push(...(await compareWithReleaseMetadata(current,previous)).failures.map(s=>`Target-branch policy: ${s}`));
       } else console.log('Initial policy adoption: target branch has no regression baseline.');
     }
     await mkdir(resolve('reports/quality'),{recursive:true});

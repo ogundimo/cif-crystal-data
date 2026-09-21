@@ -167,3 +167,5 @@ measurements when adding new evidence; follow the [maintenance convention](READM
 [#54]: https://github.com/ogundimo/cif-crystal-data-public/issues/54
 [#55]: https://github.com/ogundimo/cif-crystal-data-public/issues/55
 [#56]: https://github.com/ogundimo/cif-crystal-data-public/issues/56
+
+Release-only lockfile version changes do not alter measurement inputs. The regression gate verifies the historical lockfile against its recorded SHA-256 and compares every field except the matching root application versions. Dependency, integrity, analyzer and configuration changes still require measurement-contract review; coverage floors and complexity limits are unchanged.
