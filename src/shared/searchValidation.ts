@@ -51,6 +51,15 @@ function validateIntegerOrRange(
   }
 }
 
+export function validateNumericSearchInput(
+  input: Pick<SearchValidationInput, 'sgQuery' | 'elementCountQuery'>
+): SearchValidationErrors {
+  const errors: SearchValidationErrors = {};
+  validateIntegerOrRange(input.sgQuery, 'sgQuery', 'a space-group number', 230, errors);
+  validateIntegerOrRange(input.elementCountQuery, 'elementCountQuery', 'an element count', 118, errors);
+  return errors;
+}
+
 export function validateSearchInput(input: SearchValidationInput): SearchValidationErrors {
   const errors: SearchValidationErrors = {};
 
@@ -71,9 +80,6 @@ export function validateSearchInput(input: SearchValidationInput): SearchValidat
     errors.cMax = 'Maximum must be greater than or equal to minimum.';
   }
 
-  validateIntegerOrRange(input.sgQuery, 'sgQuery', 'a space-group number', 230, errors);
-  validateIntegerOrRange(input.elementCountQuery, 'elementCountQuery', 'an element count', 118, errors);
-
-  return errors;
+  return { ...errors, ...validateNumericSearchInput(input) };
 }
 

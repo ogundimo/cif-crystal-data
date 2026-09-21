@@ -6,6 +6,20 @@ packaged acceptance records below are historical evidence; GitHub tracks remaini
 Implementation provenance: #15, #40, #49 and #61. A successful fresh-process
 smoke test does not establish cold-cache startup acceptance.
 
+## Numeric search validation (#109)
+
+Space-group numbers accept an integer or ascending inclusive range from 1 to 230;
+element counts use 1 to 118. Empty or whitespace-only values leave the criterion
+unset. The renderer and main process share these rules. The main IPC boundary
+rejects malformed, reversed and out-of-range numeric criteria before search,
+restraint counts or matching-export queries, including excluded criteria.
+
+This chooses boundary rejection for #109: invalid input must not produce a restraint
+row suggesting that an ignored criterion is active. Quick Search already shows
+field errors, blocks submission and clears the preview while invalid. Failed
+preview requests clear stale counts and offer Retry. Direct malformed IPC requests
+receive an `Invalid search filter` error naming the field.
+
 ## Import lifecycle
 
 Discovery reports activity before a final file count exists. Directory/stat errors

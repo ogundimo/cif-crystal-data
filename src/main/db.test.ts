@@ -10,6 +10,13 @@ import {
 } from './db';
 import type { CifEntry } from '../parser/cifParser';
 
+it('retains the internal query fallback for malformed numeric text; IPC rejects it before this layer (#109)', () => {
+  for (const fields of [{ sgQuery: 'abc' }, { elementCountQuery: 'many' }]) {
+    expect(buildWhereClause({ slot1: [], slot2: [], mode: 'AND', ...fields }))
+      .toEqual({ sql: '1=1', params: [] });
+  }
+});
+
 const sampleEntry: CifEntry = {
   formula: 'Fe1O1',
   elements: [

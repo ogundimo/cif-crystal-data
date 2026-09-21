@@ -8,7 +8,7 @@ const doubles = vi.hoisted(() => ({
   save: vi.fn(), open: vi.fn(), confirm: vi.fn(), error: vi.fn(), worker: vi.fn(),
   db: { countBatchExport: vi.fn(), runBatchExport: vi.fn(), getStartupRefresh: vi.fn(), setStartupRefresh: vi.fn(), getDataAuthors: vi.fn(), readStoredCif: vi.fn(), relinkSource: vi.fn(), backupProfile: vi.fn(), restoreProfile: vi.fn(), initDb: vi.fn(), getCifExportSource: vi.fn(), getCifViewerSourceRecord: vi.fn(),
     inspectSourceRecovery: vi.fn(), previewSourceRecovery: vi.fn(), prepareSourceRemoval: vi.fn(), confirmSourceRecovery: vi.fn(),
-    searchEntriesPage: vi.fn(), getImportFolder: vi.fn(), setImportFolder: vi.fn(), clearAllEntries: vi.fn() }
+    computeRestraints: vi.fn(), searchEntriesPage: vi.fn(), getImportFolder: vi.fn(), setImportFolder: vi.fn(), clearAllEntries: vi.fn() }
 }));
 vi.mock('electron', () => ({
   app: { whenReady: () => ({ then: (ready: () => void) => ready() }), on: vi.fn(), quit: vi.fn(),
@@ -233,6 +233,18 @@ describe('main-process IPC contracts', () => {
   ])('rejects malformed pagination before querying SQLite: %j', async (fields, message) => {
     await expect(invoke('cif:searchPage', { filter, offset: 0, limit: 20, ...fields })).rejects.toThrow(`Invalid search ${message}`);
     expect(doubles.db.searchEntriesPage).not.toHaveBeenCalled();
+  });
+
+  it.each(['cif:searchPage', 'cif:restraints'])('rejects malformed numeric filters before database queries on %s', async channel => {
+    for (const fields of [{ sgQuery: 'abc' }, { elementCountQuery: 'many' }]) {
+      for (const exclude of [false, true]) {
+        const invalid = { ...filter, ...fields, sgExclude: exclude, elementCountExclude: exclude };
+        const request = channel === 'cif:searchPage' ? { filter: invalid, offset: 0, limit: 20 } : invalid;
+        await expect(invoke(channel, request)).rejects.toThrow('Invalid search filter:');
+      }
+    }
+    expect(doubles.db.searchEntriesPage).not.toHaveBeenCalled();
+    expect(doubles.db.computeRestraints).not.toHaveBeenCalled();
   });
 
   it('passes a valid filtered page request to the database', async () => {

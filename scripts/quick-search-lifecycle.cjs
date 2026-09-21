@@ -37,6 +37,14 @@ module.exports = async function testQuickSearchLifecycle(window, testUrl, waitFo
   assert.equal(await js("document.querySelector('button[type=submit]').disabled"), true);
   await js('new Promise(resolve => setTimeout(resolve, 350))');
   assert.equal(await js('window.previewRegression.requests.length'), 2, 'invalid input must not request restraints');
+  await input('abc');
+  await wait("document.querySelector('#space-group-number-error')?.textContent.includes('integer or range')");
+  const searchRequests = await js('window.appRegression.requests.length');
+  await js("document.querySelector('#quick-search-space-group-number').dispatchEvent(new KeyboardEvent('keydown', {key:'Enter',bubbles:true}))");
+  await js('new Promise(resolve => setTimeout(resolve, 350))');
+  assert.equal(await js('window.previewRegression.requests.length'), 2, 'unparseable input must not request restraints');
+  assert.equal(await js('window.appRegression.requests.length'), searchRequests, 'Enter must not submit unparseable input');
+  assert.equal(await js("document.querySelector('button[type=submit]').disabled"), true);
   await input('63');
   await wait('window.previewRegression.pending.length === 3');
   await js("window.previewRegression.pending[2].reject('unavailable')");
