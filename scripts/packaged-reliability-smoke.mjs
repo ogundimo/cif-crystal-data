@@ -54,9 +54,13 @@ async function verifyScientificRenderingAndExport(destination) {
     await new Promise(resolve=>setTimeout(resolve,50));
   }
   const text=await readFile(destination,'utf8');
-  assert.match(text,/# model=IT92-neutral-v1/); assert.match(text,/wavelength_A=1.54056/);
-  const samples=text.split(/\r?\n/).filter(line=>line && !line.startsWith('#') && !line.startsWith('2theta')).map(line=>line.split('\t').map(Number));
+  assert.equal(await run.ui("document.querySelector('[data-testid=pxrd-wavelength-input]').value"), '1.5406');
+  const rows = text.trim().split(/\r?\n/);
+  assert.ok(rows.every(line => /^\d+\.\d{4}\t\d+\.\d{6}$/.test(line)), 'headerless two-column XY export');
+  const samples=rows.map(line=>line.split('\t').map(Number));
   assert.equal(samples.length,3751);
+  assert.equal(samples[0][0], 5); assert.equal(samples.at(-1)[0], 80);
+  assert.ok(samples.some(([, intensity]) => intensity > 0));
   assert.ok(samples.every(([angle,intensity],i)=>Number.isFinite(intensity) && intensity>=0 && intensity<=100 && (!i || angle>samples[i-1][0])));
 }
 try {
@@ -112,6 +116,7 @@ try {
     executable: exe, os: release(), cpu: cpus()[0]?.model, timings, events,
     scientificRenderingAndExport:true,
     limitations: ['Not cold-cache evidence; inspector pause and GPU-disabled harness affect timings.', 'Native file dialogs are replaced with explicit temporary destinations.', 'No real research corpus was imported.'] };
-  await writeFile(join(root, 'report.json'), JSON.stringify(report, null, 2));
-  console.log('Packaged reliability report:', join(root, 'report.json'));
+  const reportPath = process.argv[3] ?? join(root, 'report.json');
+  await writeFile(reportPath, JSON.stringify(report, null, 2));
+  console.log('Packaged reliability report:', reportPath);
 } finally { if (run) await run.stop(); }

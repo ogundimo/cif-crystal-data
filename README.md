@@ -199,9 +199,14 @@ to a path without spaces.
 
 The `Release Windows application` GitHub Actions workflow publishes the NSIS installer,
 portable executable, `SHA256SUMS.txt`, and a CycloneDX SBOM. It runs the complete test suite
-before packaging, creates a signed GitHub artifact attestation when the repository is public,
+and separate viewer validation, then gates publication on packaged reliability,
+preservation and batch-export checks. It creates a signed GitHub artifact attestation when the repository is public,
 and retains the same files as a workflow artifact for 14 days. GitHub does not offer artifact
 attestations for user-owned private repositories.
+
+Review the [Windows release acceptance](docs/release-validation.md), including
+the separate manual installer and portable-launcher checks. Automated
+payload checks do not establish clean-install, upgrade or uninstall behavior.
 
 To publish a release:
 
@@ -213,7 +218,7 @@ To publish a release:
    git push origin main v1.1.0
    ```
 
-3. The tag push starts the release workflow. GitHub generates the release notes and attaches
+3. The tag push starts the release workflow. It uses `RELEASE_NOTES.md` and attaches
    both Windows executables and their checksums.
 
 The workflow can also be run manually from the Actions tab for an existing tag. Manual runs

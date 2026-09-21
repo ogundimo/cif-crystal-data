@@ -39,6 +39,9 @@ jobs:
       - name: Verify regression policy probes
         run: npm run quality:test
 
+      - name: Verify release gate failure handling
+        run: npm run test:release-validation
+
       - name: Measure unit coverage and function complexity
         run: npm run quality:baseline
 

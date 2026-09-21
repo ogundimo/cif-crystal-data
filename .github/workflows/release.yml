@@ -19,7 +19,7 @@ jobs:
   release:
     name: Test, package, and publish
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       contents: write
       id-token: write
@@ -85,11 +85,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run complete test suite
-        run: npm run test:all
+      - name: Verify release gate failure handling
+        run: npm run test:release-validation
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run Electron UI tests
+        run: npm run test:ui
+
+      - name: Build production bundles once
+        run: npm run build
+
+      - name: Verify production import worker
+        run: npx --no-install electron scripts/import-worker-smoke-electron.cjs
+
+      - name: Verify viewer on the release revision
+        run: node scripts/run-jsmol-viewer-test.mjs
 
       - name: Package Windows installers
-        run: npm run package -- --publish never
+        run: npx --no-install electron-builder --publish never
+
+      - name: Validate packaged workflows
+        run: npm run test:packaged
+
+      - name: Retain release acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-validation-${{ github.sha }}
+          path: |
+            reports/release-validation/
+            reports/viewer/
+            .dist/jsmol-verification/
+          include-hidden-files: true
+          retention-days: 30
 
       - name: Verify Windows signatures
         if: env.CSC_LINK != ''

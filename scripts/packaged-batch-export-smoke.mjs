@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import { tmpdir, cpus, release } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { launchPackaged } from './packaged-app-driver.mjs';
 
@@ -104,11 +104,12 @@ try {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   assert.ok(await run.ui("document.querySelector('dialog').textContent.includes('1 completed; 0 failed; 0 not attempted')"), await run.ui("document.querySelector('dialog').textContent"));
-  report.screenshot = join(root, 'batch-export.png');
+  report.screenshot = join(process.argv[3] ? dirname(process.argv[3]) : root, 'batch-export.png');
   await run.main(`(async()=>{const image=await __smoke.electron.BrowserWindow.getAllWindows()[0].webContents.capturePage();process.getBuiltinModule('fs').writeFileSync(${JSON.stringify(report.screenshot)},image.toPNG());return true;})()`);
   report.cancelled = cancelled;
   report.reopened = 2;
-  await writeFile(join(root, 'report.json'), JSON.stringify(report, null, 2));
-  console.log('Packaged batch export report:', join(root, 'report.json'));
+  const reportPath = process.argv[3] ?? join(root, 'report.json');
+  await writeFile(reportPath, JSON.stringify(report, null, 2));
+  console.log('Packaged batch export report:', reportPath);
   console.log(JSON.stringify(report.benchmarks, null, 2));
 } finally { if (run) await run.stop(); }
