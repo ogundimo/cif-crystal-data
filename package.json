@@ -1,6 +1,6 @@
 {
   "name": "cif-crystal-data",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Local CIF crystal data database desktop app",
   "license": "MIT",
   "engines": {
