@@ -33,7 +33,7 @@ let run, userData, shortcuts;
 
 function installRegistrations() {
   const command = `$keys = @(Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*' -ErrorAction SilentlyContinue |
-    Where-Object { $_.InstallLocation -and $_.InstallLocation.TrimEnd('\\') -ieq $env:CIF_TEST_INSTALL_LOCATION } |
+    Where-Object { $_.UninstallString -and $_.UninstallString.StartsWith(('"' + $env:CIF_TEST_INSTALL_LOCATION + '\\'), [StringComparison]::OrdinalIgnoreCase) } |
     Select-Object -ExpandProperty PSChildName); ConvertTo-Json -InputObject $keys -Compress`;
   return JSON.parse(execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', command], {
     encoding: 'utf8', windowsHide: true, env: { ...process.env, CIF_TEST_INSTALL_LOCATION: installDir }
