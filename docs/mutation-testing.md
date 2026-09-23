@@ -50,11 +50,58 @@ the checker and test runner. The TypeScript checker uses `tsconfig.mutation.json
 and accurate checking (`prioritizePerformanceOverAccuracy: false`) to distinguish
 invalid mutations from test detections. The timeout allowance is 5 seconds plus
 1.5 times the measured test duration. Initial tests must pass before mutation starts.
-No incremental result cache is configured.
+The authoritative command configures no incremental result cache and rejects any
+arguments; scoped and incremental work uses the separate commands below.
 
 This runs pure TypeScript logic in Node. It adds no Electron entry point or IPC
 channel and does not import main-process or native database responsibilities into
 the renderer. Existing architecture and application checks remain required.
+
+## Local feedback and benchmarking
+
+The September 18 complete accurate run took about 36 minutes locally. A comparable
+run under memory pressure took over 100 minutes. Two non-authoritative commands
+support day-to-day work. Neither writes to `reports/mutation/`, and neither result
+may be compared with `docs/baselines/mutation-policy.json` or cited as policy evidence.
+
+```powershell
+npm run test:mutation:dev -- --file src/renderer/src/pxrd.ts:120-180
+npm run test:mutation:dev -- --help
+```
+
+`test:mutation:dev` generates a derived Stryker config in `reports/mutation-dev/`,
+uses its own `.stryker-tmp-dev` sandbox, and enables Stryker's incremental mode with
+a cache per checker mode. `--file` accepts only pilot files, optionally with a line
+range, and may be repeated. Unknown options fail. Stryker reuses results for
+unchanged mutants and re-tests those affected by edits to the mutated file or test
+files. It cannot see other inputs, so the command also fingerprints every other
+production module, fixture, contract configuration file, tool version, the Node
+version and platform. Any change to those discards the cache. `--fresh` discards it
+explicitly. A scoped run replaces the cache with that scope's results, so a
+following whole-pilot run re-tests the rest. Inputs that change during the run
+discard both the results and the cache. `--grouped-check` enables grouped
+TypeScript checking as a labelled experiment. It can misclassify compile errors,
+so it has a separate cache and never replaces accurate checking.
+
+```powershell
+npm run benchmark:mutation
+npm run benchmark:mutation -- --variant 2 --variant 4 --variant 2:grouped
+```
+
+`benchmark:mutation` runs the complete pilot once per variant, sequentially, into
+`reports/mutation-benchmark/<timestamp>/`. By default it compares concurrency 2 and
+4 with accurate checking. It refuses to start below 3 GiB of free memory unless
+`--allow-busy` is given, in which case the summary is marked contended. For each
+variant it records wall time, the minimum free system memory, the times at which
+the initial test run and checker phase finished (from Stryker's debug file log),
+and outcome counts. It also compares every mutant's outcome with the first variant
+by identity, writing `outcome-diff.json`. If inputs change mid-run, the benchmark
+aborts. With a checker enabled, Stryker assigns `ceil(concurrency / 2)` slots to
+checkers and the remainder to test runners, and converts checkers to runners once
+checking finishes. An early `checkingDone` time therefore points at test execution
+as the bottleneck; a late one points at type checking. Adopting a different
+concurrency or checker mode is a policy change: review the outcome differences and
+update this page and the regression policy together.
 
 ## Reading results
 
