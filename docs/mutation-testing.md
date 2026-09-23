@@ -50,11 +50,73 @@ the checker and test runner. The TypeScript checker uses `tsconfig.mutation.json
 and accurate checking (`prioritizePerformanceOverAccuracy: false`) to distinguish
 invalid mutations from test detections. The timeout allowance is 5 seconds plus
 1.5 times the measured test duration. Initial tests must pass before mutation starts.
-No incremental result cache is configured.
+The authoritative command configures no incremental result cache and rejects any
+arguments; scoped and incremental work uses the separate commands below.
 
 This runs pure TypeScript logic in Node. It adds no Electron entry point or IPC
 channel and does not import main-process or native database responsibilities into
 the renderer. Existing architecture and application checks remain required.
+
+## Local feedback and benchmarking
+
+The September 18 complete accurate run took about 36 minutes locally. A comparable
+run under memory pressure took over 100 minutes. Two non-authoritative commands
+support day-to-day work. Neither writes to `reports/mutation/`, and neither result
+may be compared with `docs/baselines/mutation-policy.json` or cited as policy evidence.
+
+```powershell
+npm run test:mutation:dev -- --file src/renderer/src/pxrd.ts:120-180
+npm run test:mutation:dev -- --help
+```
+
+`test:mutation:dev` generates a derived Stryker config in `reports/mutation-dev/`,
+uses its own `.stryker-tmp-dev` sandbox, and enables Stryker's incremental mode with
+a cache per checker mode. `--file` accepts only pilot files, optionally with a line
+range, and may be repeated. Unknown options fail. Stryker reuses results for
+unchanged mutants and re-tests those affected by edits to the mutated file or test
+files. It cannot see other inputs, so the command also fingerprints every other
+production module, fixture, contract configuration file, tool version, the Node
+version and platform. Any change to those discards the cache. `--fresh` discards it
+explicitly. A scoped run replaces the cache with that scope's results, so a
+following whole-pilot run re-tests the rest. Inputs that change during the run
+discard both the results and the cache. `--grouped-check` enables grouped
+TypeScript checking as a labelled experiment. It can misclassify compile errors,
+so it has a separate cache and never replaces accurate checking.
+
+```powershell
+npm run benchmark:mutation
+npm run benchmark:mutation -- --variant 2 --variant 4 --variant 2:grouped
+```
+
+`benchmark:mutation` runs the complete pilot once per variant, sequentially, into
+`reports/mutation-benchmark/<timestamp>/`. By default it compares concurrency 2 and
+4 with accurate checking. It refuses to start below 3 GiB of free memory unless
+`--allow-busy` is given, in which case the summary is marked contended. For each
+variant it records wall time, the minimum free system memory, the times at which
+the initial test run and checker phase finished (from Stryker's debug file log),
+and outcome counts. It also compares every mutant's outcome with the first variant
+by identity, writing `outcome-diff.json`. If inputs change mid-run, the benchmark
+aborts. With a checker enabled, Stryker assigns `ceil(concurrency / 2)` slots to
+checkers and the remainder to test runners, and converts checkers to runners once
+checking finishes. An early `checkingDone` time therefore points at test execution
+as the bottleneck; a late one points at type checking. Adopting a different
+concurrency or checker mode is a policy change: review the outcome differences and
+update this page and the regression policy together.
+
+The September 23 benchmark ran on the development machine with 2 GiB free at the
+start, using identical inputs (1,118 mutants):
+
+| Variant | Duration | Checking finished | Outcomes |
+| --- | --- | --- | --- |
+| Concurrency 2, accurate | 31m13s | 1s before the end | 824 killed, 54 survived, 10 timeout, 230 compile errors |
+| Concurrency 4, accurate | 23m23s | at the end | identical except one PXRD mutant, killed → timeout |
+
+Type checking is the bottleneck: test runners wait on the checker until the run
+ends. A second checker saved 25% but drove free memory to about 0.1 GiB. The one
+changed mutant (`pxrd.ts` line 281) is timing-sensitive under that memory pressure,
+and the score is unchanged because timeouts count as detected. The configured
+concurrency stays at 2. Pass `--concurrency 4` to `test:mutation:dev` when memory
+allows.
 
 ## Reading results
 
@@ -72,12 +134,21 @@ handling are documented in
 [Regression protection](regression-protection.md#mutation-policy); #48 records
 the adoption rationale following the historical #20 proposal.
 
-## CI cadence
+## Cadence
 
-`.github/workflows/mutation.yml` provides manual dispatch on Windows with Node 22,
-a 30-minute job limit and reports retained for 30 days. Run it when changing a
-targeted module or its tests. The [current policy](regression-protection.md#mutation-policy)
-keeps manual cadence and advisory scores; there is no scheduled run.
+Mutation testing is on demand only. When you change a pilot file or its tests, run
+`npm run test:mutation:dev -- --file <that file>` and review any new survivors.
+Nothing runs it automatically, and no score gates a merge.
+
+Run the complete `npm run test:mutation` only when deliberately updating the
+[comparison reference](baselines/mutation-policy.json) or the mutation policy. On
+the single development machine it takes 30 minutes or more and competes with other
+work for memory. The scope is not being extended; #107 was closed for this reason.
+
+The manual `.github/workflows/mutation.yml` workflow was removed. The pilot had
+grown to about 1,100 mutants, beyond what its 30-minute job limit was set for, and
+full runs are no longer routine. The [current policy](regression-protection.md#mutation-policy)
+keeps advisory scores. The historical hosted run below remains a record.
 
 ## Initial measurement and follow-up
 
