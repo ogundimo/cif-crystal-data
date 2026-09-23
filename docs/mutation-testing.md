@@ -103,6 +103,21 @@ as the bottleneck; a late one points at type checking. Adopting a different
 concurrency or checker mode is a policy change: review the outcome differences and
 update this page and the regression policy together.
 
+The September 23 benchmark ran on the development machine with 2 GiB free at the
+start, using identical inputs (1,118 mutants):
+
+| Variant | Duration | Checking finished | Outcomes |
+| --- | --- | --- | --- |
+| Concurrency 2, accurate | 31m13s | 1s before the end | 824 killed, 54 survived, 10 timeout, 230 compile errors |
+| Concurrency 4, accurate | 23m23s | at the end | identical except one PXRD mutant, killed → timeout |
+
+Type checking is the bottleneck: test runners wait on the checker until the run
+ends. A second checker saved 25% but drove free memory to about 0.1 GiB. The one
+changed mutant (`pxrd.ts` line 281) is timing-sensitive under that memory pressure,
+and the score is unchanged because timeouts count as detected. The configured
+concurrency stays at 2. Pass `--concurrency 4` to `test:mutation:dev` when memory
+allows.
+
 ## Reading results
 
 Killed means an assertion/test failed; survived means selected tests passed; no
@@ -119,12 +134,21 @@ handling are documented in
 [Regression protection](regression-protection.md#mutation-policy); #48 records
 the adoption rationale following the historical #20 proposal.
 
-## CI cadence
+## Cadence
 
-`.github/workflows/mutation.yml` provides manual dispatch on Windows with Node 22,
-a 30-minute job limit and reports retained for 30 days. Run it when changing a
-targeted module or its tests. The [current policy](regression-protection.md#mutation-policy)
-keeps manual cadence and advisory scores; there is no scheduled run.
+Mutation testing is on demand only. When you change a pilot file or its tests, run
+`npm run test:mutation:dev -- --file <that file>` and review any new survivors.
+Nothing runs it automatically, and no score gates a merge.
+
+Run the complete `npm run test:mutation` only when deliberately updating the
+[comparison reference](baselines/mutation-policy.json) or the mutation policy. On
+the single development machine it takes 30 minutes or more and competes with other
+work for memory. The scope is not being extended; #107 was closed for this reason.
+
+The manual `.github/workflows/mutation.yml` workflow was removed. The pilot had
+grown to about 1,100 mutants, beyond what its 30-minute job limit was set for, and
+full runs are no longer routine. The [current policy](regression-protection.md#mutation-policy)
+keeps advisory scores. The historical hosted run below remains a record.
 
 ## Initial measurement and follow-up
 
