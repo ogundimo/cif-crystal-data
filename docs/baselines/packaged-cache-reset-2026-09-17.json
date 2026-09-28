@@ -1,0 +1,2836 @@
+{
+  "recordedAt": "2026-09-17T07:24:41.618Z",
+  "applicationCommit": "6679c8b295d82f3ef57e74b0e51907c4da42803d",
+  "executableSha256": "9c1ecedebec193bf4460eb3ab3530b1498273083cf261c9bd8ed1eeb294a9e86",
+  "distribution": "extracted Windows ZIP",
+  "protocol": "instrumented-packaged-launch-to-search-v1",
+  "environment": {
+    "os": "10.0.26200",
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "memoryBytes": 8317952000,
+    "node": "v22.23.2"
+  },
+  "status": "failed-cache-validation",
+  "cacheCondition": "mixed-validation-results",
+  "cacheValidationFailures": 17,
+  "limitations": [
+    "Per-sample prelaunch target-file residency is recorded; samples with residual pages are not cache-cold. Shared Windows DLLs/hardware caches and subsequent background reads are uncontrolled; not boot-cold.",
+    "Inspectors and tracing enabled; windows may require restore/focus.",
+    "Search includes diagnostic polling and 200 ms input-settle delay.",
+    "Synthetic profiles only."
+  ],
+  "rawEvidenceId": "cif-packaged-visible-Cu3cdm",
+  "samples": [
+    {
+      "caseName": "fresh",
+      "entries": 0,
+      "index": 1,
+      "restored": false,
+      "firstContentfulPaintMs": 911.300048828125,
+      "controlsSignalMs": 695,
+      "databaseReadyMs": 757,
+      "launchToSearchMs": 1313,
+      "searchMs": 64,
+      "resetToLaunchMs": 5394,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:24:48.2329874+00:00",
+        "resetCompletedUtc": "2026-09-17T07:25:01.0802938+00:00",
+        "finishedUtc": "2026-09-17T07:25:06.1894009+00:00",
+        "before": {
+          "availableBytes": 1841426432,
+          "systemCacheResidentBytes": 17158144,
+          "standbyBytes": 1263423488,
+          "modifiedBytes": 35188736
+        },
+        "after": {
+          "availableBytes": 2255134720,
+          "systemCacheResidentBytes": 139264,
+          "standbyBytes": 352256,
+          "modifiedBytes": 43110400
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                81282,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 0,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 81282
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                107,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 0,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 107
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "fresh",
+      "entries": 0,
+      "index": 2,
+      "restored": false,
+      "firstContentfulPaintMs": 777.800048828125,
+      "controlsSignalMs": 592,
+      "databaseReadyMs": 644,
+      "launchToSearchMs": 1130,
+      "searchMs": 55,
+      "resetToLaunchMs": 5972,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:25:13.7374254+00:00",
+        "resetCompletedUtc": "2026-09-17T07:25:25.9686710+00:00",
+        "finishedUtc": "2026-09-17T07:25:31.6626108+00:00",
+        "before": {
+          "availableBytes": 1807642624,
+          "systemCacheResidentBytes": 9228288,
+          "standbyBytes": 728539136,
+          "modifiedBytes": 45871104
+        },
+        "after": {
+          "availableBytes": 2211835904,
+          "systemCacheResidentBytes": 135168,
+          "standbyBytes": 352256,
+          "modifiedBytes": 84029440
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                20829,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 0,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 20829
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                123,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 0,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 123
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "fresh",
+      "entries": 0,
+      "index": 3,
+      "restored": false,
+      "firstContentfulPaintMs": 805.300048828125,
+      "controlsSignalMs": 601,
+      "databaseReadyMs": 682,
+      "launchToSearchMs": 1136,
+      "searchMs": 47,
+      "resetToLaunchMs": 7572,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:25:44.7987700+00:00",
+        "resetCompletedUtc": "2026-09-17T07:25:54.9942221+00:00",
+        "finishedUtc": "2026-09-17T07:26:02.2264268+00:00",
+        "before": {
+          "availableBytes": 1032552448,
+          "systemCacheResidentBytes": 18169856,
+          "standbyBytes": 905977856,
+          "modifiedBytes": 47603712
+        },
+        "after": {
+          "availableBytes": 1380159488,
+          "systemCacheResidentBytes": 991232,
+          "standbyBytes": 5775360,
+          "modifiedBytes": 92798976
+        }
+      },
+      "cacheValidation": {
+        "status": "target-files-absent-at-snapshot",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                20971,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 0,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 20971
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 0,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 0
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "populated-off",
+      "entries": 168,
+      "index": 1,
+      "restored": false,
+      "firstContentfulPaintMs": 833.5,
+      "controlsSignalMs": 587,
+      "databaseReadyMs": 629,
+      "launchToSearchMs": 1472,
+      "searchMs": 329,
+      "searchSubmissionToStructureMs": 801,
+      "resetToLaunchMs": 6140,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:26:12.4214490+00:00",
+        "resetCompletedUtc": "2026-09-17T07:26:22.7642311+00:00",
+        "finishedUtc": "2026-09-17T07:26:28.5925437+00:00",
+        "before": {
+          "availableBytes": 1400885248,
+          "systemCacheResidentBytes": 15298560,
+          "standbyBytes": 833241088,
+          "modifiedBytes": 68472832
+        },
+        "after": {
+          "availableBytes": 1491013632,
+          "systemCacheResidentBytes": 135168,
+          "standbyBytes": 413696,
+          "modifiedBytes": 64643072
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                21447,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 22187
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                188,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 188
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "populated-off",
+      "entries": 168,
+      "index": 2,
+      "restored": false,
+      "firstContentfulPaintMs": 892.39990234375,
+      "controlsSignalMs": 662,
+      "databaseReadyMs": 704,
+      "launchToSearchMs": 1516,
+      "searchMs": 292,
+      "searchSubmissionToStructureMs": 812,
+      "resetToLaunchMs": 5732,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:26:36.3856339+00:00",
+        "resetCompletedUtc": "2026-09-17T07:26:46.1632711+00:00",
+        "finishedUtc": "2026-09-17T07:26:51.6091201+00:00",
+        "before": {
+          "availableBytes": 1468719104,
+          "systemCacheResidentBytes": 8564736,
+          "standbyBytes": 723177472,
+          "modifiedBytes": 65298432
+        },
+        "after": {
+          "availableBytes": 1551904768,
+          "systemCacheResidentBytes": 270336,
+          "standbyBytes": 794624,
+          "modifiedBytes": 23859200
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24575,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25315
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                229,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 229
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "populated-off",
+      "entries": 168,
+      "index": 3,
+      "restored": false,
+      "firstContentfulPaintMs": 824.89990234375,
+      "controlsSignalMs": 603,
+      "databaseReadyMs": 647,
+      "launchToSearchMs": 1505,
+      "searchMs": 336,
+      "searchSubmissionToStructureMs": 799,
+      "resetToLaunchMs": 5487,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:26:59.8361842+00:00",
+        "resetCompletedUtc": "2026-09-17T07:27:09.2569591+00:00",
+        "finishedUtc": "2026-09-17T07:27:14.4360545+00:00",
+        "before": {
+          "availableBytes": 2176413696,
+          "systemCacheResidentBytes": 9007104,
+          "standbyBytes": 869015552,
+          "modifiedBytes": 24571904
+        },
+        "after": {
+          "availableBytes": 2415857664,
+          "systemCacheResidentBytes": 135168,
+          "standbyBytes": 376832,
+          "modifiedBytes": 55988224
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24513,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25253
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                128,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 128
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "populated-on",
+      "entries": 168,
+      "index": 1,
+      "restored": false,
+      "firstContentfulPaintMs": 959.60009765625,
+      "controlsSignalMs": 745,
+      "databaseReadyMs": 787,
+      "launchToSearchMs": 1733,
+      "searchMs": 355,
+      "searchSubmissionToStructureMs": 858,
+      "refreshControlsObservedRestoredMs": 2239,
+      "resetToLaunchMs": 5617,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:27:22.4528860+00:00",
+        "resetCompletedUtc": "2026-09-17T07:27:31.4788874+00:00",
+        "finishedUtc": "2026-09-17T07:27:36.8051669+00:00",
+        "before": {
+          "availableBytes": 2342608896,
+          "systemCacheResidentBytes": 8634368,
+          "standbyBytes": 729370624,
+          "modifiedBytes": 66990080
+        },
+        "after": {
+          "availableBytes": 2397945856,
+          "systemCacheResidentBytes": 135168,
+          "standbyBytes": 368640,
+          "modifiedBytes": 65626112
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24401,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25141
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                336,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 336
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "populated-on",
+      "entries": 168,
+      "index": 2,
+      "restored": false,
+      "firstContentfulPaintMs": 1093.5,
+      "controlsSignalMs": 831,
+      "databaseReadyMs": 879,
+      "launchToSearchMs": 1811,
+      "searchMs": 332,
+      "searchSubmissionToStructureMs": 805,
+      "refreshControlsObservedRestoredMs": 2286,
+      "resetToLaunchMs": 5310,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:27:47.6072927+00:00",
+        "resetCompletedUtc": "2026-09-17T07:27:55.7517173+00:00",
+        "finishedUtc": "2026-09-17T07:28:00.6731029+00:00",
+        "before": {
+          "availableBytes": 2314842112,
+          "systemCacheResidentBytes": 10338304,
+          "standbyBytes": 728223744,
+          "modifiedBytes": 66457600
+        },
+        "after": {
+          "availableBytes": 2374422528,
+          "systemCacheResidentBytes": 172032,
+          "standbyBytes": 352256,
+          "modifiedBytes": 133447680
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                25349,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                168,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 26257
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1219,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1219
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "populated-on",
+      "entries": 168,
+      "index": 3,
+      "restored": false,
+      "firstContentfulPaintMs": 831.39990234375,
+      "controlsSignalMs": 565,
+      "databaseReadyMs": 604,
+      "launchToSearchMs": 1384,
+      "searchMs": 213,
+      "searchSubmissionToStructureMs": 805,
+      "refreshControlsObservedRestoredMs": 1977,
+      "resetToLaunchMs": 5306,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:28:11.2718809+00:00",
+        "resetCompletedUtc": "2026-09-17T07:28:19.3992065+00:00",
+        "finishedUtc": "2026-09-17T07:28:24.4041382+00:00",
+        "before": {
+          "availableBytes": 2393600000,
+          "systemCacheResidentBytes": 9175040,
+          "standbyBytes": 836145152,
+          "modifiedBytes": 46903296
+        },
+        "after": {
+          "availableBytes": 2456764416,
+          "systemCacheResidentBytes": 139264,
+          "standbyBytes": 352256,
+          "modifiedBytes": 81272832
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                25398,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                740,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                168,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 26306
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1029,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1029
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "unavailable",
+      "entries": 168,
+      "index": 1,
+      "restored": false,
+      "firstContentfulPaintMs": 820.5,
+      "controlsSignalMs": 614,
+      "databaseReadyMs": 658,
+      "launchToSearchMs": 1504,
+      "searchMs": 286,
+      "searchSubmissionToStructureMs": 782,
+      "refreshControlsObservedRestoredMs": 2001,
+      "resetToLaunchMs": 5351,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:28:32.2354278+00:00",
+        "resetCompletedUtc": "2026-09-17T07:28:40.9311259+00:00",
+        "finishedUtc": "2026-09-17T07:28:46.0080298+00:00",
+        "before": {
+          "availableBytes": 2440847360,
+          "systemCacheResidentBytes": 8835072,
+          "standbyBytes": 722092032,
+          "modifiedBytes": 67481600
+        },
+        "after": {
+          "availableBytes": 2509721600,
+          "systemCacheResidentBytes": 200704,
+          "standbyBytes": 974848,
+          "modifiedBytes": 65871872
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                25078,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                168,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25986
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1645,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1645
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "unavailable",
+      "entries": 168,
+      "index": 2,
+      "restored": false,
+      "firstContentfulPaintMs": 775.5,
+      "controlsSignalMs": 571,
+      "databaseReadyMs": 604,
+      "launchToSearchMs": 1463,
+      "searchMs": 308,
+      "searchSubmissionToStructureMs": 805,
+      "refreshControlsObservedRestoredMs": 1960,
+      "resetToLaunchMs": 5491,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:28:56.5516716+00:00",
+        "resetCompletedUtc": "2026-09-17T07:29:05.4548751+00:00",
+        "finishedUtc": "2026-09-17T07:29:10.6129297+00:00",
+        "before": {
+          "availableBytes": 2445037568,
+          "systemCacheResidentBytes": 8249344,
+          "standbyBytes": 707788800,
+          "modifiedBytes": 62070784
+        },
+        "after": {
+          "availableBytes": 2463838208,
+          "systemCacheResidentBytes": 135168,
+          "standbyBytes": 409600,
+          "modifiedBytes": 71626752
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24483,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                740,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25223
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1368,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1368
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "unavailable",
+      "entries": 168,
+      "index": 3,
+      "restored": false,
+      "firstContentfulPaintMs": 771,
+      "controlsSignalMs": 574,
+      "databaseReadyMs": 608,
+      "launchToSearchMs": 1424,
+      "searchMs": 283,
+      "searchSubmissionToStructureMs": 800,
+      "refreshControlsObservedRestoredMs": 1942,
+      "resetToLaunchMs": 5236,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:29:20.6844177+00:00",
+        "resetCompletedUtc": "2026-09-17T07:29:28.6800014+00:00",
+        "finishedUtc": "2026-09-17T07:29:33.6622265+00:00",
+        "before": {
+          "availableBytes": 2409385984,
+          "systemCacheResidentBytes": 7548928,
+          "standbyBytes": 690114560,
+          "modifiedBytes": 85823488
+        },
+        "after": {
+          "availableBytes": 2475524096,
+          "systemCacheResidentBytes": 143360,
+          "standbyBytes": 471040,
+          "modifiedBytes": 90312704
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24466,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                740,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25206
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1954,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1954
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "upgrade",
+      "entries": 168,
+      "index": 1,
+      "restored": false,
+      "firstContentfulPaintMs": 930.89990234375,
+      "controlsSignalMs": 634,
+      "databaseReadyMs": 779,
+      "launchToSearchMs": 1520,
+      "searchMs": 260,
+      "searchSubmissionToStructureMs": 773,
+      "resetToLaunchMs": 6813,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:29:42.2665223+00:00",
+        "resetCompletedUtc": "2026-09-17T07:29:51.7931836+00:00",
+        "finishedUtc": "2026-09-17T07:29:58.3455044+00:00",
+        "before": {
+          "availableBytes": 2438615040,
+          "systemCacheResidentBytes": 8491008,
+          "standbyBytes": 709132288,
+          "modifiedBytes": 86892544
+        },
+        "after": {
+          "availableBytes": 2369966080,
+          "systemCacheResidentBytes": 1511424,
+          "standbyBytes": 13918208,
+          "modifiedBytes": 96595968
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24146,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                740,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 24886
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1940,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1940
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "upgrade",
+      "entries": 168,
+      "index": 2,
+      "restored": false,
+      "firstContentfulPaintMs": 866.89990234375,
+      "controlsSignalMs": 565,
+      "databaseReadyMs": 703,
+      "launchToSearchMs": 1349,
+      "searchMs": 146,
+      "searchSubmissionToStructureMs": 779,
+      "resetToLaunchMs": 5581,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:30:07.0245823+00:00",
+        "resetCompletedUtc": "2026-09-17T07:30:15.5725603+00:00",
+        "finishedUtc": "2026-09-17T07:30:20.8794985+00:00",
+        "before": {
+          "availableBytes": 2279772160,
+          "systemCacheResidentBytes": 9031680,
+          "standbyBytes": 714723328,
+          "modifiedBytes": 97804288
+        },
+        "after": {
+          "availableBytes": 2386477056,
+          "systemCacheResidentBytes": 147456,
+          "standbyBytes": 352256,
+          "modifiedBytes": 119365632
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24645,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25385
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1044,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1044
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "upgrade",
+      "entries": 168,
+      "index": 3,
+      "restored": false,
+      "firstContentfulPaintMs": 907.39990234375,
+      "controlsSignalMs": 578,
+      "databaseReadyMs": 731,
+      "launchToSearchMs": 1475,
+      "searchMs": 264,
+      "searchSubmissionToStructureMs": 738,
+      "resetToLaunchMs": 5071,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:30:28.3452348+00:00",
+        "resetCompletedUtc": "2026-09-17T07:30:38.0753086+00:00",
+        "finishedUtc": "2026-09-17T07:30:42.8783639+00:00",
+        "before": {
+          "availableBytes": 2276364288,
+          "systemCacheResidentBytes": 8122368,
+          "standbyBytes": 745226240,
+          "modifiedBytes": 116301824
+        },
+        "after": {
+          "availableBytes": 2385739776,
+          "systemCacheResidentBytes": 135168,
+          "standbyBytes": 389120,
+          "modifiedBytes": 37040128
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24324,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                739,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25064
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1634,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 169,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1634
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "larger",
+      "entries": 1000,
+      "index": 1,
+      "restored": false,
+      "firstContentfulPaintMs": 847.10009765625,
+      "controlsSignalMs": 641,
+      "databaseReadyMs": 677,
+      "launchToSearchMs": 1401,
+      "searchMs": 233,
+      "searchSubmissionToStructureMs": 811,
+      "resetToLaunchMs": 6302,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:30:53.6752188+00:00",
+        "resetCompletedUtc": "2026-09-17T07:31:02.1883129+00:00",
+        "finishedUtc": "2026-09-17T07:31:08.1066041+00:00",
+        "before": {
+          "availableBytes": 2371776512,
+          "systemCacheResidentBytes": 8093696,
+          "standbyBytes": 726634496,
+          "modifiedBytes": 35704832
+        },
+        "after": {
+          "availableBytes": 2355765248,
+          "systemCacheResidentBytes": 892928,
+          "standbyBytes": 622592,
+          "modifiedBytes": 68481024
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                23939,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                1958,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1001,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 25898
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1299,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1001,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1299
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "larger",
+      "entries": 1000,
+      "index": 2,
+      "restored": false,
+      "firstContentfulPaintMs": 690.39990234375,
+      "controlsSignalMs": 513,
+      "databaseReadyMs": 543,
+      "launchToSearchMs": 1207,
+      "searchMs": 191,
+      "searchSubmissionToStructureMs": 828,
+      "resetToLaunchMs": 5092,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:31:21.9623427+00:00",
+        "resetCompletedUtc": "2026-09-17T07:31:29.7880247+00:00",
+        "finishedUtc": "2026-09-17T07:31:34.6248210+00:00",
+        "before": {
+          "availableBytes": 2361135104,
+          "systemCacheResidentBytes": 8523776,
+          "standbyBytes": 725123072,
+          "modifiedBytes": 74063872
+        },
+        "after": {
+          "availableBytes": 2404794368,
+          "systemCacheResidentBytes": 143360,
+          "standbyBytes": 368640,
+          "modifiedBytes": 84201472
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24522,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                1958,
+                1,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1001,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 26481
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                1437,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1001,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 1437
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    },
+    {
+      "caseName": "larger",
+      "entries": 1000,
+      "index": 3,
+      "restored": false,
+      "firstContentfulPaintMs": 693.60009765625,
+      "controlsSignalMs": 550,
+      "databaseReadyMs": 577,
+      "launchToSearchMs": 1189,
+      "searchMs": 204,
+      "searchSubmissionToStructureMs": 835,
+      "resetToLaunchMs": 5302,
+      "cacheReset": {
+        "protocol": "rammap-system-cache-reset-v2",
+        "toolVersion": "1.63",
+        "toolSha256": "e970913798481432cd590991577089e68510b861dc669dcab24feb06aae0df52",
+        "actions": [
+          "-Es",
+          "-Et",
+          "settle-2000ms",
+          "-Es",
+          "-Et"
+        ],
+        "startedUtc": "2026-09-17T07:32:06.0264402+00:00",
+        "resetCompletedUtc": "2026-09-17T07:32:14.1236795+00:00",
+        "finishedUtc": "2026-09-17T07:32:19.2082888+00:00",
+        "before": {
+          "availableBytes": 2494844928,
+          "systemCacheResidentBytes": 10805248,
+          "standbyBytes": 962539520,
+          "modifiedBytes": 45326336
+        },
+        "after": {
+          "availableBytes": 2497544192,
+          "systemCacheResidentBytes": 147456,
+          "standbyBytes": 372736,
+          "modifiedBytes": 56332288
+        }
+      },
+      "cacheValidation": {
+        "status": "not-validated",
+        "before": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 45,
+              "pagesByList": [
+                0,
+                0,
+                24060,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 67,
+              "pagesByList": [
+                0,
+                0,
+                1959,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1001,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 26019
+        },
+        "after": {
+          "pageCount": 2030750,
+          "pageBytes": 4096,
+          "listOrder": [
+            "zero",
+            "free",
+            "standby",
+            "modified",
+            "modifiedNoWrite",
+            "bad",
+            "active",
+            "transition"
+          ],
+          "groups": [
+            {
+              "fileKeys": 29,
+              "pagesByList": [
+                0,
+                0,
+                2165,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 30,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "fileKeys": 1001,
+              "pagesByList": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "totalTargetPages": 2165
+        },
+        "scope": "App, isolated profile and synthetic input file pages at snapshot time; excludes shared Windows DLLs, hardware caches and later background reads."
+      }
+    }
+  ]
+}

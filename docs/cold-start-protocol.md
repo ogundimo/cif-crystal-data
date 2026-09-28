@@ -67,7 +67,10 @@ experimental data. Keep a pristine copied profile for each upgrade repetition,
 restored before the reboot. Do not pre-open the target database, binary or CIF files
 after reboot. Re-establish the cold condition before **every** cold sample. Windows
 Fast Startup/shutdown is not equivalent to Restart; record exactly how the condition
-was established. A dedicated cache-reset method needs its own documented validation.
+was established. A dedicated cache-reset method needs its own documented validation;
+the [RAMMap procedure](packaged-startup.md#cache-reset-samples-without-restarting-windows)
+captures and checks target-file residency before each measured launch. Its results
+must be labeled separately from restart-based samples.
 
 ## Launch and measurement
 
