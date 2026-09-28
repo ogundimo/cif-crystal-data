@@ -1,12 +1,15 @@
 import { spawnSync, execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { assessMutation } from './mutation-policy.mjs';
-import { isProduction } from './scope.mjs';
+import { changedInputs, collectInputs, configHashes, hash, mutationScope, productionInput, readJson as read, toolVersions } from './mutation-inputs.mjs';
 
-const read=async file=>JSON.parse(await readFile(file,'utf8'));
-const hash=text=>createHash('sha256').update(text.replaceAll('\r\n','\n')).digest('hex');
+// The authoritative run takes no options; scoped/incremental feedback belongs to test:mutation:dev.
+// Reject before touching reports, so a mistyped command cannot discard the last run.
+if(process.argv.length>2) {
+  console.error(`test:mutation accepts no arguments (received: ${process.argv.slice(2).join(' ')}); use npm run test:mutation:dev for local feedback`);
+  process.exit(1);
+}
 const output='reports/mutation';
 const execution={startedAt:new Date().toISOString(),completed:false,exitCode:null};
 await mkdir(output,{recursive:true});
@@ -17,21 +20,11 @@ await writeFile(`${output}/execution.json`,JSON.stringify(execution,null,2)+'\n'
 try {
   if(process.versions.node.split('.')[0]!=='22') throw new Error('Mutation policy requires Node 22');
   const config=await read('stryker.config.json');
-  const scope=['src/parser/cif/formula.ts','src/shared/searchValidation.ts','src/renderer/src/pxrd.ts'];
+  const scope=[...mutationScope];
   if(JSON.stringify(config.mutate)!==JSON.stringify(scope) || config.mutator?.excludedMutations?.length ||
     config.ignoreStatic || config.incremental || config.thresholds.break!==0) throw new Error('Mutation scope/operator policy changed; explicit review required');
-  const lock=await read('package-lock.json');
-  const tools=Object.fromEntries(['@stryker-mutator/core','@stryker-mutator/vitest-runner','@stryker-mutator/typescript-checker','vitest','typescript']
-    .map(name=>[name,lock.packages[`node_modules/${name}`].version]));
-  execution.contract={nodeMajor:22,tools,configHashes:{}};
-  for(const file of ['stryker.config.json','vitest.config.ts','scripts/quality/scope.mjs',
-    'tsconfig.mutation.json','tsconfig.web.json','tsconfig.node.json','package.json','package-lock.json']) {
-    execution.contract.configHashes[file]=hash(await readFile(file,'utf8'));
-  }
-  const files=execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean).sort();
-  const productionInput=file=>isProduction(file)||(/^src\/.*\.json$/.test(file)&&!file.includes('/__fixtures__/')&&!file.includes('/public/vendor/'));
-  const inputs=await Promise.all(files.filter(file=>productionInput(file)||/^src\/.*\.test\.tsx?$/.test(file)||file.startsWith('src/')&&file.includes('/__fixtures__/'))
-    .map(async file=>[file,hash(await readFile(file,'utf8'))]));
+  execution.contract={nodeMajor:22,tools:toolVersions(await read('package-lock.json')),configHashes:await configHashes()};
+  const inputs=await collectInputs();
   execution.contract.productionSha256=hash(JSON.stringify(inputs.filter(([file])=>productionInput(file))));
   execution.testInputs=Object.fromEntries(inputs.filter(([file])=>!productionInput(file)));
   execution.sourceHashes=Object.fromEntries(await Promise.all(scope.sort().map(async file=>[file,hash(await readFile(file,'utf8'))])));
@@ -43,7 +36,8 @@ try {
   execution.durationSeconds=(Date.parse(execution.finishedAt)-Date.parse(execution.startedAt))/1000;
   await writeFile(`${output}/execution.json`,JSON.stringify(execution,null,2)+'\n');
   if(!execution.completed) throw new Error(`Mutation execution failed: ${run.error?.message??run.status}`);
-  for(const [file,digest] of inputs) if(hash(await readFile(file,'utf8'))!==digest) throw new Error(`Inputs changed during mutation execution: ${file}`);
+  const changed=await changedInputs(inputs);
+  if(changed.length) throw new Error(`Inputs changed during mutation execution: ${changed[0]}`);
   for(const [file,digest] of Object.entries(execution.contract.configHashes)) {
     if(hash(await readFile(file,'utf8'))!==digest) throw new Error(`Configuration changed during mutation execution: ${file}`);
   }

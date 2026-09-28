@@ -38,6 +38,8 @@
     "quality:evaluate-additional": "node scripts/quality/evaluate-additional.mjs",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "node scripts/quality/run-mutation.mjs",
+    "test:mutation:dev": "node scripts/quality/run-mutation-dev.mjs",
+    "benchmark:mutation": "node scripts/quality/benchmark-mutation.mjs",
     "quality:regression": "node scripts/quality/regression.mjs",
     "quality:duplication": "node scripts/quality/duplication.mjs",
     "quality:regression:capture": "node scripts/quality/regression.mjs --capture",

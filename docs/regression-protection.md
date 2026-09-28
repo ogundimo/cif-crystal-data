@@ -17,15 +17,17 @@ Use Node 22.13+ on the Node 22 line and `npm ci`:
 npm run quality:test
 npm run quality:baseline
 npm run quality:regression -- --base origin/main
-npm run test:mutation
+npm run test:mutation:dev -- --file <changed pilot file>
 ```
 
 The existing required **Test and build** job runs the numerical gates and policy
 probes. The separately named **Advisory quality report** also runs the gate; its
 historical status name is retained. Both retain measurements and failures for
 30 days. Unit/UI/worker/viewer, architecture and unused-code checks remain intact.
-The mutation workflow remains manual and advisory, with its existing 30-minute
-limit and 30-day artifact retention. Execution failures fail the mutation command.
+Mutation testing is on demand and advisory, with no CI workflow; see
+[cadence](mutation-testing.md#cadence). The complete `npm run test:mutation` is
+reserved for updating the comparison reference. Execution failures fail both
+mutation commands.
 
 ## Coverage
 

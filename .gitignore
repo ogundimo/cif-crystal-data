@@ -10,9 +10,13 @@ out/
 reports/quality/
 reports/architecture/
 reports/mutation/
+reports/mutation-dev/
+reports/mutation-benchmark/
 reports/scientific/
 reports/viewer/
 reports/release-validation/
 reports/additional-measurements/
 reports/measurement-candidate/
 .stryker-tmp/
+.stryker-tmp-dev/
+.stryker-tmp-bench/

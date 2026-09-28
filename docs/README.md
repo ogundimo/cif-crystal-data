@@ -33,9 +33,9 @@ recorded test counts and timings apply only to their stated revisions and worklo
 | [Synthetic rock-salt sample](samples/rocksalt-demo.cif) | MIT-licensed illustrative CIF used by screenshots and viewer checks, not experimental data. |
 
 The executable commands live in [package.json](../package.json). Check
-[Test and build](../.github/workflows/ci.yml),
-[the quality-report workflow](../.github/workflows/code-quality.yml) and
-[the manual mutation workflow](../.github/workflows/mutation.yml) when changing policy.
+[Test and build](../.github/workflows/ci.yml) and
+[the quality-report workflow](../.github/workflows/code-quality.yml) when changing policy.
+Mutation testing has no workflow; it runs on demand ([cadence](mutation-testing.md#cadence)).
 The quality-report job name does not make its coverage, complexity or duplication
 regression checks advisory. Mutation scores and proposed numerical targets are
 distinct from these enforced checks.
