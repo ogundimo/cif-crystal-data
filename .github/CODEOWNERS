@@ -1,0 +1,3 @@
+# Require the repository owner's review for changes to any file.
+# Enforcement is configured in the target branch's protection settings.
+* @ogundimo
